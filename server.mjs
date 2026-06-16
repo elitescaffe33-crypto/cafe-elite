@@ -183,6 +183,7 @@ async function stripeApi(pathname, options = {}) {
 }
 
 async function notifyPaidOrder(session) {
+  console.log(`Preparing paid order email for Stripe session ${session.id}`);
   const lineItems = await stripeApi(`/checkout/sessions/${session.id}/line_items?limit=100`);
   const items = lineItems.data
     .map((item) => `${item.quantity}x ${item.description} - ${(item.amount_total / 100).toFixed(2)} GBP`)
@@ -203,6 +204,7 @@ async function notifyPaidOrder(session) {
   ].join("\n");
 
   if (smtpHost && smtpUser && smtpPass) {
+    console.log(`Sending paid order email to ${orderNotificationEmail} using SMTP ${smtpHost}:${smtpPort}`);
     await sendSmtpMail({
       subject: "Paid CAFE ELITE online order",
       text: message,
@@ -247,6 +249,9 @@ async function sendSmtpMail({ subject, text }) {
     host: smtpHost,
     port: smtpPort,
     secure: smtpPort === 465,
+    connectionTimeout: 15_000,
+    greetingTimeout: 15_000,
+    socketTimeout: 15_000,
     auth: {
       user: smtpUser,
       pass: smtpPass.replace(/\s/g, ""),
