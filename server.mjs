@@ -9,6 +9,10 @@ const port = Number(process.env.PORT || 5820);
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || "";
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
 const orderNotificationEmail = process.env.ORDER_NOTIFICATION_EMAIL || "elitescaffe33@gmail.com";
+const smtpHost = process.env.SMTP_HOST || "";
+const smtpPort = Number(process.env.SMTP_PORT || 465);
+const smtpUser = process.env.SMTP_USER || "";
+const smtpPass = process.env.SMTP_PASS || "";
 const currency = "gbp";
 
 const contentTypes = {
@@ -198,6 +202,15 @@ async function notifyPaidOrder(session) {
     `Notes: ${session.metadata?.notes || "None"}`,
   ].join("\n");
 
+  if (smtpHost && smtpUser && smtpPass) {
+    await sendSmtpMail({
+      subject: "Paid CAFE ELITE online order",
+      text: message,
+    });
+    console.log(`Paid order email sent to ${orderNotificationEmail}`);
+    return;
+  }
+
   const formData = new URLSearchParams();
   formData.set("_subject", "Paid CAFE ELITE online order");
   formData.set("_captcha", "false");
@@ -225,6 +238,27 @@ async function notifyPaidOrder(session) {
   if (!response.ok) {
     throw new Error(`Order notification failed with status ${response.status}`);
   }
+}
+
+async function sendSmtpMail({ subject, text }) {
+  const nodemailerModule = await import("nodemailer");
+  const nodemailer = nodemailerModule.default || nodemailerModule;
+  const transporter = nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpPort === 465,
+    auth: {
+      user: smtpUser,
+      pass: smtpPass.replace(/\s/g, ""),
+    },
+  });
+
+  await transporter.sendMail({
+    from: `"CAFE ELITE Orders" <${smtpUser}>`,
+    to: orderNotificationEmail,
+    subject,
+    text,
+  });
 }
 
 async function handleStripeWebhook(request, response) {
@@ -265,12 +299,21 @@ async function serveStatic(request, response) {
 }
 
 createServer(async (request, response) => {
+  if (request.method === "GET" && request.url === "/api/health") {
+    console.log("Health check received");
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(JSON.stringify({ ok: true, service: "CAFE ELITE" }));
+    return;
+  }
+
   if (request.method === "POST" && request.url === "/api/create-checkout-session") {
+    console.log("Create checkout session request received");
     await createCheckoutSession(request, response);
     return;
   }
 
   if (request.method === "POST" && request.url === "/api/stripe-webhook") {
+    console.log("Stripe webhook request received");
     await handleStripeWebhook(request, response);
     return;
   }
