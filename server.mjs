@@ -205,14 +205,22 @@ async function notifyPaidOrder(session) {
 
   if (smtpHost && smtpUser && smtpPass) {
     console.log(`Sending paid order email to ${orderNotificationEmail} using SMTP ${smtpHost}:${smtpPort}`);
-    await sendSmtpMail({
-      subject: "Paid CAFE ELITE online order",
-      text: message,
-    });
-    console.log(`Paid order email sent to ${orderNotificationEmail}`);
-    return;
+    try {
+      await sendSmtpMail({
+        subject: "Paid CAFE ELITE online order",
+        text: message,
+      });
+      console.log(`Paid order email sent to ${orderNotificationEmail}`);
+      return;
+    } catch (error) {
+      console.error(`SMTP paid order email failed, trying FormSubmit fallback: ${error.message}`);
+    }
   }
 
+  await sendFormSubmitNotification(session, message, items);
+}
+
+async function sendFormSubmitNotification(session, message, items) {
   const formData = new URLSearchParams();
   formData.set("_subject", "Paid CAFE ELITE online order");
   formData.set("_captcha", "false");
@@ -240,6 +248,8 @@ async function notifyPaidOrder(session) {
   if (!response.ok) {
     throw new Error(`Order notification failed with status ${response.status}`);
   }
+
+  console.log(`Paid order FormSubmit notification sent to ${orderNotificationEmail}`);
 }
 
 async function sendSmtpMail({ subject, text }) {
