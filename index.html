@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CAFE ELITE | Leominster</title>
+    <meta
+      name="description"
+      content="CAFE ELITE, 33 High Street Leominster HR6 8LZ. Coffee, pasta, sandwiches, cakes, snacks and collection orders."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header" id="top">
+      <a class="brand" href="#top" aria-label="CAFE ELITE home">
+        <span class="brand-mark">CE</span>
+        <span>
+          <strong>CAFE ELITE</strong>
+          <small>Leominster</small>
+        </span>
+      </a>
+      <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="#menu">Menu</a>
+        <a href="#order">Collection</a>
+        <a href="#gallery">Photos</a>
+        <a href="#visit">Find us</a>
+      </nav>
+      <button class="cart-toggle" type="button" id="cartToggle" aria-expanded="false" aria-controls="cartDrawer">
+        <span class="cart-icon" aria-hidden="true">Basket</span>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+    </header>
+
+    <aside class="cart-drawer" id="cartDrawer" aria-hidden="true" aria-live="polite">
+      <div class="cart-drawer-head">
+        <div>
+          <p class="eyebrow">Collection basket</p>
+          <h2>Your order</h2>
+        </div>
+        <button class="cart-close" type="button" id="cartClose" aria-label="Close basket">Close</button>
+      </div>
+      <ul id="basketList"></ul>
+      <p class="basket-empty" id="basketEmpty">No items added yet. Tap any menu item to add it.</p>
+      <textarea id="orderMessage" readonly rows="8" aria-label="Prepared order message"></textarea>
+      <button class="button primary checkout-button" type="button" id="checkoutButton">Pay on collection</button>
+      <button class="button stripe checkout-button" type="button" id="stripeCheckoutButton">
+        Pay online with Stripe
+      </button>
+      <p class="cart-note">
+        Add customer details before sending. Online payment can be enabled with your Stripe payment link.
+      </p>
+    </aside>
+    <div class="cart-backdrop" id="cartBackdrop" hidden></div>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-media" aria-hidden="true">
+          <img src="assets/cafe-front.jpg" alt="" />
+        </div>
+        <div class="hero-content">
+          <p class="eyebrow">33 High Street, Leominster</p>
+          <h1 id="hero-title">CAFE ELITE</h1>
+          <p class="hero-copy">
+            Fresh coffee, pasta bowls, sandwiches, cakes and collection orders in the heart of
+            Leominster.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#menu">View menu</a>
+            <a class="button secondary" href="#order">Order for collection</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="notice-band" aria-label="Service notice">
+        <span>Collection available</span>
+        <span>Delivery currently unavailable</span>
+        <span>Prices editable in <code>script.js</code></span>
+      </section>
+
+      <section class="section intro" aria-label="Cafe introduction">
+        <div>
+          <p class="eyebrow">Renaissance inspired cafe style</p>
+          <h2>A warm cafe menu with classic gold detail.</h2>
+        </div>
+        <p>
+          The site is ready for real prices, menu edits and future delivery activation. Customers
+          can build a collection order and use the map link to find the cafe quickly.
+        </p>
+      </section>
+
+      <section class="section feature-photo" aria-label="Pasta bowls feature">
+        <figure>
+          <img src="assets/pasta-bowls.jpg" alt="CAFE ELITE pasta bowls menu" />
+          <figcaption>Fresh pasta bowls, meal deals and homemade yogurt pot.</figcaption>
+        </figure>
+      </section>
+
+      <section class="section menu-section" id="menu" aria-labelledby="menu-title">
+        <div class="section-heading">
+          <p class="eyebrow">Editable price list</p>
+          <h2 id="menu-title">Menu</h2>
+        </div>
+        <div class="menu-grid" id="menuGrid"></div>
+      </section>
+
+      <section class="section order-section" id="order" aria-labelledby="order-title">
+        <div class="section-heading">
+          <p class="eyebrow">Customer details</p>
+          <h2 id="order-title">Collection details</h2>
+        </div>
+        <div class="order-layout">
+          <form class="order-panel" id="orderForm">
+            <div class="form-grid">
+              <label>
+                Name
+                <input name="customerName" type="text" autocomplete="name" placeholder="Your name" required />
+              </label>
+              <label>
+                Phone
+                <input name="phone" type="tel" autocomplete="tel" placeholder="Phone number" required />
+              </label>
+              <label>
+                Collection time
+                <input name="time" type="time" required />
+              </label>
+              <label class="wide">
+                Notes
+                <textarea name="notes" rows="4" placeholder="Milk choice, allergy notes, syrup, etc."></textarea>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button class="button primary" type="submit">Save details</button>
+              <button class="button secondary" type="button" id="openBasketFromForm">Open basket</button>
+            </div>
+          </form>
+          <div class="order-help">
+            <h3>How ordering works</h3>
+            <p>Tap menu items to add them to the basket. The basket stays in the top right while browsing.</p>
+            <p>Use Pay on collection when the order is ready. The message is prepared for cafe notification.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section gallery" id="gallery" aria-labelledby="gallery-title">
+        <div class="section-heading">
+          <p class="eyebrow">Cafe visuals</p>
+          <h2 id="gallery-title">Cafe front</h2>
+        </div>
+        <div class="photo-grid">
+          <figure>
+            <img src="assets/cafe-front.jpg" alt="CAFE ELITE cafe front" />
+            <figcaption>CAFE ELITE on High Street, Leominster</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="section visit" id="visit" aria-labelledby="visit-title">
+        <div>
+          <p class="eyebrow">Visit us</p>
+          <h2 id="visit-title">33 High Street, Leominster HR6 8LZ</h2>
+          <p>
+            Open the Google Maps link for directions to CAFE ELITE. The embedded map points to the
+            same address.
+          </p>
+          <a
+            class="button primary"
+            href="https://www.google.com/maps/search/?api=1&query=33%20High%20Street%20Leominster%20HR6%208LZ"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Open Google Maps
+          </a>
+        </div>
+        <iframe
+          title="Map to CAFE ELITE"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          src="https://www.google.com/maps?q=33%20High%20Street%20Leominster%20HR6%208LZ&output=embed"
+        ></iframe>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>CAFE ELITE</p>
+      <p>33 High Street, Leominster HR6 8LZ</p>
+    </footer>
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>

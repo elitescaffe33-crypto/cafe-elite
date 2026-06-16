@@ -1,0 +1,304 @@
+import { menuData } from "./menu-data.mjs";
+
+const ENABLE_DELIVERY = false;
+
+// Add your cafe email here to receive order notifications.
+// Example: const ORDER_NOTIFICATION_EMAIL = "hello@cafeelite.co.uk";
+const ORDER_NOTIFICATION_EMAIL = "elitescaffe33@gmail.com";
+
+// Static-site order notifications. FormSubmit may send a one-time activation email first.
+const ORDER_NOTIFICATION_ENDPOINT = `https://formsubmit.co/${ORDER_NOTIFICATION_EMAIL}`;
+
+const STRIPE_CHECKOUT_ENDPOINT = "/api/create-checkout-session";
+
+const menuGrid = document.querySelector("#menuGrid");
+const basketList = document.querySelector("#basketList");
+const basketEmpty = document.querySelector("#basketEmpty");
+const orderMessage = document.querySelector("#orderMessage");
+const orderForm = document.querySelector("#orderForm");
+const navToggle = document.querySelector(".nav-toggle");
+const siteNav = document.querySelector(".site-nav");
+const cartToggle = document.querySelector("#cartToggle");
+const cartClose = document.querySelector("#cartClose");
+const cartDrawer = document.querySelector("#cartDrawer");
+const cartBackdrop = document.querySelector("#cartBackdrop");
+const cartCount = document.querySelector("#cartCount");
+const checkoutButton = document.querySelector("#checkoutButton");
+const stripeCheckoutButton = document.querySelector("#stripeCheckoutButton");
+const openBasketFromForm = document.querySelector("#openBasketFromForm");
+const basket = [];
+
+function getItemLabel(item) {
+  return item.price ? `${item.name} - ${item.price}` : item.name;
+}
+
+function openCart() {
+  cartDrawer.classList.add("is-open");
+  cartDrawer.setAttribute("aria-hidden", "false");
+  cartToggle.setAttribute("aria-expanded", "true");
+}
+
+function closeCart() {
+  cartDrawer.classList.remove("is-open");
+  cartDrawer.setAttribute("aria-hidden", "true");
+  cartToggle.setAttribute("aria-expanded", "false");
+}
+
+function renderMenu() {
+  menuGrid.innerHTML = menuData
+    .map(
+      (group, groupIndex) => `
+        <article class="menu-card">
+          <h3>${group.category}</h3>
+          <ul>
+            ${group.items
+              .map(
+                (item, itemIndex) => `
+                  <li>
+                    <button class="menu-item-button" type="button" data-group="${groupIndex}" data-item="${itemIndex}">
+                      <span>${item.name}</span>
+                      <span class="price ${item.price ? "" : "is-empty"}">${item.price || "Add price"}</span>
+                    </button>
+                  </li>
+                `,
+              )
+              .join("")}
+          </ul>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderBasket() {
+  basketList.innerHTML = basket
+    .map(
+      (item, index) => `
+        <li>
+          <span>${getItemLabel(item)}</span>
+          <button class="remove-item" type="button" data-index="${index}" aria-label="Remove ${item.name}">Remove</button>
+        </li>
+      `,
+    )
+    .join("");
+
+  cartCount.textContent = String(basket.length);
+  basketEmpty.hidden = basket.length > 0;
+  checkoutButton.disabled = basket.length === 0;
+  stripeCheckoutButton.disabled = basket.length === 0;
+  updateMessage();
+}
+
+function updateMessage() {
+  const formData = new FormData(orderForm);
+  const name = formData.get("customerName") || "";
+  const phone = formData.get("phone") || "";
+  const time = formData.get("time") || "";
+  const notes = formData.get("notes") || "";
+  const service = ENABLE_DELIVERY ? "Collection / delivery" : "Collection";
+  const items = basket.length
+    ? basket.map((item, index) => `${index + 1}. ${getItemLabel(item)}`).join("\n")
+    : "No items selected";
+
+  orderMessage.value = [
+    "CAFE ELITE order",
+    `Service: ${service}`,
+    "Payment: Pay on collection",
+    `Name: ${name}`,
+    `Phone: ${phone}`,
+    `Collection time: ${time}`,
+    "Items:",
+    items,
+    `Notes: ${notes}`,
+  ].join("\n");
+}
+
+function addItemToBasket(groupIndex, itemIndex) {
+  const item = menuData[groupIndex]?.items[itemIndex];
+  if (!item) return;
+  basket.push(item);
+  renderBasket();
+  openCart();
+}
+
+async function sendCollectionOrder() {
+  updateMessage();
+
+  if (!basket.length) {
+    alert("Please add at least one item to the basket.");
+    return;
+  }
+
+  if (!orderForm.reportValidity()) {
+    alert("Please fill in name, phone and collection time before sending the order.");
+    document.querySelector("#order").scrollIntoView({ behavior: "smooth", block: "start" });
+    closeCart();
+    return;
+  }
+
+  if (window.location.protocol === "file:") {
+    alert(
+      "Siparis sistemi bilgisayardan direkt acilan HTML dosyasinda calismaz. Siteyi internette yayinladiktan sonra siparisler elitescaffe33@gmail.com adresine gidecek.",
+    );
+    return;
+  }
+
+  if (ORDER_NOTIFICATION_ENDPOINT) {
+    submitOrderForm();
+    return;
+  }
+
+  if (ORDER_NOTIFICATION_EMAIL) {
+    const subject = encodeURIComponent("New CAFE ELITE collection order");
+    const body = encodeURIComponent(orderMessage.value);
+    window.location.href = `mailto:${ORDER_NOTIFICATION_EMAIL}?subject=${subject}&body=${body}`;
+    return;
+  }
+
+  navigator.clipboard?.writeText(orderMessage.value);
+  alert("Order message is ready. Add your cafe email in script.js to receive this as a notification.");
+}
+
+function payOnlineWithStripe() {
+  updateMessage();
+
+  if (!basket.length) {
+    alert("Please add at least one item to the basket.");
+    return;
+  }
+
+  if (!orderForm.reportValidity()) {
+    alert("Please fill in name, phone and collection time before paying online.");
+    document.querySelector("#order").scrollIntoView({ behavior: "smooth", block: "start" });
+    closeCart();
+    return;
+  }
+
+  if (window.location.protocol === "file:") {
+    alert(
+      "Online payment needs the site to run through the backend server. It will work after publishing or when running the local server.",
+    );
+    return;
+  }
+
+  stripeCheckoutButton.disabled = true;
+  stripeCheckoutButton.textContent = "Opening Stripe...";
+
+  fetch(STRIPE_CHECKOUT_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      items: basket.map((item) => item.name),
+      customer: {
+        name: new FormData(orderForm).get("customerName") || "",
+        phone: new FormData(orderForm).get("phone") || "",
+        collectionTime: new FormData(orderForm).get("time") || "",
+        notes: new FormData(orderForm).get("notes") || "",
+      },
+      orderMessage: orderMessage.value,
+    }),
+  })
+    .then((response) => {
+      if (!response.ok) throw new Error("Stripe checkout failed");
+      return response.json();
+    })
+    .then((data) => {
+      if (!data.url) throw new Error("Missing Stripe checkout URL");
+      sessionStorage.setItem("cafeElitePendingOrder", orderMessage.value);
+      window.location.href = data.url;
+    })
+    .catch(() => {
+      alert("Stripe checkout could not be opened. Please try again.");
+      stripeCheckoutButton.disabled = false;
+      stripeCheckoutButton.textContent = "Pay online with Stripe";
+    });
+}
+
+function submitOrderForm() {
+  const formData = new FormData(orderForm);
+  const hiddenForm = document.createElement("form");
+  const fields = {
+    _subject: "New CAFE ELITE collection order",
+    _captcha: "false",
+    _template: "table",
+    _next: window.location.href.split("#")[0] + "#order-sent",
+    service: ENABLE_DELIVERY ? "Collection / delivery" : "Collection",
+    payment: "Pay on collection",
+    customer_name: formData.get("customerName") || "",
+    phone: formData.get("phone") || "",
+    collection_time: formData.get("time") || "",
+    items: basket.map((item, index) => `${index + 1}. ${getItemLabel(item)}`).join("\n"),
+    notes: formData.get("notes") || "",
+    full_message: orderMessage.value,
+  };
+
+  hiddenForm.method = "POST";
+  hiddenForm.action = ORDER_NOTIFICATION_ENDPOINT;
+  hiddenForm.style.display = "none";
+
+  Object.entries(fields).forEach(([name, value]) => {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = value;
+    hiddenForm.appendChild(input);
+  });
+
+  checkoutButton.disabled = true;
+  checkoutButton.textContent = "Sending order...";
+  document.body.appendChild(hiddenForm);
+  hiddenForm.submit();
+}
+
+function showOrderSentMessage() {
+  if (window.location.hash !== "#order-sent") return;
+  alert("Order sent. Payment will be taken on collection.");
+  basket.length = 0;
+  renderBasket();
+  closeCart();
+  history.replaceState(null, "", window.location.pathname + window.location.search);
+}
+
+menuGrid.addEventListener("click", (event) => {
+  const button = event.target.closest(".menu-item-button");
+  if (!button) return;
+  addItemToBasket(Number(button.dataset.group), Number(button.dataset.item));
+});
+
+basketList.addEventListener("click", (event) => {
+  const button = event.target.closest(".remove-item");
+  if (!button) return;
+  basket.splice(Number(button.dataset.index), 1);
+  renderBasket();
+});
+
+orderForm.addEventListener("input", updateMessage);
+
+orderForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  updateMessage();
+  openCart();
+});
+
+checkoutButton.addEventListener("click", sendCollectionOrder);
+stripeCheckoutButton.addEventListener("click", payOnlineWithStripe);
+cartToggle.addEventListener("click", openCart);
+cartClose.addEventListener("click", closeCart);
+cartBackdrop.addEventListener("click", closeCart);
+openBasketFromForm.addEventListener("click", openCart);
+
+navToggle.addEventListener("click", () => {
+  const isOpen = siteNav.classList.toggle("is-open");
+  navToggle.setAttribute("aria-expanded", String(isOpen));
+});
+
+siteNav.addEventListener("click", () => {
+  siteNav.classList.remove("is-open");
+  navToggle.setAttribute("aria-expanded", "false");
+});
+
+renderMenu();
+renderBasket();
+showOrderSentMessage();

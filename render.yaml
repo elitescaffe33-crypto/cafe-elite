@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: cafe-elite
+    env: node
+    plan: free
+    buildCommand: ""
+    startCommand: "npm start"
+    envVars:
+      - key: ORDER_NOTIFICATION_EMAIL
+        value: elitescaffe33@gmail.com
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
