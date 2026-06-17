@@ -14,6 +14,7 @@ const STRIPE_CHECKOUT_ENDPOINT = "/api/create-checkout-session";
 const menuGrid = document.querySelector("#menuGrid");
 const basketList = document.querySelector("#basketList");
 const basketEmpty = document.querySelector("#basketEmpty");
+const basketTotal = document.querySelector("#basketTotal");
 const orderMessage = document.querySelector("#orderMessage");
 const orderForm = document.querySelector("#orderForm");
 const navToggle = document.querySelector(".nav-toggle");
@@ -30,6 +31,26 @@ const basket = [];
 
 function getItemLabel(item) {
   return item.price ? `${item.name} - ${item.price}` : item.name;
+}
+
+function priceToNumber(price) {
+  return Number(String(price || "").replace(/[£,\s]/g, "")) || 0;
+}
+
+function getBasketTotal() {
+  return basket.reduce((total, item) => total + priceToNumber(item.price), 0);
+}
+
+function goToCollectionDetails() {
+  closeCart();
+  document.querySelector("#order").scrollIntoView({ behavior: "smooth", block: "start" });
+  const firstInvalid = orderForm.querySelector(":invalid");
+  if (firstInvalid) {
+    window.setTimeout(() => {
+      firstInvalid.focus({ preventScroll: true });
+      firstInvalid.reportValidity();
+    }, 350);
+  }
 }
 
 function openCart() {
@@ -83,6 +104,7 @@ function renderBasket() {
     .join("");
 
   cartCount.textContent = String(basket.length);
+  basketTotal.textContent = `Total: £${getBasketTotal().toFixed(2)}`;
   basketEmpty.hidden = basket.length > 0;
   checkoutButton.disabled = basket.length === 0;
   stripeCheckoutButton.disabled = basket.length === 0;
@@ -99,6 +121,7 @@ function updateMessage() {
   const items = basket.length
     ? basket.map((item, index) => `${index + 1}. ${getItemLabel(item)}`).join("\n")
     : "No items selected";
+  const total = getBasketTotal().toFixed(2);
 
   orderMessage.value = [
     "CAFE ELITE order",
@@ -107,6 +130,7 @@ function updateMessage() {
     `Name: ${name}`,
     `Phone: ${phone}`,
     `Collection time: ${time}`,
+    `Total: £${total}`,
     "Items:",
     items,
     `Notes: ${notes}`,
@@ -118,7 +142,6 @@ function addItemToBasket(groupIndex, itemIndex) {
   if (!item) return;
   basket.push(item);
   renderBasket();
-  openCart();
 }
 
 async function sendCollectionOrder() {
@@ -129,10 +152,8 @@ async function sendCollectionOrder() {
     return;
   }
 
-  if (!orderForm.reportValidity()) {
-    alert("Please fill in name, phone and collection time before sending the order.");
-    document.querySelector("#order").scrollIntoView({ behavior: "smooth", block: "start" });
-    closeCart();
+  if (!orderForm.checkValidity()) {
+    goToCollectionDetails();
     return;
   }
 
@@ -167,10 +188,8 @@ function payOnlineWithStripe() {
     return;
   }
 
-  if (!orderForm.reportValidity()) {
-    alert("Please fill in name, phone and collection time before paying online.");
-    document.querySelector("#order").scrollIntoView({ behavior: "smooth", block: "start" });
-    closeCart();
+  if (!orderForm.checkValidity()) {
+    goToCollectionDetails();
     return;
   }
 
@@ -201,16 +220,18 @@ function payOnlineWithStripe() {
     }),
   })
     .then((response) => {
-      if (!response.ok) throw new Error("Stripe checkout failed");
-      return response.json();
+      return response.json().then((data) => {
+        if (!response.ok) throw new Error(data.error || "Stripe checkout failed");
+        return data;
+      });
     })
     .then((data) => {
       if (!data.url) throw new Error("Missing Stripe checkout URL");
       sessionStorage.setItem("cafeElitePendingOrder", orderMessage.value);
       window.location.href = data.url;
     })
-    .catch(() => {
-      alert("Stripe checkout could not be opened. Please try again.");
+    .catch((error) => {
+      alert(`Stripe checkout could not be opened: ${error.message}`);
       stripeCheckoutButton.disabled = false;
       stripeCheckoutButton.textContent = "Pay online with Stripe";
     });

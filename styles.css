@@ -242,11 +242,23 @@ h3 {
 }
 
 .cart-drawer .basket-empty,
+.cart-drawer .basket-total,
 .cart-drawer #orderMessage,
 .cart-drawer .checkout-button,
 .cart-drawer .cart-note {
   position: relative;
   z-index: 1;
+}
+
+.basket-total {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding: 12px 0 2px;
+  color: var(--gold-bright);
+  border-top: 1px solid rgba(217, 164, 65, 0.38);
+  font-size: 1.05rem;
+  font-weight: 900;
 }
 
 .cart-note {
@@ -740,6 +752,11 @@ textarea {
   line-height: 1.7;
 }
 
+.success-page .success-note {
+  color: var(--gold-bright);
+  font-weight: 800;
+}
+
 @media (max-width: 900px) {
   .nav-toggle {
     display: block;
@@ -816,8 +833,44 @@ textarea {
     top: 72px;
     right: 10px;
     left: auto;
-    width: min(320px, calc(100vw - 20px));
-    max-height: calc(100vh - 86px);
+    width: min(292px, calc(100vw - 24px));
+    max-height: 64vh;
+    gap: 10px;
+    padding: 16px;
+  }
+
+  .cart-drawer h2 {
+    font-size: 1.35rem;
+    margin: 0;
+  }
+
+  .cart-drawer-head {
+    gap: 10px;
+  }
+
+  .cart-close {
+    min-height: 34px;
+    padding: 6px 8px;
+    font-size: 0.84rem;
+  }
+
+  .cart-drawer li {
+    padding: 8px 0;
+    font-size: 0.9rem;
+  }
+
+  .cart-drawer #orderMessage {
+    max-height: 104px;
+    font-size: 0.82rem;
+  }
+
+  .cart-note {
+    display: none;
+  }
+
+  .basket-total {
+    padding-top: 10px;
+    font-size: 0.98rem;
   }
 
   .hero::before {
