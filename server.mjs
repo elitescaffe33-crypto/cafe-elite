@@ -20,6 +20,8 @@ const smtpUser = process.env.SMTP_USER || "";
 const smtpPass = process.env.SMTP_PASS || "";
 const resendApiKey = process.env.RESEND_API_KEY || "";
 const resendFromEmail = process.env.RESEND_FROM_EMAIL || "CAFE ELITE Orders <onboarding@resend.dev>";
+const supabaseUrl = (process.env.SUPABASE_URL || "").replace(/\/$/, "");
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const currency = "gbp";
 
 const contentTypes = {
@@ -60,13 +62,67 @@ async function writeJsonFile(filePath, data) {
   await writeFile(filePath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
 }
 
+function hasSupabase() {
+  return Boolean(supabaseUrl && supabaseServiceRoleKey);
+}
+
+async function supabaseRequest(pathname, options = {}) {
+  if (!hasSupabase()) throw new Error("Supabase is not configured");
+
+  const response = await fetch(`${supabaseUrl}/rest/v1${pathname}`, {
+    ...options,
+    headers: {
+      apikey: supabaseServiceRoleKey,
+      Authorization: `Bearer ${supabaseServiceRoleKey}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+      ...(options.headers || {}),
+    },
+  });
+
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!response.ok) {
+    throw new Error(data?.message || data?.error || `Supabase failed with status ${response.status}`);
+  }
+  return data;
+}
+
 async function loadSettings() {
+  if (hasSupabase()) {
+    try {
+      const rows = await supabaseRequest("/cafe_elite_settings?id=eq.main&select=settings&limit=1");
+      return mergeSettings(defaultSiteSettings, rows?.[0]?.settings || {});
+    } catch (error) {
+      console.error("Supabase settings read failed, using file fallback:", error.message);
+    }
+  }
+
   const savedSettings = await readJsonFile(settingsFile, {});
   return mergeSettings(defaultSiteSettings, savedSettings);
 }
 
 async function saveSettings(settings) {
   const mergedSettings = mergeSettings(defaultSiteSettings, settings);
+
+  if (hasSupabase()) {
+    try {
+      await supabaseRequest("/cafe_elite_settings", {
+        method: "POST",
+        headers: {
+          Prefer: "resolution=merge-duplicates,return=representation",
+        },
+        body: JSON.stringify({
+          id: "main",
+          settings: mergedSettings,
+          updated_at: new Date().toISOString(),
+        }),
+      });
+    } catch (error) {
+      console.error("Supabase settings write failed, using file fallback:", error.message);
+    }
+  }
+
   await writeJsonFile(settingsFile, mergedSettings);
   return mergedSettings;
 }
@@ -83,15 +139,70 @@ function requireAdmin(request, response) {
 }
 
 async function saveOrder(order) {
-  const orders = await readJsonFile(ordersFile, []);
   const nextOrder = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     createdAt: new Date().toISOString(),
     ...order,
   };
+
+  if (hasSupabase()) {
+    try {
+      await supabaseRequest("/cafe_elite_orders", {
+        method: "POST",
+        body: JSON.stringify({
+          id: nextOrder.id,
+          created_at: nextOrder.createdAt,
+          type: nextOrder.type,
+          payment: nextOrder.payment,
+          status: nextOrder.status,
+          stripe_session_id: nextOrder.stripeSessionId || null,
+          amount: nextOrder.amount || null,
+          customer_name: nextOrder.customerName || "",
+          phone: nextOrder.phone || "",
+          email: nextOrder.email || "",
+          collection_time: nextOrder.collectionTime || "",
+          items: nextOrder.items || "",
+          notes: nextOrder.notes || "",
+          message: nextOrder.message || "",
+        }),
+      });
+    } catch (error) {
+      console.error("Supabase order write failed, using file fallback:", error.message);
+    }
+  }
+
+  const orders = await readJsonFile(ordersFile, []);
   orders.unshift(nextOrder);
   await writeJsonFile(ordersFile, orders.slice(0, 500));
   return nextOrder;
+}
+
+async function loadOrders() {
+  if (hasSupabase()) {
+    try {
+      const rows = await supabaseRequest("/cafe_elite_orders?select=*&order=created_at.desc&limit=500");
+      return rows.map((row) => ({
+        id: row.id,
+        createdAt: row.created_at,
+        type: row.type,
+        payment: row.payment,
+        status: row.status,
+        stripeSessionId: row.stripe_session_id,
+        amount: row.amount,
+        customerName: row.customer_name,
+        phone: row.phone,
+        email: row.email,
+        collectionTime: row.collection_time,
+        items: row.items,
+        notes: row.notes,
+        message: row.message,
+      }));
+    } catch (error) {
+      console.error("Supabase orders read failed, using file fallback:", error.message);
+    }
+  }
+
+  return readJsonFile(ordersFile, []);
 }
 
 function getOrigin(request) {
@@ -554,7 +665,7 @@ createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/api/admin/orders") {
     if (!requireAdmin(request, response)) return;
     response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify(await readJsonFile(ordersFile, [])));
+    response.end(JSON.stringify(await loadOrders()));
     return;
   }
 
