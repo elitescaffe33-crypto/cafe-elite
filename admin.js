@@ -37,6 +37,27 @@ settingsForm.addEventListener("submit", async (event) => {
 
 refreshOrders.addEventListener("click", loadOrders);
 
+ordersList.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-status]");
+  if (!button) return;
+
+  button.disabled = true;
+  try {
+    await adminFetch("/api/admin/order-status", {
+      method: "POST",
+      body: JSON.stringify({
+        id: button.dataset.orderId,
+        status: button.dataset.status,
+      }),
+    });
+    showMessage("Order status updated.");
+    await loadOrders();
+  } catch (error) {
+    showMessage(error.message || "Order status could not be updated.");
+    button.disabled = false;
+  }
+});
+
 async function openAdmin() {
   try {
     currentSettings = mergeSettings(defaultSiteSettings, await adminFetch("/api/admin/settings"));
@@ -117,19 +138,50 @@ function renderOrder(order) {
     dateStyle: "medium",
     timeStyle: "short",
   });
+  const paymentLabel = order.type === "paid-online" ? "Paid online" : "Pay on collection";
+  const status = order.status || "new";
+  const phone = order.phone || "";
 
   return `
     <article class="order-history-card">
-      <div>
-        <strong>${order.type === "paid-online" ? "Paid online" : "Pay on collection"}</strong>
+      <div class="order-card-head">
+        <div>
+          <strong>${paymentLabel}</strong>
+          <span class="order-status is-${escapeHtml(status)}">${escapeHtml(status)}</span>
+        </div>
         <span>${date}</span>
       </div>
       <p><b>Name:</b> ${escapeHtml(order.customerName || "Not provided")}</p>
-      <p><b>Phone:</b> ${escapeHtml(order.phone || "Not provided")}</p>
+      <p><b>Phone:</b> ${
+        phone
+          ? `<a href="tel:${escapeHtml(phone)}">${escapeHtml(phone)}</a>`
+          : "Not provided"
+      }</p>
       <p><b>Collection:</b> ${escapeHtml(order.collectionTime || "Not provided")}</p>
-      <p><b>Status:</b> ${escapeHtml(order.status || "")}</p>
+      <p><b>Total:</b> ${escapeHtml(order.amount || "Pay at collection")}</p>
       <pre>${escapeHtml(order.items || order.message || "")}</pre>
+      ${order.notes ? `<p><b>Notes:</b> ${escapeHtml(order.notes)}</p>` : ""}
+      <div class="order-actions" aria-label="Update order status">
+        ${renderStatusButton(order.id, status, "new", "New")}
+        ${renderStatusButton(order.id, status, "preparing", "Preparing")}
+        ${renderStatusButton(order.id, status, "completed", "Completed")}
+        ${renderStatusButton(order.id, status, "cancelled", "Cancelled")}
+      </div>
     </article>
+  `;
+}
+
+function renderStatusButton(orderId, currentStatus, status, label) {
+  return `
+    <button
+      class="status-button ${currentStatus === status ? "is-active" : ""}"
+      type="button"
+      data-order-id="${escapeHtml(orderId)}"
+      data-status="${status}"
+      ${currentStatus === status ? "disabled" : ""}
+    >
+      ${label}
+    </button>
   `;
 }
 

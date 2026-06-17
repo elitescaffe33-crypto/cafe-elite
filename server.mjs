@@ -205,6 +205,28 @@ async function loadOrders() {
   return readJsonFile(ordersFile, []);
 }
 
+async function updateOrderStatus(orderId, status) {
+  const allowedStatuses = new Set(["new", "pending", "preparing", "completed", "cancelled", "paid"]);
+  if (!orderId) throw new Error("Order id is required");
+  if (!allowedStatuses.has(status)) throw new Error("Invalid order status");
+
+  if (hasSupabase()) {
+    try {
+      await supabaseRequest(`/cafe_elite_orders?id=eq.${encodeURIComponent(orderId)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      });
+    } catch (error) {
+      console.error("Supabase order status update failed, using file fallback:", error.message);
+    }
+  }
+
+  const orders = await readJsonFile(ordersFile, []);
+  const nextOrders = orders.map((order) => (order.id === orderId ? { ...order, status } : order));
+  await writeJsonFile(ordersFile, nextOrders);
+  return { ok: true, id: orderId, status };
+}
+
 function getOrigin(request) {
   const proto = request.headers["x-forwarded-proto"] || "http";
   const host = request.headers["x-forwarded-host"] || request.headers.host;
@@ -666,6 +688,15 @@ createServer(async (request, response) => {
     if (!requireAdmin(request, response)) return;
     response.writeHead(200, { "content-type": "application/json" });
     response.end(JSON.stringify(await loadOrders()));
+    return;
+  }
+
+  if (request.method === "POST" && request.url === "/api/admin/order-status") {
+    if (!requireAdmin(request, response)) return;
+    const payload = await readJson(request);
+    const result = await updateOrderStatus(payload.id, payload.status);
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(JSON.stringify(result));
     return;
   }
 

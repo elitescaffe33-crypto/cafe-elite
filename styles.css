@@ -843,12 +843,44 @@ textarea {
   border-radius: 6px;
 }
 
-.order-history-card div {
+.order-card-head {
   display: flex;
   justify-content: space-between;
   gap: 10px;
+  align-items: start;
   color: var(--gold-bright);
   font-weight: 800;
+}
+
+.order-card-head > div {
+  display: grid;
+  gap: 8px;
+}
+
+.order-status {
+  width: fit-content;
+  padding: 5px 9px;
+  color: var(--cream);
+  background: rgba(255, 247, 231, 0.12);
+  border: 1px solid rgba(217, 164, 65, 0.28);
+  border-radius: 999px;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+}
+
+.order-status.is-paid,
+.order-status.is-completed {
+  color: #e8fff3;
+  background: rgba(71, 113, 95, 0.45);
+}
+
+.order-status.is-preparing {
+  color: #091827;
+  background: var(--gold-bright);
+}
+
+.order-status.is-cancelled {
+  background: rgba(155, 45, 37, 0.72);
 }
 
 .order-history-card p {
@@ -862,6 +894,33 @@ textarea {
   color: rgba(255, 247, 231, 0.86);
   font: inherit;
   font-size: 0.92rem;
+}
+
+.order-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.status-button {
+  min-height: 38px;
+  padding: 8px;
+  color: var(--cream);
+  background: rgba(7, 21, 39, 0.7);
+  border: 1px solid rgba(217, 164, 65, 0.42);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.status-button.is-active,
+.status-button:disabled {
+  color: #091827;
+  background: var(--gold-bright);
+  cursor: default;
 }
 
 @media (max-width: 900px) {
@@ -997,7 +1056,8 @@ textarea {
   .form-grid,
   .photo-grid,
   .admin-switches,
-  .hours-row {
+  .hours-row,
+  .order-actions {
     grid-template-columns: 1fr;
   }
 
