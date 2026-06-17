@@ -26,6 +26,8 @@ const openBasketFromForm = document.querySelector("#openBasketFromForm");
 const collectionStatus = document.querySelector("#collectionStatus");
 const deliveryStatus = document.querySelector("#deliveryStatus");
 const orderingStatus = document.querySelector("#orderingStatus");
+const publicHoursList = document.querySelector("#publicHoursList");
+const publicHoursNote = document.querySelector("#publicHoursNote");
 const collectionTimeInput = orderForm.querySelector('input[name="time"]');
 const basket = [];
 let activeSettings = defaultSiteSettings;
@@ -129,6 +131,31 @@ function updateOrderingControls() {
   if (collectionTimeInput && status.today) {
     collectionTimeInput.min = status.today.open;
     collectionTimeInput.max = status.today.lastOrder;
+  }
+
+  renderOpeningHours(status);
+}
+
+function renderOpeningHours(status = getOrderingStatus(new Date(), activeSettings)) {
+  if (!publicHoursList) return;
+
+  publicHoursList.innerHTML = Object.entries(activeSettings.ordering.days)
+    .map(([key, day]) => {
+      const isToday = status.weekday === key;
+      return `
+        <div class="public-hours-row ${isToday ? "is-today" : ""}">
+          <strong>${day.label}</strong>
+          <span>${day.open} - ${day.close}</span>
+          <small>Last order ${day.lastOrder}</small>
+        </div>
+      `;
+    })
+    .join("");
+
+  if (publicHoursNote) {
+    publicHoursNote.textContent = status.isOpen
+      ? `Online ordering is open now. Last order today: ${status.today.lastOrder}.`
+      : status.message;
   }
 }
 

@@ -38,6 +38,23 @@ settingsForm.addEventListener("submit", async (event) => {
 refreshOrders.addEventListener("click", loadOrders);
 
 ordersList.addEventListener("click", async (event) => {
+  const actionButton = event.target.closest("[data-action]");
+  if (actionButton) {
+    const orderCard = actionButton.closest(".order-history-card");
+    const orderText = orderCard?.querySelector(".printable-order")?.textContent || "";
+
+    if (actionButton.dataset.action === "copy") {
+      await navigator.clipboard.writeText(orderText);
+      showMessage("Order copied.");
+      return;
+    }
+
+    if (actionButton.dataset.action === "print") {
+      printOrder(orderText);
+      return;
+    }
+  }
+
   const button = event.target.closest("[data-status]");
   if (!button) return;
 
@@ -141,6 +158,7 @@ function renderOrder(order) {
   const paymentLabel = order.type === "paid-online" ? "Paid online" : "Pay on collection";
   const status = order.status || "new";
   const phone = order.phone || "";
+  const printableOrder = formatPrintableOrder(order, paymentLabel, date);
 
   return `
     <article class="order-history-card">
@@ -161,6 +179,11 @@ function renderOrder(order) {
       <p><b>Total:</b> ${escapeHtml(order.amount || "Pay at collection")}</p>
       <pre>${escapeHtml(order.items || order.message || "")}</pre>
       ${order.notes ? `<p><b>Notes:</b> ${escapeHtml(order.notes)}</p>` : ""}
+      <pre class="printable-order" hidden>${escapeHtml(printableOrder)}</pre>
+      <div class="order-tools" aria-label="Order tools">
+        <button class="status-button" type="button" data-action="print">Print</button>
+        <button class="status-button" type="button" data-action="copy">Copy order</button>
+      </div>
       <div class="order-actions" aria-label="Update order status">
         ${renderStatusButton(order.id, status, "new", "New")}
         ${renderStatusButton(order.id, status, "preparing", "Preparing")}
@@ -169,6 +192,51 @@ function renderOrder(order) {
       </div>
     </article>
   `;
+}
+
+function formatPrintableOrder(order, paymentLabel, date) {
+  return [
+    "CAFE ELITE",
+    "33 High Street, Leominster HR6 8LZ",
+    "------------------------------",
+    `Order time: ${date}`,
+    `Payment: ${paymentLabel}`,
+    `Status: ${order.status || "new"}`,
+    `Name: ${order.customerName || "Not provided"}`,
+    `Phone: ${order.phone || "Not provided"}`,
+    `Collection: ${order.collectionTime || "Not provided"}`,
+    `Total: ${order.amount || "Pay at collection"}`,
+    "------------------------------",
+    "Items:",
+    order.items || order.message || "No items",
+    order.notes ? `Notes: ${order.notes}` : "Notes: None",
+    "------------------------------",
+  ].join("\n");
+}
+
+function printOrder(orderText) {
+  const printWindow = window.open("", "_blank", "width=420,height=680");
+  if (!printWindow) {
+    showMessage("Print window was blocked. Use Copy order instead.");
+    return;
+  }
+
+  printWindow.document.write(`
+    <!doctype html>
+    <html>
+      <head>
+        <title>CAFE ELITE Order</title>
+        <style>
+          body { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; margin: 18px; color: #111; }
+          pre { white-space: pre-wrap; font-size: 14px; line-height: 1.35; }
+        </style>
+      </head>
+      <body><pre>${escapeHtml(orderText)}</pre></body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
 }
 
 function renderStatusButton(orderId, currentStatus, status, label) {

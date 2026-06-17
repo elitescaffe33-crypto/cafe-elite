@@ -408,6 +408,67 @@ h1 {
   background: var(--red);
 }
 
+.hours-public-card {
+  position: relative;
+  padding: 24px;
+  background: linear-gradient(180deg, rgba(17, 42, 66, 0.96), rgba(8, 24, 42, 0.96));
+  border: 1px solid rgba(217, 164, 65, 0.5);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.hours-public-card::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  pointer-events: none;
+  border: 1px solid rgba(217, 164, 65, 0.25);
+  border-radius: 5px;
+}
+
+.hours-public-list {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 8px;
+}
+
+.public-hours-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px dashed rgba(255, 247, 231, 0.22);
+}
+
+.public-hours-row:last-child {
+  border-bottom: 0;
+}
+
+.public-hours-row strong {
+  color: var(--gold-bright);
+}
+
+.public-hours-row small {
+  color: rgba(255, 247, 231, 0.68);
+}
+
+.public-hours-row.is-today {
+  padding-inline: 10px;
+  background: rgba(242, 200, 91, 0.08);
+  border: 1px solid rgba(217, 164, 65, 0.32);
+  border-radius: 6px;
+}
+
+.hours-note {
+  position: relative;
+  z-index: 1;
+  margin: 18px 0 0;
+  color: rgba(255, 247, 231, 0.8);
+  font-weight: 800;
+}
+
 .section {
   width: min(1180px, calc(100% - 36px));
   margin: 0 auto;
@@ -896,11 +957,19 @@ textarea {
   font-size: 0.92rem;
 }
 
+.order-tools,
 .order-actions {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   margin-top: 14px;
+}
+
+.order-tools {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.order-actions {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .status-button {
@@ -1057,6 +1126,8 @@ textarea {
   .photo-grid,
   .admin-switches,
   .hours-row,
+  .public-hours-row,
+  .order-tools,
   .order-actions {
     grid-template-columns: 1fr;
   }
