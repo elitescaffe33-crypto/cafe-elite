@@ -1,15 +1,19 @@
 import { createServer } from "node:http";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { menuData, priceToPence } from "./menu-data.mjs";
-import { getOrderingStatus, siteSettings } from "./site-settings.mjs";
+import { defaultSiteSettings, getOrderingStatus, mergeSettings } from "./site-settings.mjs";
 
 const root = process.cwd();
+const dataDir = join(root, "data");
+const settingsFile = join(dataDir, "site-settings-live.json");
+const ordersFile = join(dataDir, "orders.json");
 const port = Number(process.env.PORT || 5820);
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY || "";
 const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
 const orderNotificationEmail = process.env.ORDER_NOTIFICATION_EMAIL || "elitescaffe33@gmail.com";
+const adminPassword = process.env.ADMIN_PASSWORD || "";
 const smtpHost = process.env.SMTP_HOST || "";
 const smtpPort = Number(process.env.SMTP_PORT || 465);
 const smtpUser = process.env.SMTP_USER || "";
@@ -42,6 +46,53 @@ const catalog = new Map(
     ]),
   ),
 );
+
+async function readJsonFile(filePath, fallback) {
+  try {
+    return JSON.parse(await readFile(filePath, "utf8"));
+  } catch {
+    return fallback;
+  }
+}
+
+async function writeJsonFile(filePath, data) {
+  await mkdir(dataDir, { recursive: true });
+  await writeFile(filePath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
+}
+
+async function loadSettings() {
+  const savedSettings = await readJsonFile(settingsFile, {});
+  return mergeSettings(defaultSiteSettings, savedSettings);
+}
+
+async function saveSettings(settings) {
+  const mergedSettings = mergeSettings(defaultSiteSettings, settings);
+  await writeJsonFile(settingsFile, mergedSettings);
+  return mergedSettings;
+}
+
+function isAdminRequest(request) {
+  return Boolean(adminPassword) && request.headers["x-admin-password"] === adminPassword;
+}
+
+function requireAdmin(request, response) {
+  if (isAdminRequest(request)) return true;
+  response.writeHead(401, { "content-type": "application/json" });
+  response.end(JSON.stringify({ error: "Admin password is required" }));
+  return false;
+}
+
+async function saveOrder(order) {
+  const orders = await readJsonFile(ordersFile, []);
+  const nextOrder = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    createdAt: new Date().toISOString(),
+    ...order,
+  };
+  orders.unshift(nextOrder);
+  await writeJsonFile(ordersFile, orders.slice(0, 500));
+  return nextOrder;
+}
 
 function getOrigin(request) {
   const proto = request.headers["x-forwarded-proto"] || "http";
@@ -118,13 +169,15 @@ async function createCheckoutSession(request, response) {
     return;
   }
 
-  if (!siteSettings.payments.stripe) {
+  const settings = await loadSettings();
+
+  if (!settings.payments.stripe) {
     response.writeHead(403, { "content-type": "application/json" });
     response.end(JSON.stringify({ error: "Online payment is currently unavailable" }));
     return;
   }
 
-  const orderingStatus = getOrderingStatus();
+  const orderingStatus = getOrderingStatus(new Date(), settings);
   if (!orderingStatus.isOpen) {
     response.writeHead(403, { "content-type": "application/json" });
     response.end(JSON.stringify({ error: orderingStatus.message }));
@@ -184,6 +237,81 @@ async function createCheckoutSession(request, response) {
   }
 }
 
+async function createCollectionOrder(request, response) {
+  const settings = await loadSettings();
+
+  if (!settings.payments.payOnCollection) {
+    response.writeHead(403, { "content-type": "application/json" });
+    response.end(JSON.stringify({ error: "Pay on collection is currently unavailable" }));
+    return;
+  }
+
+  const orderingStatus = getOrderingStatus(new Date(), settings);
+  if (!orderingStatus.isOpen) {
+    response.writeHead(403, { "content-type": "application/json" });
+    response.end(JSON.stringify({ error: orderingStatus.message }));
+    return;
+  }
+
+  try {
+    const payload = await readJson(request);
+    const message = payload.full_message || "New CAFE ELITE collection order";
+    const order = await saveOrder({
+      type: "pay-on-collection",
+      payment: "Pay on collection",
+      status: "pending",
+      customerName: payload.customer_name || "",
+      phone: payload.phone || "",
+      collectionTime: payload.collection_time || "",
+      items: payload.items || "",
+      notes: payload.notes || "",
+      message,
+    });
+
+    await sendOrderEmail({
+      subject: "New CAFE ELITE collection order",
+      text: message,
+    });
+
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(JSON.stringify({ ok: true, orderId: order.id }));
+  } catch (error) {
+    response.writeHead(400, { "content-type": "application/json" });
+    response.end(JSON.stringify({ error: error.message }));
+  }
+}
+
+async function sendOrderEmail({ subject, text }) {
+  if (resendApiKey) {
+    await sendResendMail({ subject, text });
+    return;
+  }
+
+  if (smtpHost && smtpUser && smtpPass) {
+    await sendSmtpMail({ subject, text });
+    return;
+  }
+
+  const formData = new URLSearchParams();
+  formData.set("_subject", subject);
+  formData.set("_captcha", "false");
+  formData.set("_template", "table");
+  formData.set("message", text);
+
+  const formSubmitResponse = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(orderNotificationEmail)}`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: formData,
+  });
+
+  if (!formSubmitResponse.ok) {
+    throw new Error(`Order notification failed with status ${formSubmitResponse.status}`);
+  }
+}
+
 async function stripeApi(pathname, options = {}) {
   const stripeResponse = await fetch(`https://api.stripe.com/v1${pathname}`, {
     ...options,
@@ -218,6 +346,21 @@ async function notifyPaidOrder(session) {
     items,
     `Notes: ${session.metadata?.notes || "None"}`,
   ].join("\n");
+
+  await saveOrder({
+    type: "paid-online",
+    payment: "Stripe",
+    status: "paid",
+    stripeSessionId: session.id,
+    amount: `${(session.amount_total / 100).toFixed(2)} GBP`,
+    customerName: session.metadata?.customer_name || "",
+    phone: session.metadata?.phone || session.customer_details?.phone || "",
+    email: session.customer_details?.email || "",
+    collectionTime: session.metadata?.collection_time || "",
+    items,
+    notes: session.metadata?.notes || "",
+    message,
+  });
 
   if (resendApiKey) {
     console.log(`Sending paid order email to ${orderNotificationEmail} using Resend`);
@@ -368,6 +511,18 @@ createServer(async (request, response) => {
     return;
   }
 
+  if (request.method === "GET" && request.url === "/api/settings") {
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(JSON.stringify(await loadSettings()));
+    return;
+  }
+
+  if (request.method === "POST" && request.url === "/api/collection-order") {
+    console.log("Collection order request received");
+    await createCollectionOrder(request, response);
+    return;
+  }
+
   if (request.method === "POST" && request.url === "/api/create-checkout-session") {
     console.log("Create checkout session request received");
     await createCheckoutSession(request, response);
@@ -377,6 +532,29 @@ createServer(async (request, response) => {
   if (request.method === "POST" && request.url === "/api/stripe-webhook") {
     console.log("Stripe webhook request received");
     await handleStripeWebhook(request, response);
+    return;
+  }
+
+  if (request.method === "GET" && request.url === "/api/admin/settings") {
+    if (!requireAdmin(request, response)) return;
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(JSON.stringify(await loadSettings()));
+    return;
+  }
+
+  if (request.method === "POST" && request.url === "/api/admin/settings") {
+    if (!requireAdmin(request, response)) return;
+    const settings = await readJson(request);
+    const savedSettings = await saveSettings(settings);
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(JSON.stringify(savedSettings));
+    return;
+  }
+
+  if (request.method === "GET" && request.url === "/api/admin/orders") {
+    if (!requireAdmin(request, response)) return;
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(JSON.stringify(await readJsonFile(ordersFile, [])));
     return;
   }
 

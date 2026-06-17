@@ -762,6 +762,108 @@ textarea {
   font-weight: 800;
 }
 
+.admin-page h1 {
+  font-size: clamp(3.2rem, 9vw, 7rem);
+}
+
+.admin-hero p:not(.eyebrow),
+.admin-message {
+  color: rgba(255, 247, 231, 0.8);
+  line-height: 1.7;
+}
+
+.admin-login {
+  padding-top: 0;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 0.85fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.section-heading.compact {
+  margin-bottom: 18px;
+}
+
+.admin-switches {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.admin-switches label {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  color: var(--cream);
+}
+
+.admin-switches input {
+  width: 20px;
+  height: 20px;
+}
+
+.hours-table {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.hours-row {
+  display: grid;
+  grid-template-columns: 110px repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+  padding: 10px 0;
+  border-bottom: 1px dashed rgba(255, 247, 231, 0.2);
+}
+
+.hours-row strong {
+  color: var(--gold-bright);
+}
+
+.orders-list {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.order-history-card {
+  padding: 14px;
+  background: rgba(7, 21, 39, 0.54);
+  border: 1px solid rgba(217, 164, 65, 0.28);
+  border-radius: 6px;
+}
+
+.order-history-card div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--gold-bright);
+  font-weight: 800;
+}
+
+.order-history-card p {
+  margin: 8px 0;
+  color: rgba(255, 247, 231, 0.82);
+}
+
+.order-history-card pre {
+  white-space: pre-wrap;
+  margin: 10px 0 0;
+  color: rgba(255, 247, 231, 0.86);
+  font: inherit;
+  font-size: 0.92rem;
+}
+
 @media (max-width: 900px) {
   .nav-toggle {
     display: block;
@@ -794,7 +896,8 @@ textarea {
   .notice-band,
   .intro,
   .order-layout,
-  .visit {
+  .visit,
+  .admin-grid {
     grid-template-columns: 1fr;
   }
 
@@ -892,7 +995,9 @@ textarea {
 
   .menu-grid,
   .form-grid,
-  .photo-grid {
+  .photo-grid,
+  .admin-switches,
+  .hours-row {
     grid-template-columns: 1fr;
   }
 

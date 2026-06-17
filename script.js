@@ -1,12 +1,9 @@
 import { menuData } from "./menu-data.mjs";
-import { getOrderingStatus, siteSettings } from "./site-settings.mjs";
+import { defaultSiteSettings, getOrderingStatus, mergeSettings } from "./site-settings.mjs";
 
 // Add your cafe email here to receive order notifications.
 // Example: const ORDER_NOTIFICATION_EMAIL = "hello@cafeelite.co.uk";
 const ORDER_NOTIFICATION_EMAIL = "elitescaffe33@gmail.com";
-
-// Static-site order notifications. FormSubmit may send a one-time activation email first.
-const ORDER_NOTIFICATION_ENDPOINT = `https://formsubmit.co/${ORDER_NOTIFICATION_EMAIL}`;
 
 const STRIPE_CHECKOUT_ENDPOINT = "/api/create-checkout-session";
 
@@ -31,6 +28,7 @@ const deliveryStatus = document.querySelector("#deliveryStatus");
 const orderingStatus = document.querySelector("#orderingStatus");
 const collectionTimeInput = orderForm.querySelector('input[name="time"]');
 const basket = [];
+let activeSettings = defaultSiteSettings;
 
 function getItemLabel(item) {
   return item.price ? `${item.name} - ${item.price}` : item.name;
@@ -114,19 +112,19 @@ function renderBasket() {
 }
 
 function updateOrderingControls() {
-  const status = getOrderingStatus();
+  const status = getOrderingStatus(new Date(), activeSettings);
   const hasItems = basket.length > 0;
   const orderingDisabled = !status.isOpen || !hasItems;
 
-  collectionStatus.textContent = siteSettings.services.collection ? "Collection available" : "Collection unavailable";
-  deliveryStatus.textContent = siteSettings.services.delivery ? "Delivery available" : "Delivery currently unavailable";
+  collectionStatus.textContent = activeSettings.services.collection ? "Collection available" : "Collection unavailable";
+  deliveryStatus.textContent = activeSettings.services.delivery ? "Delivery available" : "Delivery currently unavailable";
   orderingStatus.textContent = status.message;
   orderingStatus.classList.toggle("is-closed", !status.isOpen);
 
-  checkoutButton.hidden = !siteSettings.payments.payOnCollection;
-  stripeCheckoutButton.hidden = !siteSettings.payments.stripe;
-  checkoutButton.disabled = orderingDisabled || !siteSettings.payments.payOnCollection;
-  stripeCheckoutButton.disabled = orderingDisabled || !siteSettings.payments.stripe;
+  checkoutButton.hidden = !activeSettings.payments.payOnCollection;
+  stripeCheckoutButton.hidden = !activeSettings.payments.stripe;
+  checkoutButton.disabled = orderingDisabled || !activeSettings.payments.payOnCollection;
+  stripeCheckoutButton.disabled = orderingDisabled || !activeSettings.payments.stripe;
 
   if (collectionTimeInput && status.today) {
     collectionTimeInput.min = status.today.open;
@@ -135,7 +133,7 @@ function updateOrderingControls() {
 }
 
 function ensureOrderingOpen() {
-  const status = getOrderingStatus();
+  const status = getOrderingStatus(new Date(), activeSettings);
   if (status.isOpen) return true;
   document.querySelector("#order").scrollIntoView({ behavior: "smooth", block: "start" });
   orderingStatus.textContent = status.message;
@@ -150,7 +148,7 @@ function updateMessage() {
   const phone = formData.get("phone") || "";
   const time = formData.get("time") || "";
   const notes = formData.get("notes") || "";
-  const service = siteSettings.services.delivery ? "Collection / delivery" : "Collection";
+  const service = activeSettings.services.delivery ? "Collection / delivery" : "Collection";
   const items = basket.length
     ? basket.map((item, index) => `${index + 1}. ${getItemLabel(item)}`).join("\n")
     : "No items selected";
@@ -187,7 +185,7 @@ async function sendCollectionOrder() {
 
   if (!ensureOrderingOpen()) return;
 
-  if (!siteSettings.payments.payOnCollection) {
+  if (!activeSettings.payments.payOnCollection) {
     alert("Pay on collection is currently unavailable.");
     return;
   }
@@ -204,10 +202,8 @@ async function sendCollectionOrder() {
     return;
   }
 
-  if (ORDER_NOTIFICATION_ENDPOINT) {
-    submitOrderForm();
-    return;
-  }
+  submitOrderForm();
+  return;
 
   if (ORDER_NOTIFICATION_EMAIL) {
     const subject = encodeURIComponent("New CAFE ELITE collection order");
@@ -230,7 +226,7 @@ function payOnlineWithStripe() {
 
   if (!ensureOrderingOpen()) return;
 
-  if (!siteSettings.payments.stripe) {
+  if (!activeSettings.payments.stripe) {
     alert("Online payment is currently unavailable.");
     return;
   }
@@ -286,13 +282,12 @@ function payOnlineWithStripe() {
 
 function submitOrderForm() {
   const formData = new FormData(orderForm);
-  const hiddenForm = document.createElement("form");
   const fields = {
     _subject: "New CAFE ELITE collection order",
     _captcha: "false",
     _template: "table",
     _next: window.location.href.split("#")[0] + "#order-sent",
-    service: siteSettings.services.delivery ? "Collection / delivery" : "Collection",
+    service: activeSettings.services.delivery ? "Collection / delivery" : "Collection",
     payment: "Pay on collection",
     customer_name: formData.get("customerName") || "",
     phone: formData.get("phone") || "",
@@ -302,22 +297,30 @@ function submitOrderForm() {
     full_message: orderMessage.value,
   };
 
-  hiddenForm.method = "POST";
-  hiddenForm.action = ORDER_NOTIFICATION_ENDPOINT;
-  hiddenForm.style.display = "none";
-
-  Object.entries(fields).forEach(([name, value]) => {
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = name;
-    input.value = value;
-    hiddenForm.appendChild(input);
-  });
-
   checkoutButton.disabled = true;
   checkoutButton.textContent = "Sending order...";
-  document.body.appendChild(hiddenForm);
-  hiddenForm.submit();
+  fetch("/api/collection-order", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(fields),
+  })
+    .then((response) =>
+      response.json().then((data) => {
+        if (!response.ok) throw new Error(data.error || "Order could not be sent");
+        return data;
+      }),
+    )
+    .then(() => {
+      window.location.hash = "order-sent";
+      showOrderSentMessage();
+    })
+    .catch((error) => {
+      alert(`Order could not be sent: ${error.message}`);
+      checkoutButton.disabled = false;
+      checkoutButton.textContent = "Pay on collection";
+    });
 }
 
 function showOrderSentMessage() {
@@ -368,7 +371,20 @@ siteNav.addEventListener("click", () => {
 });
 
 renderMenu();
-renderBasket();
-updateOrderingControls();
-window.setInterval(updateOrderingControls, 60_000);
-showOrderSentMessage();
+loadSettings().then(() => {
+  renderBasket();
+  updateOrderingControls();
+  window.setInterval(updateOrderingControls, 60_000);
+  showOrderSentMessage();
+});
+
+async function loadSettings() {
+  try {
+    const response = await fetch("/api/settings");
+    if (!response.ok) throw new Error("Settings unavailable");
+    const settings = await response.json();
+    activeSettings = mergeSettings(defaultSiteSettings, settings);
+  } catch {
+    activeSettings = defaultSiteSettings;
+  }
+}

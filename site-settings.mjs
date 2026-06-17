@@ -1,4 +1,4 @@
-export const siteSettings = {
+export const defaultSiteSettings = {
   timezone: "Europe/London",
 
   ordering: {
@@ -26,6 +26,34 @@ export const siteSettings = {
   },
 };
 
+export let siteSettings = defaultSiteSettings;
+
+export function setSiteSettings(nextSettings) {
+  siteSettings = mergeSettings(defaultSiteSettings, nextSettings || {});
+}
+
+export function mergeSettings(base, overrides) {
+  const output = Array.isArray(base) ? [...base] : { ...base };
+
+  Object.entries(overrides || {}).forEach(([key, value]) => {
+    if (
+      value &&
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      base &&
+      typeof base[key] === "object" &&
+      !Array.isArray(base[key])
+    ) {
+      output[key] = mergeSettings(base[key], value);
+      return;
+    }
+
+    output[key] = value;
+  });
+
+  return output;
+}
+
 export const dayKeys = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
 export function timeToMinutes(time) {
@@ -35,22 +63,22 @@ export function timeToMinutes(time) {
   return hours * 60 + minutes;
 }
 
-export function getOrderingStatus(date = new Date()) {
-  if (!siteSettings.ordering.enabled) {
+export function getOrderingStatus(date = new Date(), settings = siteSettings) {
+  if (!settings.ordering.enabled) {
     return {
       isOpen: false,
-      message: siteSettings.ordering.closedMessage,
+      message: settings.ordering.closedMessage,
       today: null,
     };
   }
 
   const weekday = new Intl.DateTimeFormat("en-GB", {
     weekday: "long",
-    timeZone: siteSettings.timezone,
+    timeZone: settings.timezone,
   })
     .format(date)
     .toLowerCase();
-  const today = siteSettings.ordering.days[weekday];
+  const today = settings.ordering.days[weekday];
 
   if (!today) {
     return {
@@ -64,7 +92,7 @@ export function getOrderingStatus(date = new Date()) {
     hour: "2-digit",
     minute: "2-digit",
     hourCycle: "h23",
-    timeZone: siteSettings.timezone,
+    timeZone: settings.timezone,
   }).format(date);
 
   const now = timeToMinutes(currentTime);
