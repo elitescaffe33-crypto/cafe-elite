@@ -1,6 +1,5 @@
 import { menuData } from "./menu-data.mjs";
-
-const ENABLE_DELIVERY = false;
+import { getOrderingStatus, siteSettings } from "./site-settings.mjs";
 
 // Add your cafe email here to receive order notifications.
 // Example: const ORDER_NOTIFICATION_EMAIL = "hello@cafeelite.co.uk";
@@ -27,6 +26,10 @@ const cartCount = document.querySelector("#cartCount");
 const checkoutButton = document.querySelector("#checkoutButton");
 const stripeCheckoutButton = document.querySelector("#stripeCheckoutButton");
 const openBasketFromForm = document.querySelector("#openBasketFromForm");
+const collectionStatus = document.querySelector("#collectionStatus");
+const deliveryStatus = document.querySelector("#deliveryStatus");
+const orderingStatus = document.querySelector("#orderingStatus");
+const collectionTimeInput = orderForm.querySelector('input[name="time"]');
 const basket = [];
 
 function getItemLabel(item) {
@@ -34,7 +37,7 @@ function getItemLabel(item) {
 }
 
 function priceToNumber(price) {
-  return Number(String(price || "").replace(/[£,\s]/g, "")) || 0;
+  return Number(String(price || "").replace(/[\u00a3,\s]/g, "")) || 0;
 }
 
 function getBasketTotal() {
@@ -104,11 +107,41 @@ function renderBasket() {
     .join("");
 
   cartCount.textContent = String(basket.length);
-  basketTotal.textContent = `Total: £${getBasketTotal().toFixed(2)}`;
+  basketTotal.textContent = `Total: \u00a3${getBasketTotal().toFixed(2)}`;
   basketEmpty.hidden = basket.length > 0;
-  checkoutButton.disabled = basket.length === 0;
-  stripeCheckoutButton.disabled = basket.length === 0;
+  updateOrderingControls();
   updateMessage();
+}
+
+function updateOrderingControls() {
+  const status = getOrderingStatus();
+  const hasItems = basket.length > 0;
+  const orderingDisabled = !status.isOpen || !hasItems;
+
+  collectionStatus.textContent = siteSettings.services.collection ? "Collection available" : "Collection unavailable";
+  deliveryStatus.textContent = siteSettings.services.delivery ? "Delivery available" : "Delivery currently unavailable";
+  orderingStatus.textContent = status.message;
+  orderingStatus.classList.toggle("is-closed", !status.isOpen);
+
+  checkoutButton.hidden = !siteSettings.payments.payOnCollection;
+  stripeCheckoutButton.hidden = !siteSettings.payments.stripe;
+  checkoutButton.disabled = orderingDisabled || !siteSettings.payments.payOnCollection;
+  stripeCheckoutButton.disabled = orderingDisabled || !siteSettings.payments.stripe;
+
+  if (collectionTimeInput && status.today) {
+    collectionTimeInput.min = status.today.open;
+    collectionTimeInput.max = status.today.lastOrder;
+  }
+}
+
+function ensureOrderingOpen() {
+  const status = getOrderingStatus();
+  if (status.isOpen) return true;
+  document.querySelector("#order").scrollIntoView({ behavior: "smooth", block: "start" });
+  orderingStatus.textContent = status.message;
+  orderingStatus.classList.add("is-closed");
+  window.setTimeout(() => orderingStatus.classList.remove("is-closed"), 1800);
+  return false;
 }
 
 function updateMessage() {
@@ -117,7 +150,7 @@ function updateMessage() {
   const phone = formData.get("phone") || "";
   const time = formData.get("time") || "";
   const notes = formData.get("notes") || "";
-  const service = ENABLE_DELIVERY ? "Collection / delivery" : "Collection";
+  const service = siteSettings.services.delivery ? "Collection / delivery" : "Collection";
   const items = basket.length
     ? basket.map((item, index) => `${index + 1}. ${getItemLabel(item)}`).join("\n")
     : "No items selected";
@@ -130,7 +163,7 @@ function updateMessage() {
     `Name: ${name}`,
     `Phone: ${phone}`,
     `Collection time: ${time}`,
-    `Total: £${total}`,
+    `Total: \u00a3${total}`,
     "Items:",
     items,
     `Notes: ${notes}`,
@@ -149,6 +182,13 @@ async function sendCollectionOrder() {
 
   if (!basket.length) {
     alert("Please add at least one item to the basket.");
+    return;
+  }
+
+  if (!ensureOrderingOpen()) return;
+
+  if (!siteSettings.payments.payOnCollection) {
+    alert("Pay on collection is currently unavailable.");
     return;
   }
 
@@ -185,6 +225,13 @@ function payOnlineWithStripe() {
 
   if (!basket.length) {
     alert("Please add at least one item to the basket.");
+    return;
+  }
+
+  if (!ensureOrderingOpen()) return;
+
+  if (!siteSettings.payments.stripe) {
+    alert("Online payment is currently unavailable.");
     return;
   }
 
@@ -245,7 +292,7 @@ function submitOrderForm() {
     _captcha: "false",
     _template: "table",
     _next: window.location.href.split("#")[0] + "#order-sent",
-    service: ENABLE_DELIVERY ? "Collection / delivery" : "Collection",
+    service: siteSettings.services.delivery ? "Collection / delivery" : "Collection",
     payment: "Pay on collection",
     customer_name: formData.get("customerName") || "",
     phone: formData.get("phone") || "",
@@ -322,4 +369,6 @@ siteNav.addEventListener("click", () => {
 
 renderMenu();
 renderBasket();
+updateOrderingControls();
+window.setInterval(updateOrderingControls, 60_000);
 showOrderSentMessage();

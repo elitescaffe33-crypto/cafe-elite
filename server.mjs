@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { menuData, priceToPence } from "./menu-data.mjs";
+import { getOrderingStatus, siteSettings } from "./site-settings.mjs";
 
 const root = process.cwd();
 const port = Number(process.env.PORT || 5820);
@@ -114,6 +115,19 @@ async function createCheckoutSession(request, response) {
   if (!stripeSecretKey) {
     response.writeHead(500, { "content-type": "application/json" });
     response.end(JSON.stringify({ error: "Stripe secret key is not configured" }));
+    return;
+  }
+
+  if (!siteSettings.payments.stripe) {
+    response.writeHead(403, { "content-type": "application/json" });
+    response.end(JSON.stringify({ error: "Online payment is currently unavailable" }));
+    return;
+  }
+
+  const orderingStatus = getOrderingStatus();
+  if (!orderingStatus.isOpen) {
+    response.writeHead(403, { "content-type": "application/json" });
+    response.end(JSON.stringify({ error: orderingStatus.message }));
     return;
   }
 

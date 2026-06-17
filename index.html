@@ -52,7 +52,7 @@
       </div>
       <ul id="basketList"></ul>
       <p class="basket-empty" id="basketEmpty">No items added yet. Tap any menu item to add it.</p>
-      <p class="basket-total" id="basketTotal">Total: £0.00</p>
+      <p class="basket-total" id="basketTotal">Total: &pound;0.00</p>
       <textarea id="orderMessage" readonly rows="8" aria-label="Prepared order message"></textarea>
       <button class="button primary checkout-button" type="button" id="checkoutButton">Pay on collection</button>
       <button class="button stripe checkout-button" type="button" id="stripeCheckoutButton">
@@ -84,14 +84,14 @@
       </section>
 
       <section class="notice-band" aria-label="Service notice">
-        <span>Collection available</span>
-        <span>Delivery currently unavailable</span>
-        <span>Prices editable in <code>script.js</code></span>
+        <span id="collectionStatus">Collection available</span>
+        <span id="deliveryStatus">Delivery currently unavailable</span>
+        <span id="orderingStatus">Online ordering open until 15:45</span>
       </section>
 
       <section class="section menu-section" id="menu" aria-labelledby="menu-title">
         <div class="section-heading">
-          <p class="eyebrow">Editable price list</p>
+          <p class="eyebrow">Tap to add items</p>
           <h2 id="menu-title">Menu</h2>
         </div>
         <div class="menu-grid" id="menuGrid"></div>

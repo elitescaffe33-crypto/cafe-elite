@@ -403,6 +403,11 @@ h1 {
   text-align: center;
 }
 
+.notice-band span.is-closed {
+  color: var(--cream);
+  background: var(--red);
+}
+
 .section {
   width: min(1180px, calc(100% - 36px));
   margin: 0 auto;
