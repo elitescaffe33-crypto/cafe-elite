@@ -13,6 +13,8 @@ const smtpHost = process.env.SMTP_HOST || "";
 const smtpPort = Number(process.env.SMTP_PORT || 465);
 const smtpUser = process.env.SMTP_USER || "";
 const smtpPass = process.env.SMTP_PASS || "";
+const resendApiKey = process.env.RESEND_API_KEY || "";
+const resendFromEmail = process.env.RESEND_FROM_EMAIL || "CAFE ELITE Orders <onboarding@resend.dev>";
 const currency = "gbp";
 
 const contentTypes = {
@@ -203,6 +205,16 @@ async function notifyPaidOrder(session) {
     `Notes: ${session.metadata?.notes || "None"}`,
   ].join("\n");
 
+  if (resendApiKey) {
+    console.log(`Sending paid order email to ${orderNotificationEmail} using Resend`);
+    await sendResendMail({
+      subject: "Paid CAFE ELITE online order",
+      text: message,
+    });
+    console.log(`Paid order Resend email sent to ${orderNotificationEmail}`);
+    return;
+  }
+
   if (smtpHost && smtpUser && smtpPass) {
     console.log(`Sending paid order email to ${orderNotificationEmail} using SMTP ${smtpHost}:${smtpPort}`);
     try {
@@ -250,6 +262,27 @@ async function sendFormSubmitNotification(session, message, items) {
   }
 
   console.log(`Paid order FormSubmit notification sent to ${orderNotificationEmail}`);
+}
+
+async function sendResendMail({ subject, text }) {
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: resendFromEmail,
+      to: [orderNotificationEmail],
+      subject,
+      text,
+    }),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.message || data.error || `Resend failed with status ${response.status}`);
+  }
 }
 
 async function sendSmtpMail({ subject, text }) {
