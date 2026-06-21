@@ -1,0 +1,16 @@
+[Unit]
+Description=CAFE ELITE receipt printer bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/cafe-elite
+EnvironmentFile=/home/pi/cafe-elite/.printer-env
+ExecStart=/usr/bin/node /home/pi/cafe-elite/printer-bridge.mjs
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
