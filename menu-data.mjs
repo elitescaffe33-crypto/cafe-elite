@@ -4,8 +4,10 @@ export const menuData = [
     items: [
       { name: "Tomato Pasta", price: "£6.99", image: "assets/tomato-pasta.jpg" },
       { name: "Garlic Yogurt Pasta", price: "£6.99", image: "assets/garlic-yogurt-pasta.jpg" },
-      { name: "Any Two Bowls (Most Popular)", price: "£11.99" },
-      { name: "Family Feast (Best Value)", price: "£21.99" },
+      { name: "Any Two Bowls: Tomato + Tomato", price: "£11.99", description: "Choose this if both bowls are Tomato Pasta." },
+      { name: "Any Two Bowls: Tomato + Garlic Yogurt", price: "£11.99", description: "One Tomato Pasta and one Garlic Yogurt Pasta." },
+      { name: "Any Two Bowls: Garlic Yogurt + Garlic Yogurt", price: "£11.99", description: "Choose this if both bowls are Garlic Yogurt Pasta." },
+      { name: "Family Feast - Any 4 Bowls", price: "£21.99", description: "Please write the 4 bowl choices in order notes." },
     ],
   },
   {

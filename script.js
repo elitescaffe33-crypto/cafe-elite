@@ -82,6 +82,7 @@ function renderMenu() {
                     <button class="menu-item-button ${item.image ? "has-image" : ""}" type="button" data-group="${groupIndex}" data-item="${itemIndex}">
                       <span class="menu-item-copy">
                         <span class="menu-item-name">${item.name}</span>
+                        ${item.description ? `<span class="menu-item-description">${item.description}</span>` : ""}
                         <span class="price ${item.price ? "" : "is-empty"}">${item.price || "Add price"}</span>
                       </span>
                       ${

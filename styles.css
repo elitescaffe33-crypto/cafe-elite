@@ -639,6 +639,12 @@ h2 {
   overflow-wrap: anywhere;
 }
 
+.menu-item-description {
+  color: rgba(255, 247, 231, 0.7);
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
 .menu-item-button.has-image {
   grid-template-columns: minmax(0, 1fr) 116px;
   min-height: 106px;
@@ -1175,17 +1181,25 @@ textarea {
   }
 
   .menu-item-button.has-image {
+    grid-template-columns: minmax(0, 1fr) 104px;
+    align-items: center;
+    min-height: 100px;
+  }
+
+  .menu-item-photo {
+    order: initial;
+    width: 104px;
+    height: 92px;
+  }
+
+  .menu-card--pasta-menu .menu-item-button.has-image {
     grid-template-columns: 1fr;
     align-items: stretch;
   }
 
-  .menu-item-photo {
+  .menu-card--pasta-menu .menu-item-photo {
     order: -1;
     width: 100%;
-    height: 156px;
-  }
-
-  .menu-card--pasta-menu .menu-item-photo {
     height: 178px;
   }
 }
