@@ -72,7 +72,7 @@ function renderMenu() {
   menuGrid.innerHTML = menuData
     .map(
       (group, groupIndex) => `
-        <article class="menu-card">
+        <article class="menu-card menu-card--${group.category.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}">
           <h3>${group.category}</h3>
           <ul>
             ${group.items

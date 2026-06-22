@@ -11,9 +11,9 @@ export const menuData = [
   {
     category: "Sandwich Menu",
     items: [
-      { name: "Vegetarian Egg", price: "£2.99" },
+      { name: "Vegetarian Egg", price: "£2.99", image: "assets/vegetarian-egg.jpg" },
       { name: "Tuna & Gherkin", price: "£2.99" },
-      { name: "Classic Ham & Cheese", price: "£2.99" },
+      { name: "Classic Ham & Cheese", price: "£2.99", image: "assets/classic-ham-cheese.jpg" },
     ],
   },
   {
@@ -57,20 +57,20 @@ export const menuData = [
   {
     category: "Ice Cream",
     items: [
-      { name: "Cornetto Hazelnut & Chocolate", price: "£2.99", image: "assets/cornetto-hazelnut-chocolate.jpg" },
-      { name: "Solero Exotic", price: "£2.99", image: "assets/solero-exotic.jpg" },
+      { name: "Cornetto Hazelnut & Chocolate", price: "£1.99", image: "assets/cornetto-hazelnut-chocolate.jpg" },
+      { name: "Solero Exotic", price: "£1.99", image: "assets/solero-exotic.jpg" },
     ],
   },
   {
     category: "Cakes",
     items: [
-      { name: "Carrot Cake", price: "£2.99" },
-      { name: "Orange Cake", price: "£2.99" },
+      { name: "Carrot Cake", price: "£2.99", image: "assets/carrot-cake.jpg" },
+      { name: "Orange Cake", price: "£2.99", image: "assets/orange-cake.jpg" },
       { name: "Victoria Sponge Cake", price: "£2.99", image: "assets/victoria-sponge-cake.jpg" },
       { name: "Fudge Cake", price: "£2.99", image: "assets/fudge-cake.jpg" },
       { name: "Lemon Cake", price: "£2.99", image: "assets/lemon-cake.jpg" },
       { name: "Apple Pie", price: "£2.99" },
-      { name: "Tiramisu", price: "£2.99" },
+      { name: "Tiramisu", price: "£2.99", image: "assets/tiramisu.jpg" },
     ],
   },
   {
