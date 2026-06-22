@@ -79,9 +79,16 @@ function renderMenu() {
               .map(
                 (item, itemIndex) => `
                   <li>
-                    <button class="menu-item-button" type="button" data-group="${groupIndex}" data-item="${itemIndex}">
-                      <span>${item.name}</span>
-                      <span class="price ${item.price ? "" : "is-empty"}">${item.price || "Add price"}</span>
+                    <button class="menu-item-button ${item.image ? "has-image" : ""}" type="button" data-group="${groupIndex}" data-item="${itemIndex}">
+                      <span class="menu-item-copy">
+                        <span class="menu-item-name">${item.name}</span>
+                        <span class="price ${item.price ? "" : "is-empty"}">${item.price || "Add price"}</span>
+                      </span>
+                      ${
+                        item.image
+                          ? `<img class="menu-item-photo" src="${item.image}" alt="${item.name}">`
+                          : ""
+                      }
                     </button>
                   </li>
                 `,

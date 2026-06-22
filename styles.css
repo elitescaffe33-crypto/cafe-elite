@@ -619,7 +619,7 @@ h2 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
-  align-items: baseline;
+  align-items: center;
   padding: 0;
   color: inherit;
   background: transparent;
@@ -629,7 +629,31 @@ h2 {
   cursor: pointer;
 }
 
-.menu-item-button:hover span:first-child {
+.menu-item-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.menu-item-name {
+  overflow-wrap: anywhere;
+}
+
+.menu-item-button.has-image {
+  grid-template-columns: minmax(0, 1fr) 72px;
+  min-height: 76px;
+}
+
+.menu-item-photo {
+  width: 72px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 7px;
+  border: 1px solid rgba(217, 164, 65, 0.45);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+}
+
+.menu-item-button:hover .menu-item-name {
   color: var(--gold-bright);
 }
 
