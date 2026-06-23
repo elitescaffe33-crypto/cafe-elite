@@ -287,19 +287,33 @@ function verifyStripeSignature(payload, signatureHeader) {
   }
 }
 
+function normalizeOrderItem(item) {
+  if (typeof item === "string") return { name: item, details: "" };
+  return {
+    name: String(item?.name || ""),
+    details: String(item?.details || ""),
+  };
+}
+
 function aggregateItems(itemNames, settings) {
   const catalog = buildCatalog(settings);
   const counts = new Map();
 
-  itemNames.forEach((name) => {
+  itemNames.map(normalizeOrderItem).forEach(({ name, details }) => {
     if (!catalog.has(name)) throw new Error(`Unknown item: ${name}`);
-    counts.set(name, (counts.get(name) || 0) + 1);
+    const key = `${name}::${details}`;
+    const existing = counts.get(key) || {
+      ...catalog.get(name),
+      name,
+      displayName: details ? `${name} (${details})` : name,
+      details,
+      quantity: 0,
+    };
+    existing.quantity += 1;
+    counts.set(key, existing);
   });
 
-  return [...counts.entries()].map(([name, quantity]) => ({
-    ...catalog.get(name),
-    quantity,
-  }));
+  return [...counts.values()];
 }
 
 async function createCheckoutSession(request, response) {
@@ -343,14 +357,14 @@ async function createCheckoutSession(request, response) {
     params.set("metadata[notes]", payload.customer?.notes || "");
     params.set("metadata[marketing_consent]", payload.customer?.marketingConsent ? "yes" : "no");
     params.set("metadata[source]", "CAFE ELITE website");
-    params.set("metadata[order_items]", items.map((item) => `${item.quantity}x ${item.name}`).join(", "));
+    params.set("metadata[order_items]", items.map((item) => `${item.quantity}x ${item.displayName || item.name}`).join(", "));
     if (payload.customer?.email) params.set("customer_email", payload.customer.email);
 
     items.forEach((item, index) => {
       params.set(`line_items[${index}][quantity]`, String(item.quantity));
       params.set(`line_items[${index}][price_data][currency]`, currency);
       params.set(`line_items[${index}][price_data][unit_amount]`, String(item.amount));
-      params.set(`line_items[${index}][price_data][product_data][name]`, item.name);
+      params.set(`line_items[${index}][price_data][product_data][name]`, item.displayName || item.name);
       params.set(`line_items[${index}][price_data][product_data][description]`, item.category);
     });
 

@@ -4,8 +4,37 @@ export const menuData = [
     items: [
       { name: "Tomato Pasta", price: "£6.99", image: "assets/tomato-pasta.jpg" },
       { name: "Garlic Yogurt Pasta", price: "£6.99", image: "assets/garlic-yogurt-pasta.jpg" },
+      { name: "Any 3 Bowls", price: "£18.99", description: "Please write your 3 bowl choices in order notes." },
       { name: "Any Two Bowls (Most Popular)", price: "£11.99", description: "Please write your 2 bowl choices in order notes." },
       { name: "Family Feast - Any 4 Bowls (Best Value)", price: "£21.99", description: "Please write your 4 bowl choices in order notes." },
+    ],
+  },
+  {
+    category: "Meal Deal",
+    items: [
+      {
+        name: "Any Pasta Bowl + Coffee + Any Snack",
+        price: "£10.50",
+        description: "Choose one pasta bowl, one coffee and one snack.",
+        deal: {
+          pasta: ["Tomato Pasta", "Garlic Yogurt Pasta"],
+          coffee: ["Latte", "Americano", "Cappuccino", "Flat White", "Espresso", "2X Espresso", "Mocha", "Hot Chocolate", "Ice Latte"],
+          snack: [
+            "Muffins",
+            "Cookies",
+            "Carrot Loaf Slice",
+            "Lemon Loaf Slice",
+            "Chocolate Loaf Slice",
+            "Chocolate Cupcake",
+            "Vanilla Cupcake",
+            "Pink Cupcake",
+            "Mini Cheddars",
+            "Ready Salted Chips",
+            "Cornetto Hazelnut & Chocolate",
+            "Solero Exotic",
+          ],
+        },
+      },
     ],
   },
   {
@@ -82,10 +111,6 @@ export const menuData = [
       { name: "Cornetto Hazelnut & Chocolate", price: "£1.99", image: "assets/cornetto-hazelnut-chocolate.jpg" },
       { name: "Solero Exotic", price: "£1.99", image: "assets/solero-exotic.jpg" },
     ],
-  },
-  {
-    category: "Meal Deal",
-    items: [{ name: "Coffee + Sandwich + Snack", price: "£6.99" }],
   },
   {
     category: "Extras",

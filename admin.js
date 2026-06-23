@@ -40,6 +40,7 @@ settingsForm.addEventListener("submit", async (event) => {
   });
   currentSettings = settings;
   showMessage("Settings saved.");
+  window.setTimeout(() => window.location.reload(), 450);
 });
 
 refreshOrders.addEventListener("click", loadOrders);

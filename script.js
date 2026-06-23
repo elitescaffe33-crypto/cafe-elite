@@ -34,7 +34,8 @@ let activeMenuData = menuData;
 let activeSettings = defaultSiteSettings;
 
 function getItemLabel(item) {
-  return getItemPrice(item) ? `${item.name} - ${getItemPrice(item)}` : item.name;
+  const details = item.details ? ` (${item.details})` : "";
+  return getItemPrice(item) ? `${item.name}${details} - ${getItemPrice(item)}` : `${item.name}${details}`;
 }
 
 function getItemPrice(item) {
@@ -83,20 +84,7 @@ function renderMenu() {
             ${group.items
               .map(
                 (item, itemIndex) => `
-                  <li>
-                    <button class="menu-item-button ${item.image ? "has-image" : ""}" type="button" data-group="${groupIndex}" data-item="${itemIndex}">
-                      <span class="menu-item-copy">
-                        <span class="menu-item-name">${item.name}</span>
-                        ${item.description ? `<span class="menu-item-description">${item.description}</span>` : ""}
-                        <span class="price ${getItemPrice(item) ? "" : "is-empty"}">${getItemPrice(item) || "Add price"}</span>
-                      </span>
-                      ${
-                        item.image
-                          ? `<img class="menu-item-photo" src="${item.image}" alt="${item.name}">`
-                          : ""
-                      }
-                    </button>
-                  </li>
+                  <li>${item.deal ? renderDealItem(item, groupIndex, itemIndex) : renderStandardItem(item, groupIndex, itemIndex)}</li>
                 `,
               )
               .join("")}
@@ -105,6 +93,40 @@ function renderMenu() {
       `,
     )
     .join("");
+}
+
+function renderStandardItem(item, groupIndex, itemIndex) {
+  return `
+    <button class="menu-item-button ${item.image ? "has-image" : ""}" type="button" data-group="${groupIndex}" data-item="${itemIndex}">
+      <span class="menu-item-copy">
+        <span class="menu-item-name">${item.name}</span>
+        ${item.description ? `<span class="menu-item-description">${item.description}</span>` : ""}
+        <span class="price ${getItemPrice(item) ? "" : "is-empty"}">${getItemPrice(item) || "Add price"}</span>
+      </span>
+      ${item.image ? `<img class="menu-item-photo" src="${item.image}" alt="${item.name}">` : ""}
+    </button>
+  `;
+}
+
+function renderDealItem(item, groupIndex, itemIndex) {
+  const options = (values) => values.map((value) => `<option value="${value}">${value}</option>`).join("");
+  return `
+    <div class="deal-builder" data-group="${groupIndex}" data-item="${itemIndex}">
+      <div class="deal-builder-head">
+        <span class="menu-item-copy">
+          <span class="menu-item-name">${item.name}</span>
+          ${item.description ? `<span class="menu-item-description">${item.description}</span>` : ""}
+          <span class="price">${getItemPrice(item)}</span>
+        </span>
+      </div>
+      <div class="deal-fields">
+        <label>Pasta <select data-choice="pasta">${options(item.deal.pasta)}</select></label>
+        <label>Coffee <select data-choice="coffee">${options(item.deal.coffee)}</select></label>
+        <label>Snack <select data-choice="snack">${options(item.deal.snack)}</select></label>
+      </div>
+      <button class="status-button deal-add" type="button">Add deal</button>
+    </div>
+  `;
 }
 
 function renderBasket() {
@@ -219,6 +241,25 @@ function addItemToBasket(groupIndex, itemIndex) {
   renderBasket();
 }
 
+function addDealToBasket(builder) {
+  const groupIndex = Number(builder.dataset.group);
+  const itemIndex = Number(builder.dataset.item);
+  const item = activeMenuData[groupIndex]?.items[itemIndex];
+  if (!item?.deal) return;
+
+  const choices = Object.fromEntries(
+    [...builder.querySelectorAll("[data-choice]")].map((select) => [select.dataset.choice, select.value]),
+  );
+
+  basket.push({
+    ...item,
+    details: `${choices.pasta} + ${choices.coffee} + ${choices.snack}`,
+    dealChoices: choices,
+  });
+  renderBasket();
+  openCart();
+}
+
 async function sendCollectionOrder() {
   updateMessage();
 
@@ -296,7 +337,10 @@ function payOnlineWithStripe() {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      items: basket.map((item) => item.name),
+      items: basket.map((item) => ({
+        name: item.name,
+        details: item.details || "",
+      })),
       customer: {
         name: new FormData(orderForm).get("customerName") || "",
         phone: new FormData(orderForm).get("phone") || "",
@@ -381,6 +425,12 @@ function showOrderSentMessage() {
 }
 
 menuGrid.addEventListener("click", (event) => {
+  const dealButton = event.target.closest(".deal-add");
+  if (dealButton) {
+    addDealToBasket(dealButton.closest(".deal-builder"));
+    return;
+  }
+
   const button = event.target.closest(".menu-item-button");
   if (!button) return;
   addItemToBasket(Number(button.dataset.group), Number(button.dataset.item));
