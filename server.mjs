@@ -40,9 +40,36 @@ function getMenuPrice(item, settings) {
   return settings?.menuPrices?.[item.name] || item.price;
 }
 
+function buildMenuData(settings) {
+  const hiddenItems = new Set(settings?.menuCustom?.hiddenItems || []);
+  const customItems = Array.isArray(settings?.menuCustom?.customItems) ? settings.menuCustom.customItems : [];
+  const groups = menuData.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => !hiddenItems.has(item.name)),
+  }));
+
+  customItems.forEach((item) => {
+    if (!item?.name || !item?.category || hiddenItems.has(item.name)) return;
+    let group = groups.find((entry) => entry.category.toLowerCase() === item.category.toLowerCase());
+    if (!group) {
+      group = { category: item.category, items: [] };
+      groups.push(group);
+    }
+    if (!group.items.some((entry) => entry.name === item.name)) {
+      group.items.push({
+        name: item.name,
+        price: item.price || "£0.00",
+        description: item.description || "",
+      });
+    }
+  });
+
+  return groups.filter((group) => group.items.length);
+}
+
 function buildCatalog(settings) {
   return new Map(
-    menuData.flatMap((group) =>
+    buildMenuData(settings).flatMap((group) =>
       group.items.map((item) => [
         item.name,
         {
@@ -708,6 +735,13 @@ createServer(async (request, response) => {
   if (request.method === "GET" && request.url === "/api/settings") {
     response.writeHead(200, { "content-type": "application/json" });
     response.end(JSON.stringify(await loadSettings()));
+    return;
+  }
+
+  if (request.method === "GET" && request.url === "/api/menu") {
+    const settings = await loadSettings();
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(JSON.stringify(buildMenuData(settings)));
     return;
   }
 

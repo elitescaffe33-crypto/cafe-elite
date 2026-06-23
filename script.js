@@ -32,6 +32,7 @@ const collectionTimeInput = orderForm.querySelector('input[name="time"]');
 const basket = [];
 let activeMenuData = menuData;
 let activeSettings = defaultSiteSettings;
+let openDealKey = "";
 
 function getItemLabel(item) {
   const details = item.details ? ` (${item.details})` : "";
@@ -39,7 +40,7 @@ function getItemLabel(item) {
 }
 
 function getItemPrice(item) {
-  return activeSettings.menuPrices?.[item.name] || item.price;
+  return activeSettings.menuPrices?.[item.name] || item.price || "";
 }
 
 function priceToNumber(price) {
@@ -110,21 +111,26 @@ function renderStandardItem(item, groupIndex, itemIndex) {
 
 function renderDealItem(item, groupIndex, itemIndex) {
   const options = (values) => values.map((value) => `<option value="${value}">${value}</option>`).join("");
+  const key = `${groupIndex}-${itemIndex}`;
+  const isOpen = openDealKey === key;
   return `
-    <div class="deal-builder" data-group="${groupIndex}" data-item="${itemIndex}">
-      <div class="deal-builder-head">
+    <div class="deal-builder ${isOpen ? "is-open" : ""}" data-group="${groupIndex}" data-item="${itemIndex}">
+      <button class="deal-toggle" type="button" aria-expanded="${isOpen ? "true" : "false"}">
         <span class="menu-item-copy">
           <span class="menu-item-name">${item.name}</span>
           ${item.description ? `<span class="menu-item-description">${item.description}</span>` : ""}
           <span class="price">${getItemPrice(item)}</span>
         </span>
+        <span class="deal-chevron">${isOpen ? "Close" : "Choose"}</span>
+      </button>
+      <div class="deal-panel">
+        <div class="deal-fields">
+          ${Object.entries(item.deal)
+            .map(([label, values]) => `<label>${label.replace(/^\w/, (letter) => letter.toUpperCase())} <select data-choice="${label}">${options(values)}</select></label>`)
+            .join("")}
+        </div>
+        <button class="status-button deal-add" type="button">Add deal</button>
       </div>
-      <div class="deal-fields">
-        <label>Pasta <select data-choice="pasta">${options(item.deal.pasta)}</select></label>
-        <label>Coffee <select data-choice="coffee">${options(item.deal.coffee)}</select></label>
-        <label>Snack <select data-choice="snack">${options(item.deal.snack)}</select></label>
-      </div>
-      <button class="status-button deal-add" type="button">Add deal</button>
     </div>
   `;
 }
@@ -253,7 +259,7 @@ function addDealToBasket(builder) {
 
   basket.push({
     ...item,
-    details: `${choices.pasta} + ${choices.coffee} + ${choices.snack}`,
+    details: Object.values(choices).join(" + "),
     dealChoices: choices,
   });
   renderBasket();
@@ -425,6 +431,15 @@ function showOrderSentMessage() {
 }
 
 menuGrid.addEventListener("click", (event) => {
+  const dealToggle = event.target.closest(".deal-toggle");
+  if (dealToggle) {
+    const builder = dealToggle.closest(".deal-builder");
+    const key = `${builder.dataset.group}-${builder.dataset.item}`;
+    openDealKey = openDealKey === key ? "" : key;
+    renderMenu();
+    return;
+  }
+
   const dealButton = event.target.closest(".deal-add");
   if (dealButton) {
     addDealToBasket(dealButton.closest(".deal-builder"));
@@ -478,15 +493,26 @@ loadSettings().then(() => {
 
 async function loadSettings() {
   try {
-    const response = await fetch("/api/settings");
-    if (!response.ok) throw new Error("Settings unavailable");
-    const settings = await response.json();
+    const [settingsResponse, menuResponse] = await Promise.all([fetch("/api/settings"), fetch("/api/menu")]);
+    if (!settingsResponse.ok) throw new Error("Settings unavailable");
+    if (!menuResponse.ok) throw new Error("Menu unavailable");
+    const settings = await settingsResponse.json();
     activeSettings = mergeSettings(defaultSiteSettings, settings);
-    activeMenuData = applyMenuPrices(menuData, activeSettings.menuPrices || {});
+    activeMenuData = await menuResponse.json();
     renderMenu();
+    return;
   } catch {
-    activeSettings = defaultSiteSettings;
-    activeMenuData = menuData;
+    try {
+      const response = await fetch("/api/settings");
+      if (!response.ok) throw new Error("Settings unavailable");
+      const settings = await response.json();
+      activeSettings = mergeSettings(defaultSiteSettings, settings);
+      activeMenuData = applyMenuPrices(menuData, activeSettings.menuPrices || {});
+      renderMenu();
+    } catch {
+      activeSettings = defaultSiteSettings;
+      activeMenuData = menuData;
+    }
   }
 }
 

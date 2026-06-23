@@ -679,12 +679,54 @@ h2 {
 
 .deal-builder {
   display: grid;
-  gap: 14px;
+  gap: 0;
 }
 
-.deal-builder-head {
+.deal-toggle {
+  width: 100%;
   display: grid;
-  gap: 4px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.deal-toggle:hover .menu-item-name {
+  color: var(--gold-bright);
+}
+
+.deal-chevron {
+  align-self: center;
+  padding: 7px 9px;
+  color: #091827;
+  background: var(--gold-bright);
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.deal-panel {
+  display: grid;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height 220ms ease,
+    opacity 180ms ease,
+    padding-top 180ms ease;
+}
+
+.deal-builder.is-open .deal-panel {
+  max-height: 520px;
+  padding-top: 12px;
+  opacity: 1;
 }
 
 .deal-fields {
@@ -711,6 +753,7 @@ h2 {
 
 .deal-add {
   justify-self: start;
+  margin-top: 10px;
 }
 
 .menu-item-button:focus-visible {
@@ -919,9 +962,60 @@ textarea {
 
 .admin-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 0.85fr);
-  gap: 20px;
+  grid-template-columns: 1fr;
+  gap: 14px;
   align-items: start;
+}
+
+.admin-accordion {
+  position: relative;
+  background: linear-gradient(180deg, rgba(17, 42, 66, 0.96), rgba(8, 24, 42, 0.96));
+  border: 1px solid rgba(217, 164, 65, 0.5);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.admin-accordion summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 18px 20px;
+  color: var(--gold-bright);
+  cursor: pointer;
+  font-weight: 900;
+  list-style: none;
+}
+
+.admin-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.admin-accordion summary::after {
+  content: "+";
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  color: #091827;
+  background: var(--gold-bright);
+  border-radius: 6px;
+}
+
+.admin-accordion[open] summary::after {
+  content: "-";
+}
+
+.admin-accordion summary small {
+  color: rgba(255, 247, 231, 0.7);
+  font-weight: 700;
+}
+
+.admin-accordion > .order-panel,
+.admin-accordion > form.order-panel {
+  margin: 0 12px 12px;
+  box-shadow: none;
 }
 
 .section-heading.compact {
@@ -992,6 +1086,24 @@ textarea {
   margin-top: 16px;
 }
 
+.add-product-panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 14px;
+  background: rgba(7, 21, 39, 0.42);
+  border: 1px solid rgba(217, 164, 65, 0.24);
+  border-radius: 6px;
+}
+
+.add-product-panel h3 {
+  margin: 0;
+  color: var(--gold-bright);
+  font-size: 1rem;
+}
+
 .price-group {
   display: grid;
   gap: 10px;
@@ -1009,7 +1121,7 @@ textarea {
 
 .price-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 96px;
+  grid-template-columns: minmax(0, 1fr) 110px auto;
   gap: 10px;
   align-items: center;
 }
@@ -1021,6 +1133,10 @@ textarea {
 .price-row input {
   min-height: 38px;
   padding: 8px 10px;
+}
+
+.remove-product {
+  min-width: 82px;
 }
 
 .order-history-card {
@@ -1275,6 +1391,7 @@ textarea {
   .photo-grid,
   .admin-switches,
   .hours-row,
+  .price-row,
   .public-hours-row,
   .order-tools,
   .order-actions {

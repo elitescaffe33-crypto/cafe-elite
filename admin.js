@@ -14,6 +14,7 @@ const refreshOrders = document.querySelector("#refreshOrders");
 const contactsList = document.querySelector("#contactsList");
 const refreshContacts = document.querySelector("#refreshContacts");
 const copyContacts = document.querySelector("#copyContacts");
+const addProductButton = document.querySelector("#addProductButton");
 const adminMessage = document.querySelector("#adminMessage");
 
 let adminPassword = window.localStorage.getItem("cafeEliteAdminPassword") || "";
@@ -29,6 +30,13 @@ loginButton.addEventListener("click", () => {
   adminPassword = passwordInput.value.trim();
   window.localStorage.setItem("cafeEliteAdminPassword", adminPassword);
   openAdmin();
+});
+
+document.querySelectorAll(".is-admin-nav a[href^='#']").forEach((link) => {
+  link.addEventListener("click", () => {
+    const panel = document.querySelector(link.getAttribute("href"));
+    if (panel?.tagName === "DETAILS") panel.open = true;
+  });
 });
 
 settingsForm.addEventListener("submit", async (event) => {
@@ -50,12 +58,63 @@ pricesForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const settings = mergeSettings(defaultSiteSettings, currentSettings);
   settings.menuPrices = readPricesFromForm();
+  settings.menuCustom = getMenuCustom();
   await adminFetch("/api/admin/settings", {
     method: "POST",
     body: JSON.stringify(settings),
   });
   currentSettings = settings;
-  showMessage("Prices saved.");
+  renderPriceEditor();
+  showMessage("Menu saved.");
+});
+
+addProductButton.addEventListener("click", () => {
+  const categoryInput = pricesForm.elements.newCategory.value.trim();
+  const matchingCategory = getEffectiveMenuData().find((group) => group.category.toLowerCase() === categoryInput.toLowerCase())?.category;
+  const category = matchingCategory || categoryInput;
+  const name = pricesForm.elements.newName.value.trim();
+  const price = pricesForm.elements.newPrice.value.trim();
+  const description = pricesForm.elements.newDescription.value.trim();
+
+  if (!category || !name || !price) {
+    showMessage("Category, name and price are needed before adding a product.");
+    return;
+  }
+
+  const custom = getMenuCustom();
+  custom.hiddenItems = custom.hiddenItems.filter((itemName) => itemName !== name);
+  const existing = custom.customItems.find((item) => item.name.toLowerCase() === name.toLowerCase());
+
+  if (existing) {
+    existing.category = category;
+    existing.price = price;
+    existing.description = description;
+  } else {
+    custom.customItems.push({ category, name, price, description });
+  }
+
+  currentSettings.menuPrices = readPricesFromForm();
+  pricesForm.elements.newCategory.value = "";
+  pricesForm.elements.newName.value = "";
+  pricesForm.elements.newPrice.value = "";
+  pricesForm.elements.newDescription.value = "";
+  renderPriceEditor();
+  showMessage("Product added. Press Save menu to publish it.");
+});
+
+priceEditor.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-remove-product]");
+  if (!button) return;
+
+  const name = button.dataset.removeProduct;
+  const custom = getMenuCustom();
+  custom.customItems = custom.customItems.filter((item) => item.name !== name);
+  if (baseItemNames().has(name) && !custom.hiddenItems.includes(name)) {
+    custom.hiddenItems.push(name);
+  }
+  delete currentSettings.menuPrices?.[name];
+  renderPriceEditor();
+  showMessage("Product removed. Press Save menu to publish it.");
 });
 
 copyContacts.addEventListener("click", async () => {
@@ -127,7 +186,7 @@ async function openAdmin() {
 }
 
 function renderPriceEditor() {
-  priceEditor.innerHTML = menuData
+  priceEditor.innerHTML = getEffectiveMenuData()
     .map(
       (group) => `
         <section class="price-group">
@@ -135,10 +194,11 @@ function renderPriceEditor() {
           ${group.items
             .map(
               (item) => `
-                <label class="price-row">
+                <div class="price-row">
                   <span>${escapeHtml(item.name)}</span>
                   <input name="${escapeHtml(item.name)}" type="text" value="${escapeHtml(currentSettings.menuPrices?.[item.name] || item.price)}" />
-                </label>
+                  <button class="status-button remove-product" type="button" data-remove-product="${escapeHtml(item.name)}">Remove</button>
+                </div>
               `,
             )
             .join("")}
@@ -150,13 +210,54 @@ function renderPriceEditor() {
 
 function readPricesFromForm() {
   const prices = {};
-  menuData.forEach((group) => {
+  getEffectiveMenuData().forEach((group) => {
     group.items.forEach((item) => {
       const value = pricesForm.elements[item.name]?.value.trim();
       if (value && value !== item.price) prices[item.name] = value;
     });
   });
   return prices;
+}
+
+function getMenuCustom() {
+  currentSettings.menuCustom ||= { hiddenItems: [], customItems: [] };
+  currentSettings.menuCustom.hiddenItems ||= [];
+  currentSettings.menuCustom.customItems ||= [];
+  return currentSettings.menuCustom;
+}
+
+function baseItemNames() {
+  return new Set(menuData.flatMap((group) => group.items.map((item) => item.name)));
+}
+
+function getEffectiveMenuData() {
+  const custom = getMenuCustom();
+  const hidden = new Set(custom.hiddenItems);
+  const groups = menuData
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => !hidden.has(item.name)),
+    }))
+    .filter((group) => group.items.length);
+
+  custom.customItems.forEach((item) => {
+    const category = item.category || "Menu";
+    let group = groups.find((entry) => entry.category.toLowerCase() === category.toLowerCase());
+    if (!group) {
+      group = { category, items: [] };
+      groups.push(group);
+    }
+    const existingIndex = group.items.findIndex((entry) => entry.name === item.name);
+    const normalized = {
+      name: item.name,
+      price: item.price,
+      description: item.description || "",
+    };
+    if (existingIndex >= 0) group.items[existingIndex] = normalized;
+    else group.items.push(normalized);
+  });
+
+  return groups;
 }
 
 async function adminFetch(url, options = {}) {

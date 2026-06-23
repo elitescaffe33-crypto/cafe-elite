@@ -26,6 +26,10 @@ export const defaultSiteSettings = {
   },
 
   menuPrices: {},
+  menuCustom: {
+    hiddenItems: [],
+    customItems: [],
+  },
 };
 
 export let siteSettings = defaultSiteSettings;

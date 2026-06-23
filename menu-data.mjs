@@ -4,9 +4,36 @@ export const menuData = [
     items: [
       { name: "Tomato Pasta", price: "£6.99", image: "assets/tomato-pasta.jpg" },
       { name: "Garlic Yogurt Pasta", price: "£6.99", image: "assets/garlic-yogurt-pasta.jpg" },
-      { name: "Any 3 Bowls", price: "£18.99", description: "Please write your 3 bowl choices in order notes." },
-      { name: "Any Two Bowls (Most Popular)", price: "£11.99", description: "Please write your 2 bowl choices in order notes." },
-      { name: "Family Feast - Any 4 Bowls (Best Value)", price: "£21.99", description: "Please write your 4 bowl choices in order notes." },
+      {
+        name: "Any Two Bowls (Most Popular)",
+        price: "£11.99",
+        description: "Choose your 2 bowls.",
+        deal: {
+          bowl1: ["Tomato Pasta", "Garlic Yogurt Pasta"],
+          bowl2: ["Tomato Pasta", "Garlic Yogurt Pasta"],
+        },
+      },
+      {
+        name: "Any 3 Bowls",
+        price: "£18.99",
+        description: "Choose your 3 bowls.",
+        deal: {
+          bowl1: ["Tomato Pasta", "Garlic Yogurt Pasta"],
+          bowl2: ["Tomato Pasta", "Garlic Yogurt Pasta"],
+          bowl3: ["Tomato Pasta", "Garlic Yogurt Pasta"],
+        },
+      },
+      {
+        name: "Family Feast - Any 4 Bowls (Best Value)",
+        price: "£21.99",
+        description: "Choose your 4 bowls.",
+        deal: {
+          bowl1: ["Tomato Pasta", "Garlic Yogurt Pasta"],
+          bowl2: ["Tomato Pasta", "Garlic Yogurt Pasta"],
+          bowl3: ["Tomato Pasta", "Garlic Yogurt Pasta"],
+          bowl4: ["Tomato Pasta", "Garlic Yogurt Pasta"],
+        },
+      },
     ],
   },
   {
@@ -19,6 +46,29 @@ export const menuData = [
         deal: {
           pasta: ["Tomato Pasta", "Garlic Yogurt Pasta"],
           coffee: ["Latte", "Americano", "Cappuccino", "Flat White", "Espresso", "2X Espresso", "Mocha", "Hot Chocolate", "Ice Latte"],
+          snack: [
+            "Muffins",
+            "Cookies",
+            "Carrot Loaf Slice",
+            "Lemon Loaf Slice",
+            "Chocolate Loaf Slice",
+            "Chocolate Cupcake",
+            "Vanilla Cupcake",
+            "Pink Cupcake",
+            "Mini Cheddars",
+            "Ready Salted Chips",
+            "Cornetto Hazelnut & Chocolate",
+            "Solero Exotic",
+          ],
+        },
+      },
+      {
+        name: "Coffee + Sandwich + Snack",
+        price: "£6.99",
+        description: "Choose one coffee, one sandwich and one snack.",
+        deal: {
+          coffee: ["Latte", "Americano", "Cappuccino", "Flat White", "Espresso", "2X Espresso", "Mocha", "Hot Chocolate", "Ice Latte"],
+          sandwich: ["Vegetarian Egg", "Tuna & Gherkin", "Classic Ham & Cheese"],
           snack: [
             "Muffins",
             "Cookies",

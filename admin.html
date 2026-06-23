@@ -14,7 +14,7 @@
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="admin.html" aria-label="Reload CAFE ELITE admin">
+      <a class="brand" href="index.html" aria-label="CAFE ELITE home">
         <span class="brand-mark">CE</span>
         <span>
           <strong>CAFE ELITE</strong>
@@ -51,54 +51,76 @@
 
       <section class="section admin-dashboard" id="adminDashboard" hidden>
         <div class="admin-grid">
-          <form class="order-panel" id="settingsForm">
-            <div class="section-heading compact">
-              <p class="eyebrow">Order controls</p>
-              <h2 id="settings">Site settings</h2>
-            </div>
+          <details class="admin-accordion" id="settings">
+            <summary><span>Site settings</span><small>Hours and order controls</small></summary>
+            <form class="order-panel" id="settingsForm">
+              <div class="section-heading compact">
+                <p class="eyebrow">Order controls</p>
+                <h2>Site settings</h2>
+              </div>
 
-            <div class="admin-switches">
-              <label><input name="orderingEnabled" type="checkbox" /> Online ordering</label>
-              <label><input name="collection" type="checkbox" /> Collection</label>
-              <label><input name="delivery" type="checkbox" /> Delivery</label>
-              <label><input name="payOnCollection" type="checkbox" /> Pay on collection</label>
-              <label><input name="stripe" type="checkbox" /> Stripe online payment</label>
-            </div>
+              <div class="admin-switches">
+                <label><input name="orderingEnabled" type="checkbox" /> Online ordering</label>
+                <label><input name="collection" type="checkbox" /> Collection</label>
+                <label><input name="delivery" type="checkbox" /> Delivery</label>
+                <label><input name="payOnCollection" type="checkbox" /> Pay on collection</label>
+                <label><input name="stripe" type="checkbox" /> Stripe online payment</label>
+              </div>
 
-            <div class="hours-table" id="hoursTable"></div>
+              <div class="hours-table" id="hoursTable"></div>
 
-            <button class="button primary" type="submit">Save settings</button>
-          </form>
+              <button class="button primary" type="submit">Save settings</button>
+            </form>
+          </details>
 
-          <form class="order-panel" id="pricesForm">
-            <div class="section-heading compact">
-              <p class="eyebrow">Menu controls</p>
-              <h2 id="prices">Menu prices</h2>
-            </div>
-            <div class="price-editor" id="priceEditor"></div>
-            <button class="button primary" type="submit">Save prices</button>
-          </form>
+          <details class="admin-accordion" id="prices">
+            <summary><span>Menu prices</span><small>Edit, add or remove products</small></summary>
+            <form class="order-panel" id="pricesForm">
+              <div class="section-heading compact">
+                <p class="eyebrow">Menu controls</p>
+                <h2>Menu prices</h2>
+              </div>
+              <div class="add-product-panel">
+                <h3>Add product</h3>
+                <div class="form-grid">
+                  <label>Category <input name="newCategory" type="text" placeholder="Snacks" /></label>
+                  <label>Name <input name="newName" type="text" placeholder="New item" /></label>
+                  <label>Price <input name="newPrice" type="text" placeholder="£1.99" /></label>
+                  <label class="wide">Description <input name="newDescription" type="text" placeholder="Optional" /></label>
+                </div>
+                <button class="button secondary" id="addProductButton" type="button">Add product</button>
+              </div>
+              <div class="price-editor" id="priceEditor"></div>
+              <button class="button primary" type="submit">Save menu</button>
+            </form>
+          </details>
 
-          <section class="order-panel" id="orders">
-            <div class="section-heading compact">
-              <p class="eyebrow">Recent orders</p>
-              <h2>Order history</h2>
-            </div>
-            <button class="button secondary" id="refreshOrders" type="button">Refresh orders</button>
-            <div class="orders-list" id="ordersList"></div>
-          </section>
+          <details class="admin-accordion" id="orders">
+            <summary><span>Order history</span><small>Recent orders and status</small></summary>
+            <section class="order-panel">
+              <div class="section-heading compact">
+                <p class="eyebrow">Recent orders</p>
+                <h2>Order history</h2>
+              </div>
+              <button class="button secondary" id="refreshOrders" type="button">Refresh orders</button>
+              <div class="orders-list" id="ordersList"></div>
+            </section>
+          </details>
 
-          <section class="order-panel" id="customers">
-            <div class="section-heading compact">
-              <p class="eyebrow">Customer list</p>
-              <h2>Contacts</h2>
-            </div>
-            <div class="order-tools">
-              <button class="button secondary" id="refreshContacts" type="button">Refresh contacts</button>
-              <button class="button secondary" id="copyContacts" type="button">Copy CSV</button>
-            </div>
-            <div class="contacts-list" id="contactsList"></div>
-          </section>
+          <details class="admin-accordion" id="customers">
+            <summary><span>Contacts</span><small>Customer email and phone list</small></summary>
+            <section class="order-panel">
+              <div class="section-heading compact">
+                <p class="eyebrow">Customer list</p>
+                <h2>Contacts</h2>
+              </div>
+              <div class="order-tools">
+                <button class="button secondary" id="refreshContacts" type="button">Refresh contacts</button>
+                <button class="button secondary" id="copyContacts" type="button">Copy CSV</button>
+              </div>
+              <div class="contacts-list" id="contactsList"></div>
+            </section>
+          </details>
         </div>
       </section>
     </main>
