@@ -24,7 +24,9 @@
       <nav class="site-nav is-admin-nav" aria-label="Admin navigation">
         <a href="index.html">Website</a>
         <a href="#settings">Settings</a>
+        <a href="#prices">Prices</a>
         <a href="#orders">Orders</a>
+        <a href="#customers">Customers</a>
       </nav>
     </header>
 
@@ -68,6 +70,15 @@
             <button class="button primary" type="submit">Save settings</button>
           </form>
 
+          <form class="order-panel" id="pricesForm">
+            <div class="section-heading compact">
+              <p class="eyebrow">Menu controls</p>
+              <h2 id="prices">Menu prices</h2>
+            </div>
+            <div class="price-editor" id="priceEditor"></div>
+            <button class="button primary" type="submit">Save prices</button>
+          </form>
+
           <section class="order-panel" id="orders">
             <div class="section-heading compact">
               <p class="eyebrow">Recent orders</p>
@@ -75,6 +86,18 @@
             </div>
             <button class="button secondary" id="refreshOrders" type="button">Refresh orders</button>
             <div class="orders-list" id="ordersList"></div>
+          </section>
+
+          <section class="order-panel" id="customers">
+            <div class="section-heading compact">
+              <p class="eyebrow">Customer list</p>
+              <h2>Contacts</h2>
+            </div>
+            <div class="order-tools">
+              <button class="button secondary" id="refreshContacts" type="button">Refresh contacts</button>
+              <button class="button secondary" id="copyContacts" type="button">Copy CSV</button>
+            </div>
+            <div class="contacts-list" id="contactsList"></div>
           </section>
         </div>
       </section>

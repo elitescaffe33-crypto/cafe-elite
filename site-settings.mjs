@@ -24,6 +24,8 @@ export const defaultSiteSettings = {
     payOnCollection: true,
     stripe: true,
   },
+
+  menuPrices: {},
 };
 
 export let siteSettings = defaultSiteSettings;

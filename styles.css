@@ -912,6 +912,20 @@ textarea {
   height: 20px;
 }
 
+.marketing-consent {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+  color: rgba(255, 247, 231, 0.82);
+}
+
+.marketing-consent input {
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+}
+
 .hours-table {
   position: relative;
   z-index: 1;
@@ -933,6 +947,7 @@ textarea {
   color: var(--gold-bright);
 }
 
+.price-editor,
 .orders-list {
   position: relative;
   z-index: 1;
@@ -941,11 +956,65 @@ textarea {
   margin-top: 16px;
 }
 
+.price-group {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(7, 21, 39, 0.42);
+  border: 1px solid rgba(217, 164, 65, 0.24);
+  border-radius: 6px;
+}
+
+.price-group h3 {
+  margin: 0;
+  color: var(--gold-bright);
+  font-size: 1rem;
+}
+
+.price-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  gap: 10px;
+  align-items: center;
+}
+
+.price-row span {
+  color: var(--cream);
+}
+
+.price-row input {
+  min-height: 38px;
+  padding: 8px 10px;
+}
+
 .order-history-card {
   padding: 14px;
   background: rgba(7, 21, 39, 0.54);
   border: 1px solid rgba(217, 164, 65, 0.28);
   border-radius: 6px;
+}
+
+.contacts-list {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.contact-card {
+  padding: 14px;
+  background: rgba(7, 21, 39, 0.54);
+  border: 1px solid rgba(217, 164, 65, 0.28);
+  border-radius: 6px;
+}
+
+.contact-card strong {
+  color: var(--gold-bright);
+}
+
+.contact-card p {
+  margin: 8px 0 0;
 }
 
 .order-card-head {

@@ -1,3 +1,4 @@
+import { menuData } from "./menu-data.mjs";
 import { dayKeys, defaultSiteSettings, mergeSettings } from "./site-settings.mjs";
 
 const passwordInput = document.querySelector("#adminPassword");
@@ -5,13 +6,19 @@ const loginButton = document.querySelector("#loginButton");
 const loginPanel = document.querySelector("#loginPanel");
 const dashboard = document.querySelector("#adminDashboard");
 const settingsForm = document.querySelector("#settingsForm");
+const pricesForm = document.querySelector("#pricesForm");
+const priceEditor = document.querySelector("#priceEditor");
 const hoursTable = document.querySelector("#hoursTable");
 const ordersList = document.querySelector("#ordersList");
 const refreshOrders = document.querySelector("#refreshOrders");
+const contactsList = document.querySelector("#contactsList");
+const refreshContacts = document.querySelector("#refreshContacts");
+const copyContacts = document.querySelector("#copyContacts");
 const adminMessage = document.querySelector("#adminMessage");
 
 let adminPassword = window.localStorage.getItem("cafeEliteAdminPassword") || "";
 let currentSettings = defaultSiteSettings;
+let currentContacts = [];
 
 if (adminPassword) {
   passwordInput.value = adminPassword;
@@ -36,6 +43,32 @@ settingsForm.addEventListener("submit", async (event) => {
 });
 
 refreshOrders.addEventListener("click", loadOrders);
+refreshContacts.addEventListener("click", loadContacts);
+
+pricesForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const settings = mergeSettings(defaultSiteSettings, currentSettings);
+  settings.menuPrices = readPricesFromForm();
+  await adminFetch("/api/admin/settings", {
+    method: "POST",
+    body: JSON.stringify(settings),
+  });
+  currentSettings = settings;
+  showMessage("Prices saved.");
+});
+
+copyContacts.addEventListener("click", async () => {
+  const csv = [
+    "name,email,phone,marketing_consent,order_count,latest_order",
+    ...currentContacts.map((contact) =>
+      [contact.name, contact.email, contact.phone, contact.marketingConsent ? "yes" : "no", contact.orderCount, contact.latestOrderAt]
+        .map((value) => `"${String(value || "").replace(/"/g, '""')}"`)
+        .join(","),
+    ),
+  ].join("\n");
+  await navigator.clipboard.writeText(csv);
+  showMessage("Contacts copied as CSV.");
+});
 
 ordersList.addEventListener("click", async (event) => {
   const actionButton = event.target.closest("[data-action]");
@@ -79,7 +112,9 @@ async function openAdmin() {
   try {
     currentSettings = mergeSettings(defaultSiteSettings, await adminFetch("/api/admin/settings"));
     renderSettingsForm();
+    renderPriceEditor();
     await loadOrders();
+    await loadContacts();
     loginPanel.hidden = true;
     dashboard.hidden = false;
     showMessage("");
@@ -88,6 +123,39 @@ async function openAdmin() {
     loginPanel.hidden = false;
     showMessage(error.message || "Login failed.");
   }
+}
+
+function renderPriceEditor() {
+  priceEditor.innerHTML = menuData
+    .map(
+      (group) => `
+        <section class="price-group">
+          <h3>${escapeHtml(group.category)}</h3>
+          ${group.items
+            .map(
+              (item) => `
+                <label class="price-row">
+                  <span>${escapeHtml(item.name)}</span>
+                  <input name="${escapeHtml(item.name)}" type="text" value="${escapeHtml(currentSettings.menuPrices?.[item.name] || item.price)}" />
+                </label>
+              `,
+            )
+            .join("")}
+        </section>
+      `,
+    )
+    .join("");
+}
+
+function readPricesFromForm() {
+  const prices = {};
+  menuData.forEach((group) => {
+    group.items.forEach((item) => {
+      const value = pricesForm.elements[item.name]?.value.trim();
+      if (value && value !== item.price) prices[item.name] = value;
+    });
+  });
+  return prices;
 }
 
 async function adminFetch(url, options = {}) {
@@ -148,6 +216,29 @@ async function loadOrders() {
   ordersList.innerHTML = orders.length
     ? orders.map(renderOrder).join("")
     : `<p class="basket-empty">No orders saved yet.</p>`;
+}
+
+async function loadContacts() {
+  currentContacts = await adminFetch("/api/admin/contacts");
+  contactsList.innerHTML = currentContacts.length
+    ? currentContacts.map(renderContact).join("")
+    : `<p class="basket-empty">No customer contacts saved yet.</p>`;
+}
+
+function renderContact(contact) {
+  const date = contact.latestOrderAt
+    ? new Date(contact.latestOrderAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })
+    : "Not provided";
+
+  return `
+    <article class="contact-card">
+      <strong>${escapeHtml(contact.name || "Unnamed customer")}</strong>
+      <p><b>Email:</b> ${contact.email ? `<a href="mailto:${escapeHtml(contact.email)}">${escapeHtml(contact.email)}</a>` : "Not provided"}</p>
+      <p><b>Phone:</b> ${contact.phone ? `<a href="tel:${escapeHtml(contact.phone)}">${escapeHtml(contact.phone)}</a>` : "Not provided"}</p>
+      <p><b>Offers consent:</b> ${contact.marketingConsent ? "Yes" : "No"}</p>
+      <p><b>Orders:</b> ${escapeHtml(contact.orderCount || 0)} | <b>Latest:</b> ${escapeHtml(date)}</p>
+    </article>
+  `;
 }
 
 function renderOrder(order) {

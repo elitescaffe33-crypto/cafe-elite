@@ -36,18 +36,24 @@ const contentTypes = {
   ".md": "text/markdown; charset=utf-8",
 };
 
-const catalog = new Map(
-  menuData.flatMap((group) =>
-    group.items.map((item) => [
-      item.name,
-      {
-        category: group.category,
-        name: item.name,
-        amount: priceToPence(item.price),
-      },
-    ]),
-  ),
-);
+function getMenuPrice(item, settings) {
+  return settings?.menuPrices?.[item.name] || item.price;
+}
+
+function buildCatalog(settings) {
+  return new Map(
+    menuData.flatMap((group) =>
+      group.items.map((item) => [
+        item.name,
+        {
+          category: group.category,
+          name: item.name,
+          amount: priceToPence(getMenuPrice(item, settings)),
+        },
+      ]),
+    ),
+  );
+}
 
 async function readJsonFile(filePath, fallback) {
   try {
@@ -281,7 +287,8 @@ function verifyStripeSignature(payload, signatureHeader) {
   }
 }
 
-function aggregateItems(itemNames) {
+function aggregateItems(itemNames, settings) {
+  const catalog = buildCatalog(settings);
   const counts = new Map();
 
   itemNames.forEach((name) => {
@@ -319,7 +326,7 @@ async function createCheckoutSession(request, response) {
 
   try {
     const payload = await readJson(request);
-    const items = aggregateItems(Array.isArray(payload.items) ? payload.items : []);
+    const items = aggregateItems(Array.isArray(payload.items) ? payload.items : [], settings);
 
     if (!items.length) throw new Error("No items selected");
 
@@ -334,8 +341,10 @@ async function createCheckoutSession(request, response) {
     params.set("metadata[phone]", payload.customer?.phone || "");
     params.set("metadata[collection_time]", payload.customer?.collectionTime || "");
     params.set("metadata[notes]", payload.customer?.notes || "");
+    params.set("metadata[marketing_consent]", payload.customer?.marketingConsent ? "yes" : "no");
     params.set("metadata[source]", "CAFE ELITE website");
     params.set("metadata[order_items]", items.map((item) => `${item.quantity}x ${item.name}`).join(", "));
+    if (payload.customer?.email) params.set("customer_email", payload.customer.email);
 
     items.forEach((item, index) => {
       params.set(`line_items[${index}][quantity]`, String(item.quantity));
@@ -389,16 +398,18 @@ async function createCollectionOrder(request, response) {
   try {
     const payload = await readJson(request);
     const message = payload.full_message || "New CAFE ELITE collection order";
+    const marketingConsent = payload.marketing_consent === "yes";
     const order = await saveOrder({
       type: "pay-on-collection",
       payment: "Pay on collection",
       status: "pending",
       customerName: payload.customer_name || "",
       phone: payload.phone || "",
+      email: payload.email || "",
       collectionTime: payload.collection_time || "",
       items: payload.items || "",
       notes: payload.notes || "",
-      message,
+      message: marketingConsent ? `${message}\nMarketing consent: yes` : message,
     });
 
     await sendOrderEmail({
@@ -474,6 +485,7 @@ async function notifyPaidOrder(session) {
     `Customer name: ${session.metadata?.customer_name || "Not provided"}`,
     `Phone: ${session.metadata?.phone || session.customer_details?.phone || "Not provided"}`,
     `Email: ${session.customer_details?.email || "Not provided"}`,
+    `Marketing consent: ${session.metadata?.marketing_consent || "no"}`,
     `Collection time: ${session.metadata?.collection_time || "Not provided"}`,
     "Items:",
     items,
@@ -534,6 +546,7 @@ async function sendFormSubmitNotification(session, message, items) {
   formData.set("customer_name", session.metadata?.customer_name || "");
   formData.set("phone", session.metadata?.phone || session.customer_details?.phone || "");
   formData.set("email", session.customer_details?.email || "");
+  formData.set("marketing_consent", session.metadata?.marketing_consent || "no");
   formData.set("collection_time", session.metadata?.collection_time || "");
   formData.set("items", items);
   formData.set("notes", session.metadata?.notes || "");
@@ -552,6 +565,40 @@ async function sendFormSubmitNotification(session, message, items) {
   }
 
   console.log(`Paid order FormSubmit notification sent to ${orderNotificationEmail}`);
+}
+
+function buildContacts(orders) {
+  const contacts = new Map();
+
+  orders.forEach((order) => {
+    const email = String(order.email || "").trim().toLowerCase();
+    const phone = String(order.phone || "").trim();
+    if (!email && !phone) return;
+
+    const key = email || phone;
+    const hasMarketingConsent =
+      order.marketingConsent === true || /marketing consent:\s*(yes|true)/i.test(order.message || "");
+    const existing = contacts.get(key) || {
+      name: order.customerName || "",
+      email,
+      phone,
+      marketingConsent: false,
+      orderCount: 0,
+      latestOrderAt: order.createdAt || "",
+    };
+
+    existing.name = existing.name || order.customerName || "";
+    existing.email = existing.email || email;
+    existing.phone = existing.phone || phone;
+    existing.marketingConsent = existing.marketingConsent || hasMarketingConsent;
+    existing.orderCount += 1;
+    if (order.createdAt && (!existing.latestOrderAt || new Date(order.createdAt) > new Date(existing.latestOrderAt))) {
+      existing.latestOrderAt = order.createdAt;
+    }
+    contacts.set(key, existing);
+  });
+
+  return [...contacts.values()].sort((a, b) => new Date(b.latestOrderAt) - new Date(a.latestOrderAt));
 }
 
 async function sendResendMail({ subject, text }) {
@@ -688,6 +735,13 @@ createServer(async (request, response) => {
     if (!requireAdmin(request, response)) return;
     response.writeHead(200, { "content-type": "application/json" });
     response.end(JSON.stringify(await loadOrders()));
+    return;
+  }
+
+  if (request.method === "GET" && request.url === "/api/admin/contacts") {
+    if (!requireAdmin(request, response)) return;
+    response.writeHead(200, { "content-type": "application/json" });
+    response.end(JSON.stringify(buildContacts(await loadOrders())));
     return;
   }
 

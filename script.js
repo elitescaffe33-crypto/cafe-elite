@@ -30,10 +30,15 @@ const publicHoursList = document.querySelector("#publicHoursList");
 const publicHoursNote = document.querySelector("#publicHoursNote");
 const collectionTimeInput = orderForm.querySelector('input[name="time"]');
 const basket = [];
+let activeMenuData = menuData;
 let activeSettings = defaultSiteSettings;
 
 function getItemLabel(item) {
-  return item.price ? `${item.name} - ${item.price}` : item.name;
+  return getItemPrice(item) ? `${item.name} - ${getItemPrice(item)}` : item.name;
+}
+
+function getItemPrice(item) {
+  return activeSettings.menuPrices?.[item.name] || item.price;
 }
 
 function priceToNumber(price) {
@@ -41,7 +46,7 @@ function priceToNumber(price) {
 }
 
 function getBasketTotal() {
-  return basket.reduce((total, item) => total + priceToNumber(item.price), 0);
+  return basket.reduce((total, item) => total + priceToNumber(getItemPrice(item)), 0);
 }
 
 function goToCollectionDetails() {
@@ -69,7 +74,7 @@ function closeCart() {
 }
 
 function renderMenu() {
-  menuGrid.innerHTML = menuData
+  menuGrid.innerHTML = activeMenuData
     .map(
       (group, groupIndex) => `
         <article class="menu-card menu-card--${group.category.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}">
@@ -83,7 +88,7 @@ function renderMenu() {
                       <span class="menu-item-copy">
                         <span class="menu-item-name">${item.name}</span>
                         ${item.description ? `<span class="menu-item-description">${item.description}</span>` : ""}
-                        <span class="price ${item.price ? "" : "is-empty"}">${item.price || "Add price"}</span>
+                        <span class="price ${getItemPrice(item) ? "" : "is-empty"}">${getItemPrice(item) || "Add price"}</span>
                       </span>
                       ${
                         item.image
@@ -181,8 +186,10 @@ function updateMessage() {
   const formData = new FormData(orderForm);
   const name = formData.get("customerName") || "";
   const phone = formData.get("phone") || "";
+  const email = formData.get("email") || "";
   const time = formData.get("time") || "";
   const notes = formData.get("notes") || "";
+  const marketingConsent = formData.get("marketingConsent") ? "Yes" : "No";
   const service = activeSettings.services.delivery ? "Collection / delivery" : "Collection";
   const items = basket.length
     ? basket.map((item, index) => `${index + 1}. ${getItemLabel(item)}`).join("\n")
@@ -195,6 +202,8 @@ function updateMessage() {
     "Payment: Pay on collection",
     `Name: ${name}`,
     `Phone: ${phone}`,
+    `Email: ${email}`,
+    `Marketing consent: ${marketingConsent}`,
     `Collection time: ${time}`,
     `Total: \u00a3${total}`,
     "Items:",
@@ -204,7 +213,7 @@ function updateMessage() {
 }
 
 function addItemToBasket(groupIndex, itemIndex) {
-  const item = menuData[groupIndex]?.items[itemIndex];
+  const item = activeMenuData[groupIndex]?.items[itemIndex];
   if (!item) return;
   basket.push(item);
   renderBasket();
@@ -291,8 +300,10 @@ function payOnlineWithStripe() {
       customer: {
         name: new FormData(orderForm).get("customerName") || "",
         phone: new FormData(orderForm).get("phone") || "",
+        email: new FormData(orderForm).get("email") || "",
         collectionTime: new FormData(orderForm).get("time") || "",
         notes: new FormData(orderForm).get("notes") || "",
+        marketingConsent: Boolean(new FormData(orderForm).get("marketingConsent")),
       },
       orderMessage: orderMessage.value,
     }),
@@ -326,6 +337,8 @@ function submitOrderForm() {
     payment: "Pay on collection",
     customer_name: formData.get("customerName") || "",
     phone: formData.get("phone") || "",
+    email: formData.get("email") || "",
+    marketing_consent: formData.get("marketingConsent") ? "yes" : "no",
     collection_time: formData.get("time") || "",
     items: basket.map((item, index) => `${index + 1}. ${getItemLabel(item)}`).join("\n"),
     notes: formData.get("notes") || "",
@@ -419,7 +432,20 @@ async function loadSettings() {
     if (!response.ok) throw new Error("Settings unavailable");
     const settings = await response.json();
     activeSettings = mergeSettings(defaultSiteSettings, settings);
+    activeMenuData = applyMenuPrices(menuData, activeSettings.menuPrices || {});
+    renderMenu();
   } catch {
     activeSettings = defaultSiteSettings;
+    activeMenuData = menuData;
   }
+}
+
+function applyMenuPrices(groups, prices = {}) {
+  return groups.map((group) => ({
+    ...group,
+    items: group.items.map((item) => ({
+      ...item,
+      price: prices[item.name] || item.price,
+    })),
+  }));
 }
