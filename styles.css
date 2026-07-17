@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --ink: #071527;
   --ink-soft: #10233a;
   --panel: #112a42;
@@ -35,6 +35,51 @@ img {
 
 a {
   color: inherit;
+}
+.gold-spark-field {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.gold-spark-field span {
+  position: absolute;
+  bottom: -8vh;
+  width: var(--spark-size, 4px);
+  height: var(--spark-size, 4px);
+  left: var(--spark-left, 50%);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 247, 204, 0.96), rgba(242, 200, 91, 0.82) 42%, rgba(217, 164, 65, 0) 72%);
+  box-shadow: 0 0 12px rgba(242, 200, 91, 0.72);
+  opacity: 0;
+  transform: translate3d(0, 0, 0) scale(0.72);
+  animation: spark-rise var(--spark-duration, 9s) linear infinite;
+  animation-delay: var(--spark-delay, 0s);
+}
+
+@keyframes spark-rise {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.58);
+  }
+  12% {
+    opacity: 0.78;
+  }
+  58% {
+    opacity: 0.58;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--spark-drift, 24px), -112vh, 0) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gold-spark-field {
+    display: none;
+  }
 }
 
 .site-header {
@@ -1425,3 +1470,4 @@ textarea {
     height: 178px;
   }
 }
+

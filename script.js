@@ -1,4 +1,4 @@
-import { menuData } from "./menu-data.mjs";
+﻿import { menuData } from "./menu-data.mjs";
 import { defaultSiteSettings, getOrderingStatus, mergeSettings } from "./site-settings.mjs";
 
 // Add your cafe email here to receive order notifications.
@@ -6,6 +6,11 @@ import { defaultSiteSettings, getOrderingStatus, mergeSettings } from "./site-se
 const ORDER_NOTIFICATION_EMAIL = "elitescaffe33@gmail.com";
 
 const STRIPE_CHECKOUT_ENDPOINT = "/api/create-checkout-session";
+const CAFE_MUSIC_TRACKS = [
+  // Add MP3 files here after uploading them to assets/music/.
+  // Example: "assets/music/track-1.mp3",
+];
+const CAFE_MUSIC_VOLUME = 0.18;
 
 const menuGrid = document.querySelector("#menuGrid");
 const basketList = document.querySelector("#basketList");
@@ -34,6 +39,51 @@ let activeMenuData = menuData;
 let activeSettings = defaultSiteSettings;
 let openDealKey = "";
 
+
+function setupGoldSparks() {
+  const field = document.querySelector(".gold-spark-field");
+  if (!field || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const sparkCount = window.innerWidth < 680 ? 14 : 22;
+  field.innerHTML = Array.from({ length: sparkCount }, (_, index) => {
+    const left = 4 + Math.random() * 92;
+    const size = 2 + Math.random() * 4.5;
+    const duration = 8 + Math.random() * 9;
+    const delay = -(Math.random() * duration);
+    const drift = -42 + Math.random() * 84;
+    return `<span style="--spark-left:${left.toFixed(2)}%;--spark-size:${size.toFixed(2)}px;--spark-duration:${duration.toFixed(2)}s;--spark-delay:${delay.toFixed(2)}s;--spark-drift:${drift.toFixed(2)}px"></span>`;
+  }).join("");
+}
+
+function setupBackgroundMusic() {
+  if (!CAFE_MUSIC_TRACKS.length) return;
+
+  const audio = new Audio();
+  audio.volume = CAFE_MUSIC_VOLUME;
+  audio.preload = "none";
+  let started = false;
+
+  const pickTrack = () => CAFE_MUSIC_TRACKS[Math.floor(Math.random() * CAFE_MUSIC_TRACKS.length)];
+  const playNext = () => {
+    audio.src = pickTrack();
+    audio.play().catch(() => {
+      started = false;
+    });
+  };
+
+  audio.addEventListener("ended", playNext);
+
+  const start = () => {
+    if (started) return;
+    started = true;
+    playNext();
+    window.removeEventListener("pointerdown", start);
+    window.removeEventListener("keydown", start);
+  };
+
+  window.addEventListener("pointerdown", start, { once: true });
+  window.addEventListener("keydown", start, { once: true });
+}
 function getItemLabel(item) {
   const details = item.details ? ` (${item.details})` : "";
   return getItemPrice(item) ? `${item.name}${details} - ${getItemPrice(item)}` : `${item.name}${details}`;
@@ -483,6 +533,8 @@ siteNav.addEventListener("click", () => {
   navToggle.setAttribute("aria-expanded", "false");
 });
 
+setupGoldSparks();
+setupBackgroundMusic();
 renderMenu();
 loadSettings().then(() => {
   renderBasket();
@@ -525,3 +577,5 @@ function applyMenuPrices(groups, prices = {}) {
     })),
   }));
 }
+
+
