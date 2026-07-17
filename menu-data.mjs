@@ -1,5 +1,36 @@
 export const menuData = [
   {
+    category: "Signature Picks",
+    items: [
+      { name: "Tomato Pasta", price: "£6.99", description: "A fresh house favourite with rich tomato sauce.", image: "assets/tomato-pasta.jpg" },
+      { name: "Garlic Yogurt Pasta", price: "£6.99", description: "Creamy, cooling and made for comfort.", image: "assets/garlic-yogurt-pasta.jpg" },
+      {
+        name: "Any Pasta Bowl + Coffee + Any Snack",
+        price: "£10.50",
+        description: "Our best all-round collection deal.",
+        deal: {
+          pasta: ["Tomato Pasta", "Garlic Yogurt Pasta"],
+          coffee: ["Latte", "Americano", "Cappuccino", "Flat White", "Espresso", "2X Espresso", "Mocha", "Hot Chocolate", "Ice Latte"],
+          snack: [
+            "Muffins",
+            "Cookies",
+            "Carrot Loaf Slice",
+            "Lemon Loaf Slice",
+            "Chocolate Loaf Slice",
+            "Chocolate Cupcake",
+            "Vanilla Cupcake",
+            "Pink Cupcake",
+            "Mini Cheddars",
+            "Ready Salted Chips",
+            "Cornetto Hazelnut & Chocolate",
+            "Solero Exotic",
+          ],
+        },
+      },
+      { name: "Fudge Cake", price: "£2.99", description: "Deep chocolate sponge with a rich finish.", image: "assets/fudge-cake.jpg" },
+    ],
+  },
+  {
     category: "Pasta Menu",
     items: [
       { name: "Tomato Pasta", price: "£6.99", image: "assets/tomato-pasta.jpg" },

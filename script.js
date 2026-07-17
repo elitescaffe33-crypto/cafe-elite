@@ -44,10 +44,10 @@ function setupGoldSparks() {
   const field = document.querySelector(".gold-spark-field");
   if (!field || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-  const sparkCount = window.innerWidth < 680 ? 14 : 22;
+  const sparkCount = window.innerWidth < 680 ? 21 : 33;
   field.innerHTML = Array.from({ length: sparkCount }, (_, index) => {
     const left = 4 + Math.random() * 92;
-    const size = 2 + Math.random() * 4.5;
+    const size = 4 + Math.random() * 9;
     const duration = 8 + Math.random() * 9;
     const delay = -(Math.random() * duration);
     const drift = -42 + Math.random() * 84;
@@ -185,6 +185,35 @@ function renderDealItem(item, groupIndex, itemIndex) {
   `;
 }
 
+
+function burstBasketCount() {
+  if (!cartCount || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const rect = cartCount.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  const particleCount = 48;
+
+  cartCount.classList.remove("is-bursting");
+  void cartCount.offsetWidth;
+  cartCount.classList.add("is-bursting");
+  window.setTimeout(() => cartCount.classList.remove("is-bursting"), 420);
+
+  Array.from({ length: particleCount }, (_, index) => {
+    const angle = (Math.PI * 2 * index) / particleCount + Math.random() * 0.35;
+    const distance = 42 + Math.random() * 96;
+    const particle = document.createElement("span");
+    particle.className = "basket-burst-particle";
+    particle.style.setProperty("--burst-left", `${centerX}px`);
+    particle.style.setProperty("--burst-top", `${centerY}px`);
+    particle.style.setProperty("--burst-x", `${Math.cos(angle) * distance}px`);
+    particle.style.setProperty("--burst-y", `${Math.sin(angle) * distance}px`);
+    particle.style.setProperty("--burst-size", `${5 + Math.random() * 8}px`);
+    document.body.append(particle);
+    particle.addEventListener("animationend", () => particle.remove(), { once: true });
+    return particle;
+  });
+}
 function renderBasket() {
   basketList.innerHTML = basket
     .map(
@@ -295,6 +324,7 @@ function addItemToBasket(groupIndex, itemIndex) {
   if (!item) return;
   basket.push(item);
   renderBasket();
+  burstBasketCount();
 }
 
 function addDealToBasket(builder) {
@@ -313,6 +343,7 @@ function addDealToBasket(builder) {
     dealChoices: choices,
   });
   renderBasket();
+  burstBasketCount();
   openCart();
 }
 
@@ -577,5 +608,4 @@ function applyMenuPrices(groups, prices = {}) {
     })),
   }));
 }
-
 
