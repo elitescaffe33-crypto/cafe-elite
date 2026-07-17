@@ -5,12 +5,12 @@ export const menuData = [
       { name: "Tomato Pasta", price: "£6.99", description: "A fresh house favourite with rich tomato sauce.", image: "assets/tomato-pasta.jpg" },
       { name: "Garlic Yogurt Pasta", price: "£6.99", description: "Creamy, cooling and made for comfort.", image: "assets/garlic-yogurt-pasta.jpg" },
       {
-        name: "Any Pasta Bowl + Coffee + Any Snack",
-        price: "£10.50",
-        description: "Our best all-round collection deal.",
+        name: "Coffee + Sandwich + Snack",
+        price: "£6.99",
+        description: "A simple cafe classic for collection.",
         deal: {
-          pasta: ["Tomato Pasta", "Garlic Yogurt Pasta"],
           coffee: ["Latte", "Americano", "Cappuccino", "Flat White", "Espresso", "2X Espresso", "Mocha", "Hot Chocolate", "Ice Latte"],
+          sandwich: ["Vegetarian Egg", "Tuna & Gherkin", "Classic Ham & Cheese"],
           snack: [
             "Muffins",
             "Cookies",
@@ -71,29 +71,6 @@ export const menuData = [
     category: "Meal Deal",
     items: [
       {
-        name: "Any Pasta Bowl + Coffee + Any Snack",
-        price: "£10.50",
-        description: "Choose one pasta bowl, one coffee and one snack.",
-        deal: {
-          pasta: ["Tomato Pasta", "Garlic Yogurt Pasta"],
-          coffee: ["Latte", "Americano", "Cappuccino", "Flat White", "Espresso", "2X Espresso", "Mocha", "Hot Chocolate", "Ice Latte"],
-          snack: [
-            "Muffins",
-            "Cookies",
-            "Carrot Loaf Slice",
-            "Lemon Loaf Slice",
-            "Chocolate Loaf Slice",
-            "Chocolate Cupcake",
-            "Vanilla Cupcake",
-            "Pink Cupcake",
-            "Mini Cheddars",
-            "Ready Salted Chips",
-            "Cornetto Hazelnut & Chocolate",
-            "Solero Exotic",
-          ],
-        },
-      },
-      {
         name: "Coffee + Sandwich + Snack",
         price: "£6.99",
         description: "Choose one coffee, one sandwich and one snack.",
@@ -147,9 +124,11 @@ export const menuData = [
       { name: "Breakfast Tea", price: "£2.40" },
       { name: "Super Fruit", price: "£2.40" },
       { name: "Passion Fruit", price: "£2.40" },
-      { name: "Ginger Lemon", price: "£2.40" },
       { name: "Spanish Orange", price: "£2.40" },
-      { name: "Forest Fruits", price: "£2.40" },
+      { name: "Pomegranate", price: "£2.40", description: "" },
+      { name: "Blueberry", price: "£2.40", description: "" },
+      { name: "Fresh Orange", price: "£2.40", description: "" },
+      { name: "Italian Lemon", price: "£2.40", description: "" },
     ],
   },
   {

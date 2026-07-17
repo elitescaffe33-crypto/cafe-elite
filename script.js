@@ -1,4 +1,4 @@
-﻿import { menuData } from "./menu-data.mjs";
+import { menuData } from "./menu-data.mjs";
 import { defaultSiteSettings, getOrderingStatus, mergeSettings } from "./site-settings.mjs";
 
 // Add your cafe email here to receive order notifications.
@@ -186,6 +186,35 @@ function renderDealItem(item, groupIndex, itemIndex) {
 }
 
 
+
+function playBasketChime() {
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) return;
+
+  const context = playBasketChime.context || new AudioContext();
+  playBasketChime.context = context;
+  if (context.state === "suspended") context.resume();
+
+  const now = context.currentTime;
+  const master = context.createGain();
+  master.gain.setValueAtTime(0.0001, now);
+  master.gain.exponentialRampToValueAtTime(0.055, now + 0.018);
+  master.gain.exponentialRampToValueAtTime(0.0001, now + 0.58);
+  master.connect(context.destination);
+
+  [880, 1320, 1760].forEach((frequency, index) => {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(frequency, now + index * 0.045);
+    gain.gain.setValueAtTime(0.0001, now + index * 0.045);
+    gain.gain.exponentialRampToValueAtTime(0.42 / (index + 1), now + 0.035 + index * 0.045);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32 + index * 0.07);
+    oscillator.connect(gain).connect(master);
+    oscillator.start(now + index * 0.045);
+    oscillator.stop(now + 0.48 + index * 0.07);
+  });
+}
 function burstBasketCount() {
   if (!cartCount || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
@@ -324,6 +353,7 @@ function addItemToBasket(groupIndex, itemIndex) {
   if (!item) return;
   basket.push(item);
   renderBasket();
+  playBasketChime();
   burstBasketCount();
 }
 
@@ -343,6 +373,7 @@ function addDealToBasket(builder) {
     dealChoices: choices,
   });
   renderBasket();
+  playBasketChime();
   burstBasketCount();
   openCart();
 }
@@ -608,4 +639,3 @@ function applyMenuPrices(groups, prices = {}) {
     })),
   }));
 }
-
