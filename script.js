@@ -6,11 +6,8 @@ import { defaultSiteSettings, getOrderingStatus, mergeSettings } from "./site-se
 const ORDER_NOTIFICATION_EMAIL = "elitescaffe33@gmail.com";
 
 const STRIPE_CHECKOUT_ENDPOINT = "/api/create-checkout-session";
-const CAFE_MUSIC_TRACKS = [
-  // Add MP3 files here after uploading them to assets/music/.
-  // Example: "assets/music/track-1.mp3",
-];
-const CAFE_MUSIC_VOLUME = 0.18;
+const CAFE_MUSIC_TRACKS = [];
+const CAFE_MUSIC_VOLUME = 0.1;
 
 const menuGrid = document.querySelector("#menuGrid");
 const basketList = document.querySelector("#basketList");
@@ -196,23 +193,32 @@ function playBasketChime() {
   if (context.state === "suspended") context.resume();
 
   const now = context.currentTime;
+  const filter = context.createBiquadFilter();
   const master = context.createGain();
+  filter.type = "lowpass";
+  filter.frequency.setValueAtTime(1050, now);
+  filter.Q.setValueAtTime(0.72, now);
   master.gain.setValueAtTime(0.0001, now);
-  master.gain.exponentialRampToValueAtTime(0.055, now + 0.018);
+  master.gain.exponentialRampToValueAtTime(0.065, now + 0.026);
   master.gain.exponentialRampToValueAtTime(0.0001, now + 0.58);
-  master.connect(context.destination);
+  filter.connect(master).connect(context.destination);
 
-  [880, 1320, 1760].forEach((frequency, index) => {
+  [
+    { frequency: 196, start: 0, level: 0.58, length: 0.38 },
+    { frequency: 247, start: 0.038, level: 0.34, length: 0.4 },
+    { frequency: 330, start: 0.078, level: 0.2, length: 0.34 },
+  ].forEach(({ frequency, start, level, length }) => {
     const oscillator = context.createOscillator();
     const gain = context.createGain();
-    oscillator.type = "sine";
-    oscillator.frequency.setValueAtTime(frequency, now + index * 0.045);
-    gain.gain.setValueAtTime(0.0001, now + index * 0.045);
-    gain.gain.exponentialRampToValueAtTime(0.42 / (index + 1), now + 0.035 + index * 0.045);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32 + index * 0.07);
-    oscillator.connect(gain).connect(master);
-    oscillator.start(now + index * 0.045);
-    oscillator.stop(now + 0.48 + index * 0.07);
+    oscillator.type = "triangle";
+    oscillator.frequency.setValueAtTime(frequency, now + start);
+    oscillator.frequency.exponentialRampToValueAtTime(frequency * 0.985, now + start + length);
+    gain.gain.setValueAtTime(0.0001, now + start);
+    gain.gain.exponentialRampToValueAtTime(level, now + start + 0.024);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + start + length);
+    oscillator.connect(gain).connect(filter);
+    oscillator.start(now + start);
+    oscillator.stop(now + start + length + 0.05);
   });
 }
 function burstBasketCount() {
