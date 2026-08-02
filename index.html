@@ -111,12 +111,21 @@
           <p class="eyebrow">Opening times</p>
           <h2 id="hours-title">Hours</h2>
         </div>
-        <div class="hours-public-card">
-          <div class="hours-public-list" id="publicHoursList"></div>
-          <p class="hours-note" id="publicHoursNote">
-            Online orders close shortly before the cafe closes.
-          </p>
-        </div>
+        <details class="hours-public-card hours-disclosure">
+          <summary>
+            <span>
+              <strong>View opening hours</strong>
+              <small>Tap to see today and weekly opening times</small>
+            </span>
+            <span class="hours-disclosure-icon" aria-hidden="true">+</span>
+          </summary>
+          <div class="hours-disclosure-panel">
+            <div class="hours-public-list" id="publicHoursList"></div>
+            <p class="hours-note" id="publicHoursNote">
+              Online orders close shortly before the cafe closes.
+            </p>
+          </div>
+        </details>
       </section>
 
       <section class="section menu-section" id="menu" aria-labelledby="menu-title">
