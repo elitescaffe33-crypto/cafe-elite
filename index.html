@@ -32,9 +32,9 @@
         <span></span>
       </button>
       <nav class="site-nav" aria-label="Primary navigation">
-        <a href="#menu">Menu</a>
+        <a href="#signature">Menu</a>
+        <a href="#collection">Collection</a>
         <a href="#hours">Hours</a>
-        <a href="#order">Collection</a>
         <a href="#gallery">Photos</a>
         <a href="#visit">Find us</a>
         <a href="admin.html">Settings</a>
@@ -76,34 +76,80 @@
           <p class="eyebrow">33 High Street, Leominster</p>
           <h1 id="hero-title">CAFE ELITE</h1>
           <p class="hero-copy">
-            Proper coffee, fresh pasta bowls and indulgent cafe favourites in the heart of Leominster.
+            Proper coffee, fresh pasta bowls and a calmer kind of cafe moment on High Street.
           </p>
           <div class="hero-actions">
-            <a class="button primary" href="#menu">View menu</a>
-            <a class="button secondary" href="#order">Order for collection</a>
+            <a class="button primary" href="#signature">View menu</a>
+            <a class="button secondary" href="#collection">Order for collection</a>
           </div>
         </div>
       </section>
 
-      <section class="trust-strip" aria-label="Why customers choose CAFE ELITE">
-        <div>
-          <strong>Made fresh in-store</strong>
-          <span>Prepared daily at 33 High Street.</span>
+      <section class="section signature-section" id="signature" aria-labelledby="signature-title">
+        <div class="section-heading section-heading--center">
+          <p class="eyebrow">Signature picks</p>
+          <h2 id="signature-title">Start with the favourites</h2>
+          <p class="section-intro">
+            A small edit of the things people come back for: warm bowls, smooth coffee and something sweet.
+          </p>
         </div>
-        <div>
-          <strong>Collection made simple</strong>
-          <span>Order online and collect from the cafe.</span>
+        <div class="signature-grid" id="signatureGrid"></div>
+      </section>
+
+      <section class="section reason-section" aria-labelledby="reason-title">
+        <div class="section-heading section-heading--center">
+          <p class="eyebrow">Why CAFE ELITE?</p>
+          <h2 id="reason-title">Small cafe. High standards.</h2>
         </div>
-        <div>
-          <strong>Secure online payment</strong>
-          <span>Pay safely with Stripe or on collection.</span>
+        <div class="trust-strip" aria-label="Why customers choose CAFE ELITE">
+          <div>
+            <strong>Prepared with care</strong>
+            <span>Fresh cafe favourites made for a clean, reliable collection experience.</span>
+          </div>
+          <div>
+            <strong>Local and personal</strong>
+            <span>An independent High Street coffee house, not a faceless chain.</span>
+          </div>
+          <div>
+            <strong>Simple to order</strong>
+            <span>Choose online, pay securely if you want, and collect from the cafe.</span>
+          </div>
+        </div>
+        <div class="reviews-shell" aria-hidden="true" hidden>
+          Future Google reviews module placeholder.
         </div>
       </section>
 
-      <section class="notice-band" aria-label="Service notice">
-        <span id="collectionStatus">Collection available</span>
-        <span id="deliveryStatus">Delivery currently unavailable</span>
-        <span id="orderingStatus">Online ordering open until 15:45</span>
+      <section class="section collection-flow" id="collection" aria-labelledby="collection-title">
+        <div class="section-heading section-heading--center">
+          <p class="eyebrow">Collection</p>
+          <h2 id="collection-title">Order without the queue</h2>
+          <p class="section-intro">
+            Pick your favourites, tell us when you are coming, and we will prepare everything for collection.
+          </p>
+        </div>
+        <div class="collection-steps" aria-label="How collection works">
+          <article>
+            <span>01</span>
+            <h3>Choose</h3>
+            <p>Tap menu items or build a deal from the choices.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Confirm</h3>
+            <p>Add your name, phone number and collection time.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Collect</h3>
+            <p>Pay online or on collection, then pick up from 33 High Street.</p>
+          </article>
+        </div>
+        <div class="notice-band" aria-label="Service notice">
+          <span id="collectionStatus">Collection available</span>
+          <span id="deliveryStatus">Delivery currently unavailable</span>
+          <span id="orderingStatus">Online ordering open until 15:45</span>
+        </div>
       </section>
 
       <section class="section hours-section" id="hours" aria-labelledby="hours-title">
@@ -130,8 +176,8 @@
 
       <section class="section menu-section" id="menu" aria-labelledby="menu-title">
         <div class="section-heading">
-          <p class="eyebrow">Signature choices and full menu</p>
-          <h2 id="menu-title">Menu</h2>
+          <p class="eyebrow">Full menu</p>
+          <h2 id="menu-title">Choose your collection order</h2>
         </div>
         <div class="menu-grid" id="menuGrid"></div>
       </section>
@@ -139,7 +185,7 @@
       <section class="section order-section" id="order" aria-labelledby="order-title">
         <div class="section-heading">
           <p class="eyebrow">Customer details</p>
-          <h2 id="order-title">Collection details</h2>
+          <h2 id="order-title">Confirm collection details</h2>
         </div>
         <div class="order-layout">
           <form class="order-panel" id="orderForm">

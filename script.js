@@ -10,6 +10,7 @@ const CAFE_MUSIC_TRACKS = [];
 const CAFE_MUSIC_VOLUME = 0.1;
 
 const menuGrid = document.querySelector("#menuGrid");
+const signatureGrid = document.querySelector("#signatureGrid");
 const basketList = document.querySelector("#basketList");
 const basketEmpty = document.querySelector("#basketEmpty");
 const basketTotal = document.querySelector("#basketTotal");
@@ -35,6 +36,8 @@ const basket = [];
 let activeMenuData = menuData;
 let activeSettings = defaultSiteSettings;
 let openDealKey = "";
+
+const signatureBadges = ["Most Popular", "Customer Favourite", "Cafe Deal", "Sweet Finish"];
 
 
 function setupGoldSparks() {
@@ -140,6 +143,42 @@ function renderMenu() {
         </article>
       `,
     )
+    .join("");
+
+  renderSignaturePicks();
+}
+
+function renderSignaturePicks() {
+  if (!signatureGrid) return;
+  const signatureGroupIndex = activeMenuData.findIndex((group) => group.category === "Signature Picks");
+  const signatureGroup = activeMenuData[signatureGroupIndex];
+  if (!signatureGroup) {
+    signatureGrid.innerHTML = "";
+    return;
+  }
+
+  signatureGrid.innerHTML = signatureGroup.items
+    .map((item, itemIndex) => {
+      const badge = signatureBadges[itemIndex] || "Signature";
+      return `
+        <article class="signature-card ${item.image ? "has-image" : "no-image"}">
+          ${item.image ? `<img class="signature-photo" src="${item.image}" alt="${item.name}">` : `<div class="signature-placeholder" aria-hidden="true">CE</div>`}
+          <div class="signature-card-body">
+            <span class="signature-badge">${badge}</span>
+            <h3>${item.name}</h3>
+            ${item.description ? `<p>${item.description}</p>` : ""}
+            <div class="signature-card-foot">
+              <strong>${getItemPrice(item)}</strong>
+              ${
+                item.deal
+                  ? `<button class="button outline signature-jump" type="button" data-target-group="${signatureGroupIndex}" data-target-item="${itemIndex}">Choose</button>`
+                  : `<button class="button primary signature-add" type="button" data-group="${signatureGroupIndex}" data-item="${itemIndex}">Add</button>`
+              }
+            </div>
+          </div>
+        </article>
+      `;
+    })
     .join("");
 }
 
@@ -567,6 +606,20 @@ menuGrid.addEventListener("click", (event) => {
   const button = event.target.closest(".menu-item-button");
   if (!button) return;
   addItemToBasket(Number(button.dataset.group), Number(button.dataset.item));
+});
+
+signatureGrid?.addEventListener("click", (event) => {
+  const addButton = event.target.closest(".signature-add");
+  if (addButton) {
+    addItemToBasket(Number(addButton.dataset.group), Number(addButton.dataset.item));
+    return;
+  }
+
+  const jumpButton = event.target.closest(".signature-jump");
+  if (!jumpButton) return;
+  openDealKey = `${jumpButton.dataset.targetGroup}-${jumpButton.dataset.targetItem}`;
+  renderMenu();
+  document.querySelector("#menu").scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
 basketList.addEventListener("click", (event) => {
