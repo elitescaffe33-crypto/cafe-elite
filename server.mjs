@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
-import { menuData, priceToPence } from "./menu-data.mjs";
+import { getItemKey, getItemOrderName, menuData, priceToPence, slugify } from "./menu-data.mjs";
 import { defaultSiteSettings, getOrderingStatus, mergeSettings } from "./site-settings.mjs";
 
 const root = process.cwd();
@@ -37,7 +37,27 @@ const contentTypes = {
 };
 
 function getMenuPrice(item, settings) {
-  return settings?.menuPrices?.[item.name] || item.price;
+  const priceKey = getItemKey(item);
+  return settings?.menuPrices?.[priceKey] || settings?.menuPrices?.[item.name] || item.price;
+}
+
+function isHiddenItem(item, hiddenItems) {
+  const priceKey = getItemKey(item);
+  return hiddenItems.has(priceKey) || hiddenItems.has(item.id) || hiddenItems.has(item.name);
+}
+
+function normalizeCustomMenuItem(item) {
+  const name = String(item?.name || "").trim();
+  const category = String(item?.category || "Menu").trim() || "Menu";
+  const id = String(item?.id || `custom-${slugify(category)}-${slugify(name)}`);
+  return {
+    id,
+    priceKey: item?.priceKey || id,
+    category,
+    name,
+    price: item?.price || "\u00a30.00",
+    description: item?.description || "",
+  };
 }
 
 function buildMenuData(settings) {
@@ -45,41 +65,65 @@ function buildMenuData(settings) {
   const customItems = Array.isArray(settings?.menuCustom?.customItems) ? settings.menuCustom.customItems : [];
   const groups = menuData.map((group) => ({
     ...group,
-    items: group.items.filter((item) => !hiddenItems.has(item.name)),
+    items: group.items.filter((item) => !isHiddenItem(item, hiddenItems)),
   }));
 
-  customItems.forEach((item) => {
-    if (!item?.name || !item?.category || hiddenItems.has(item.name)) return;
+  customItems.map(normalizeCustomMenuItem).forEach((item) => {
+    if (!item.name || isHiddenItem(item, hiddenItems)) return;
     let group = groups.find((entry) => entry.category.toLowerCase() === item.category.toLowerCase());
     if (!group) {
-      group = { category: item.category, items: [] };
+      group = { id: slugify(item.category), category: item.category, items: [] };
       groups.push(group);
     }
-    if (!group.items.some((entry) => entry.name === item.name)) {
-      group.items.push({
-        name: item.name,
-        price: item.price || "£0.00",
-        description: item.description || "",
-      });
-    }
+    const existingIndex = group.items.findIndex((entry) => getItemKey(entry) === getItemKey(item) || entry.name === item.name);
+    const normalized = {
+      id: item.id,
+      priceKey: item.priceKey,
+      name: item.name,
+      price: item.price,
+      description: item.description,
+    };
+    if (existingIndex >= 0) group.items[existingIndex] = { ...group.items[existingIndex], ...normalized };
+    else group.items.push(normalized);
   });
 
   return groups.filter((group) => group.items.length);
 }
 
 function buildCatalog(settings) {
-  return new Map(
-    buildMenuData(settings).flatMap((group) =>
-      group.items.map((item) => [
-        item.name,
-        {
-          category: group.category,
-          name: item.name,
-          amount: priceToPence(getMenuPrice(item, settings)),
-        },
-      ]),
-    ),
-  );
+  const catalog = new Map();
+  const entries = [];
+  const nameKeys = new Map();
+
+  buildMenuData(settings).forEach((group) => {
+    group.items.forEach((item) => {
+      const priceKey = getItemKey(item);
+      const entry = {
+        category: group.category,
+        id: item.id || "",
+        sourceId: item.sourceId || "",
+        priceKey,
+        name: item.name,
+        displayName: getItemOrderName(item),
+        amount: priceToPence(getMenuPrice(item, settings)),
+      };
+      entries.push({ item, entry, priceKey });
+      if (!nameKeys.has(item.name)) nameKeys.set(item.name, new Set());
+      nameKeys.get(item.name).add(priceKey);
+    });
+  });
+
+  entries.forEach(({ item, entry, priceKey }) => {
+    [item.id, item.sourceId, priceKey].filter(Boolean).forEach((alias) => {
+      if (!catalog.has(alias)) catalog.set(alias, entry);
+    });
+  });
+
+  entries.forEach(({ entry }) => {
+    if (nameKeys.get(entry.name)?.size === 1 && !catalog.has(entry.name)) catalog.set(entry.name, entry);
+  });
+
+  return catalog;
 }
 
 async function readJsonFile(filePath, fallback) {
@@ -315,8 +359,11 @@ function verifyStripeSignature(payload, signatureHeader) {
 }
 
 function normalizeOrderItem(item) {
-  if (typeof item === "string") return { name: item, details: "" };
+  if (typeof item === "string") return { id: "", sourceId: "", priceKey: "", name: item, details: "" };
   return {
+    id: String(item?.id || ""),
+    sourceId: String(item?.sourceId || ""),
+    priceKey: String(item?.priceKey || ""),
     name: String(item?.name || ""),
     details: String(item?.details || ""),
   };
@@ -326,13 +373,17 @@ function aggregateItems(itemNames, settings) {
   const catalog = buildCatalog(settings);
   const counts = new Map();
 
-  itemNames.map(normalizeOrderItem).forEach(({ name, details }) => {
-    if (!catalog.has(name)) throw new Error(`Unknown item: ${name}`);
-    const key = `${name}::${details}`;
+  itemNames.map(normalizeOrderItem).forEach(({ id, sourceId, priceKey, name, details }) => {
+    const lookupKey = [id, priceKey, sourceId, name].find((key) => key && catalog.has(key));
+    if (!lookupKey) throw new Error(`Unknown item: ${name || id || priceKey}`);
+
+    const catalogItem = catalog.get(lookupKey);
+    const baseName = catalogItem.displayName || catalogItem.name;
+    const key = `${catalogItem.priceKey || lookupKey}::${details}`;
     const existing = counts.get(key) || {
-      ...catalog.get(name),
-      name,
-      displayName: details ? `${name} (${details})` : name,
+      ...catalogItem,
+      name: baseName,
+      displayName: details ? `${baseName} (${details})` : baseName,
       details,
       quantity: 0,
     };
@@ -709,8 +760,10 @@ async function handleStripeWebhook(request, response) {
 
 async function serveStatic(request, response) {
   const url = new URL(request.url || "/", `http://${request.headers.host}`);
-  const cleanPath = normalize(decodeURIComponent(url.pathname)).replace(/^(\.\.[/\\])+/, "");
-  const filePath = join(root, cleanPath === "/" ? "index.html" : cleanPath);
+  const cleanPath = normalize(decodeURIComponent(url.pathname))
+    .replace(/^([/\\]*\.\.[/\\])+/, "")
+    .replace(/^[/\\]+/, "");
+  const filePath = join(root, cleanPath || "index.html");
 
   try {
     const body = await readFile(filePath);

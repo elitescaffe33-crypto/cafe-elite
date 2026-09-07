@@ -1,4 +1,4 @@
-import { menuData } from "./menu-data.mjs";
+import { getItemKey, getItemOrderName, menuData, slugify } from "./menu-data.mjs";
 import { dayKeys, defaultSiteSettings, mergeSettings } from "./site-settings.mjs";
 
 const passwordInput = document.querySelector("#adminPassword");
@@ -82,15 +82,18 @@ addProductButton.addEventListener("click", () => {
   }
 
   const custom = getMenuCustom();
-  custom.hiddenItems = custom.hiddenItems.filter((itemName) => itemName !== name);
-  const existing = custom.customItems.find((item) => item.name.toLowerCase() === name.toLowerCase());
+  const id = `custom-${slugify(category)}-${slugify(name)}`;
+  custom.hiddenItems = custom.hiddenItems.filter((itemKey) => itemKey !== id && itemKey !== name);
+  const existing = custom.customItems.find((item) => getItemKey(item) === id || item.name.toLowerCase() === name.toLowerCase());
 
   if (existing) {
+    existing.id = id;
+    existing.priceKey = id;
     existing.category = category;
     existing.price = price;
     existing.description = description;
   } else {
-    custom.customItems.push({ category, name, price, description });
+    custom.customItems.push({ id, priceKey: id, category, name, price, description });
   }
 
   currentSettings.menuPrices = readPricesFromForm();
@@ -106,13 +109,13 @@ priceEditor.addEventListener("click", (event) => {
   const button = event.target.closest("[data-remove-product]");
   if (!button) return;
 
-  const name = button.dataset.removeProduct;
+  const key = button.dataset.removeProduct;
   const custom = getMenuCustom();
-  custom.customItems = custom.customItems.filter((item) => item.name !== name);
-  if (baseItemNames().has(name) && !custom.hiddenItems.includes(name)) {
-    custom.hiddenItems.push(name);
+  custom.customItems = custom.customItems.filter((item) => getItemKey(item) !== key && item.name !== key);
+  if (baseItemKeys().has(key) && !custom.hiddenItems.includes(key)) {
+    custom.hiddenItems.push(key);
   }
-  delete currentSettings.menuPrices?.[name];
+  delete currentSettings.menuPrices?.[key];
   renderPriceEditor();
   showMessage("Product removed. Press Save menu to publish it.");
 });
@@ -186,21 +189,22 @@ async function openAdmin() {
 }
 
 function renderPriceEditor() {
-  priceEditor.innerHTML = getEffectiveMenuData()
+  priceEditor.innerHTML = getPriceEditorMenuData()
     .map(
       (group) => `
         <section class="price-group">
           <h3>${escapeHtml(group.category)}</h3>
           ${group.items
-            .map(
-              (item) => `
+            .map((item) => {
+              const key = getItemKey(item);
+              return `
                 <div class="price-row">
-                  <span>${escapeHtml(item.name)}</span>
-                  <input name="${escapeHtml(item.name)}" type="text" value="${escapeHtml(currentSettings.menuPrices?.[item.name] || item.price)}" />
-                  <button class="status-button remove-product" type="button" data-remove-product="${escapeHtml(item.name)}">Remove</button>
+                  <span>${escapeHtml(getItemOrderName(item))}<small>${escapeHtml(group.category)}</small></span>
+                  <input name="${escapeHtml(key)}" type="text" value="${escapeHtml(currentSettings.menuPrices?.[key] || currentSettings.menuPrices?.[item.name] || item.price)}" />
+                  <button class="status-button remove-product" type="button" data-remove-product="${escapeHtml(key)}">Remove</button>
                 </div>
-              `,
-            )
+              `;
+            })
             .join("")}
         </section>
       `,
@@ -210,10 +214,11 @@ function renderPriceEditor() {
 
 function readPricesFromForm() {
   const prices = {};
-  getEffectiveMenuData().forEach((group) => {
+  getPriceEditorMenuData().forEach((group) => {
     group.items.forEach((item) => {
-      const value = pricesForm.elements[item.name]?.value.trim();
-      if (value && value !== item.price) prices[item.name] = value;
+      const key = getItemKey(item);
+      const value = pricesForm.elements[key]?.value.trim();
+      if (value && value !== item.price) prices[key] = value;
     });
   });
   return prices;
@@ -226,8 +231,27 @@ function getMenuCustom() {
   return currentSettings.menuCustom;
 }
 
-function baseItemNames() {
-  return new Set(menuData.flatMap((group) => group.items.map((item) => item.name)));
+function baseItemKeys() {
+  return new Set(menuData.flatMap((group) => group.items.map((item) => getItemKey(item))));
+}
+
+function isHiddenItem(item, hiddenItems) {
+  const key = getItemKey(item);
+  return hiddenItems.has(key) || hiddenItems.has(item.id) || hiddenItems.has(item.name);
+}
+
+function normalizeCustomMenuItem(item) {
+  const name = String(item?.name || "").trim();
+  const category = String(item?.category || "Menu").trim() || "Menu";
+  const id = item?.id || `custom-${slugify(category)}-${slugify(name)}`;
+  return {
+    id,
+    priceKey: item?.priceKey || id,
+    category,
+    name,
+    price: item?.price || "\u00a30.00",
+    description: item?.description || "",
+  };
 }
 
 function getEffectiveMenuData() {
@@ -236,28 +260,34 @@ function getEffectiveMenuData() {
   const groups = menuData
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => !hidden.has(item.name)),
+      items: group.items.filter((item) => !isHiddenItem(item, hidden)),
     }))
     .filter((group) => group.items.length);
 
-  custom.customItems.forEach((item) => {
-    const category = item.category || "Menu";
-    let group = groups.find((entry) => entry.category.toLowerCase() === category.toLowerCase());
+  custom.customItems.map(normalizeCustomMenuItem).forEach((item) => {
+    if (!item.name || isHiddenItem(item, hidden)) return;
+    let group = groups.find((entry) => entry.category.toLowerCase() === item.category.toLowerCase());
     if (!group) {
-      group = { category, items: [] };
+      group = { id: slugify(item.category), category: item.category, items: [] };
       groups.push(group);
     }
-    const existingIndex = group.items.findIndex((entry) => entry.name === item.name);
+    const existingIndex = group.items.findIndex((entry) => getItemKey(entry) === getItemKey(item) || entry.name === item.name);
     const normalized = {
+      id: item.id,
+      priceKey: item.priceKey,
       name: item.name,
       price: item.price,
       description: item.description || "",
     };
-    if (existingIndex >= 0) group.items[existingIndex] = normalized;
+    if (existingIndex >= 0) group.items[existingIndex] = { ...group.items[existingIndex], ...normalized };
     else group.items.push(normalized);
   });
 
   return groups;
+}
+
+function getPriceEditorMenuData() {
+  return getEffectiveMenuData().filter((group) => !group.featured);
 }
 
 async function adminFetch(url, options = {}) {

@@ -1,4 +1,4 @@
-import { menuData } from "./menu-data.mjs";
+import { getGroupId, getItemKey, getItemOrderName, menuData } from "./menu-data.mjs";
 import { defaultSiteSettings, getOrderingStatus, mergeSettings } from "./site-settings.mjs";
 
 // Add your cafe email here to receive order notifications.
@@ -10,7 +10,9 @@ const CAFE_MUSIC_TRACKS = [];
 const CAFE_MUSIC_VOLUME = 0.1;
 
 const menuGrid = document.querySelector("#menuGrid");
+const menuCategoryNav = document.querySelector("#menuCategoryNav");
 const signatureGrid = document.querySelector("#signatureGrid");
+const promoPriceTargets = document.querySelectorAll("[data-price-product]");
 const basketList = document.querySelector("#basketList");
 const basketEmpty = document.querySelector("#basketEmpty");
 const basketTotal = document.querySelector("#basketTotal");
@@ -36,9 +38,6 @@ const basket = [];
 let activeMenuData = menuData;
 let activeSettings = defaultSiteSettings;
 let openDealKey = "";
-
-const signatureBadges = ["Most Popular", "Customer Favourite", "Cafe Deal", "Sweet Finish"];
-
 
 function setupGoldSparks() {
   const field = document.querySelector(".gold-spark-field");
@@ -85,22 +84,39 @@ function setupBackgroundMusic() {
   window.addEventListener("keydown", start, { once: true });
 }
 function getItemLabel(item) {
+  const name = getItemOrderName(item);
   const details = item.details ? ` (${item.details})` : "";
-  return getItemPrice(item) ? `${item.name}${details} - ${getItemPrice(item)}` : `${item.name}${details}`;
+  return getItemPrice(item) ? `${name}${details} - ${getItemPrice(item)}` : `${name}${details}`;
 }
 
 function getItemPrice(item) {
-  return activeSettings.menuPrices?.[item.name] || item.price || "";
+  const priceKey = getItemKey(item);
+  return activeSettings.menuPrices?.[priceKey] || activeSettings.menuPrices?.[item.name] || item.price || "";
 }
 
 function priceToNumber(price) {
-  return Number(String(price || "").replace(/[\u00a3,\s]/g, "")) || 0;
+  return Number(String(price || "").replace(/[\u00a3\u00c2,\s]/g, "")) || 0;
 }
 
 function getBasketTotal() {
   return basket.reduce((total, item) => total + priceToNumber(getItemPrice(item)), 0);
 }
 
+function findMenuItemById(productId) {
+  return activeMenuData
+    .flatMap((group) => group.items)
+    .find((item) => getItemKey(item) === productId || item.id === productId);
+}
+
+function renderHomepagePromoPrices() {
+  promoPriceTargets.forEach((target) => {
+    const item = findMenuItemById(target.dataset.priceProduct);
+    if (!item) return;
+    const prefix = target.dataset.pricePrefix ? `<span>${target.dataset.pricePrefix}</span> ` : "";
+    const suffix = target.dataset.priceSuffix ? ` ${target.dataset.priceSuffix}` : "";
+    target.innerHTML = `${prefix}${getItemPrice(item)}${suffix}`;
+  });
+}
 function goToCollectionDetails() {
   closeCart();
   document.querySelector("#order").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -125,12 +141,22 @@ function closeCart() {
   cartToggle.setAttribute("aria-expanded", "false");
 }
 
+function renderMenuCategoryNav() {
+  if (!menuCategoryNav) return;
+  menuCategoryNav.innerHTML = activeMenuData
+    .map((group) => `<a href="#menu-${getGroupId(group)}">${group.category}</a>`)
+    .join("");
+}
+
 function renderMenu() {
+  renderMenuCategoryNav();
   menuGrid.innerHTML = activeMenuData
-    .map(
-      (group, groupIndex) => `
-        <article class="menu-card menu-card--${group.category.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}">
+    .map((group, groupIndex) => {
+      const groupId = getGroupId(group);
+      return `
+        <article class="menu-card menu-card--${groupId}" id="menu-${groupId}">
           <h3>${group.category}</h3>
+          ${group.description ? `<p class="menu-card-intro">${group.description}</p>` : ""}
           <ul>
             ${group.items
               .map(
@@ -141,16 +167,17 @@ function renderMenu() {
               .join("")}
           </ul>
         </article>
-      `,
-    )
+      `;
+    })
     .join("");
 
   renderSignaturePicks();
+  renderHomepagePromoPrices();
 }
 
 function renderSignaturePicks() {
   if (!signatureGrid) return;
-  const signatureGroupIndex = activeMenuData.findIndex((group) => group.category === "Signature Picks");
+  const signatureGroupIndex = activeMenuData.findIndex((group) => getGroupId(group) === "signature-picks");
   const signatureGroup = activeMenuData[signatureGroupIndex];
   if (!signatureGroup) {
     signatureGrid.innerHTML = "";
@@ -159,7 +186,7 @@ function renderSignaturePicks() {
 
   signatureGrid.innerHTML = signatureGroup.items
     .map((item, itemIndex) => {
-      const badge = signatureBadges[itemIndex] || "Signature";
+      const badge = item.badge || "Signature";
       return `
         <article class="signature-card ${item.image ? "has-image" : "no-image"}">
           ${item.image ? `<img class="signature-photo" src="${item.image}" alt="${item.name}">` : `<div class="signature-placeholder" aria-hidden="true">CE</div>`}
@@ -183,12 +210,19 @@ function renderSignaturePicks() {
 }
 
 function renderStandardItem(item, groupIndex, itemIndex) {
+  const price = getItemPrice(item);
+  const ingredients = Array.isArray(item.ingredients) && item.ingredients.length ? item.ingredients.join(", ") : "";
   return `
-    <button class="menu-item-button ${item.image ? "has-image" : ""}" type="button" data-group="${groupIndex}" data-item="${itemIndex}">
+    <button class="menu-item-button ${item.image ? "has-image" : ""}" type="button" data-group="${groupIndex}" data-item="${itemIndex}" data-product-id="${item.id || getItemKey(item)}">
       <span class="menu-item-copy">
-        <span class="menu-item-name">${item.name}</span>
+        <span class="menu-item-head">
+          ${item.badge ? `<span class="item-badge">${item.badge}</span>` : ""}
+          <span class="menu-item-name">${item.name}</span>
+        </span>
         ${item.description ? `<span class="menu-item-description">${item.description}</span>` : ""}
-        <span class="price ${getItemPrice(item) ? "" : "is-empty"}">${getItemPrice(item) || "Add price"}</span>
+        ${item.secondaryDescription ? `<span class="menu-item-description menu-item-description--secondary">${item.secondaryDescription}</span>` : ""}
+        ${ingredients ? `<span class="menu-item-ingredients">${ingredients}</span>` : ""}
+        <span class="price ${price ? "" : "is-empty"}">${price || "Add price"}</span>
       </span>
       ${item.image ? `<img class="menu-item-photo" src="${item.image}" alt="${item.name}">` : ""}
     </button>
@@ -197,31 +231,39 @@ function renderStandardItem(item, groupIndex, itemIndex) {
 
 function renderDealItem(item, groupIndex, itemIndex) {
   const options = (values) => values.map((value) => `<option value="${value}">${value}</option>`).join("");
+  const dealEntries = Object.entries(item.deal);
+  const hasChoices = dealEntries.length > 0;
   const key = `${groupIndex}-${itemIndex}`;
   const isOpen = openDealKey === key;
   return `
-    <div class="deal-builder ${isOpen ? "is-open" : ""}" data-group="${groupIndex}" data-item="${itemIndex}">
-      <button class="deal-toggle" type="button" aria-expanded="${isOpen ? "true" : "false"}">
+    <div class="deal-builder ${item.image ? "has-image" : ""} ${isOpen ? "is-open" : ""}" data-group="${groupIndex}" data-item="${itemIndex}" data-product-id="${item.id || getItemKey(item)}">
+      ${item.image ? `<img class="deal-artwork" src="${item.image}" alt="${item.name}" loading="lazy">` : ""}
+      <button class="deal-toggle" type="button" aria-expanded="${hasChoices && isOpen ? "true" : "false"}">
         <span class="menu-item-copy">
-          <span class="menu-item-name">${item.name}</span>
+          <span class="menu-item-head">
+            ${item.badge ? `<span class="item-badge">${item.badge}</span>` : ""}
+            <span class="menu-item-name">${item.name}</span>
+          </span>
           ${item.description ? `<span class="menu-item-description">${item.description}</span>` : ""}
           <span class="price">${getItemPrice(item)}</span>
         </span>
-        <span class="deal-chevron">${isOpen ? "Close" : "Choose"}</span>
+        <span class="deal-chevron">${hasChoices ? (isOpen ? "Close" : "Choose") : "Add"}</span>
       </button>
-      <div class="deal-panel">
-        <div class="deal-fields">
-          ${Object.entries(item.deal)
-            .map(([label, values]) => `<label>${label.replace(/^\w/, (letter) => letter.toUpperCase())} <select data-choice="${label}">${options(values)}</select></label>`)
-            .join("")}
-        </div>
-        <button class="status-button deal-add" type="button">Add deal</button>
-      </div>
+      ${
+        hasChoices
+          ? `<div class="deal-panel">
+              <div class="deal-fields">
+                ${dealEntries
+                  .map(([label, values]) => `<label>${label.replace(/^\w/, (letter) => letter.toUpperCase())} <select data-choice="${label}">${options(values)}</select></label>`)
+                  .join("")}
+              </div>
+              <button class="status-button deal-add" type="button">Add deal</button>
+            </div>`
+          : ""
+      }
     </div>
   `;
 }
-
-
 
 function playBasketChime() {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -414,7 +456,7 @@ function addDealToBasket(builder) {
 
   basket.push({
     ...item,
-    details: Object.values(choices).join(" + "),
+    details: item.fixedDetails || Object.values(choices).join(" + "),
     dealChoices: choices,
   });
   renderBasket();
@@ -501,6 +543,9 @@ function payOnlineWithStripe() {
     },
     body: JSON.stringify({
       items: basket.map((item) => ({
+        id: item.id || "",
+        sourceId: item.sourceId || "",
+        priceKey: getItemKey(item),
         name: item.name,
         details: item.details || "",
       })),
@@ -591,6 +636,11 @@ menuGrid.addEventListener("click", (event) => {
   const dealToggle = event.target.closest(".deal-toggle");
   if (dealToggle) {
     const builder = dealToggle.closest(".deal-builder");
+    const item = activeMenuData[Number(builder.dataset.group)]?.items[Number(builder.dataset.item)];
+    if (item?.deal && Object.keys(item.deal).length === 0) {
+      addDealToBasket(builder);
+      return;
+    }
     const key = `${builder.dataset.group}-${builder.dataset.item}`;
     openDealKey = openDealKey === key ? "" : key;
     renderMenu();
@@ -619,7 +669,9 @@ signatureGrid?.addEventListener("click", (event) => {
   if (!jumpButton) return;
   openDealKey = `${jumpButton.dataset.targetGroup}-${jumpButton.dataset.targetItem}`;
   renderMenu();
-  document.querySelector("#menu").scrollIntoView({ behavior: "smooth", block: "start" });
+  const targetGroup = activeMenuData[Number(jumpButton.dataset.targetGroup)];
+  const target = targetGroup ? document.querySelector(`#menu-${getGroupId(targetGroup)}`) : document.querySelector("#menu");
+  target?.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
 basketList.addEventListener("click", (event) => {
@@ -694,7 +746,7 @@ function applyMenuPrices(groups, prices = {}) {
     ...group,
     items: group.items.map((item) => ({
       ...item,
-      price: prices[item.name] || item.price,
+      price: prices[getItemKey(item)] || prices[item.name] || item.price,
     })),
   }));
 }

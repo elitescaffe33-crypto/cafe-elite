@@ -20,11 +20,7 @@
     <div class="gold-spark-field" aria-hidden="true"></div>
     <header class="site-header" id="top">
       <a class="brand" href="#top" aria-label="CAFE ELITE home">
-        <span class="brand-mark">CE</span>
-        <span>
-          <strong>CAFE ELITE</strong>
-          <small>Leominster</small>
-        </span>
+        <img class="brand-logo" src="assets/caffe-elite-logo.jpg" alt="CAFE ELITE Coffee House" />
       </a>
       <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">
         <span></span>
@@ -32,11 +28,12 @@
         <span></span>
       </button>
       <nav class="site-nav" aria-label="Primary navigation">
-        <a href="#signature">Menu</a>
-        <a href="#collection">Collection</a>
-        <a href="#hours">Hours</a>
-        <a href="#gallery">Photos</a>
-        <a href="#visit">Find us</a>
+        <a href="#new-at">New</a>
+        <a href="#menu-pasta">Food</a>
+        <a href="#menu-coffee">Coffee</a>
+        <a href="#menu-soft-drinks">Cold Drinks</a>
+        <a href="#menu-cakes">Treats</a>
+        <a href="#story">Our Story</a>
         <a href="admin.html">Settings</a>
       </nav>
       <button class="cart-toggle" type="button" id="cartToggle" aria-expanded="false" aria-controls="cartDrawer">
@@ -76,12 +73,83 @@
           <p class="eyebrow">33 High Street, Leominster</p>
           <h1 id="hero-title">CAFE ELITE</h1>
           <p class="hero-copy">
-            Proper coffee, fresh pasta bowls and a calmer kind of cafe moment on High Street.
+            Fresh baguettes, warm bowls and seasonal drinks from an independent High Street coffee house.
           </p>
           <div class="hero-actions">
-            <a class="button primary" href="#signature">View menu</a>
+            <a class="button primary" href="#new-at">See what's new</a>
             <a class="button secondary" href="#collection">Order for collection</a>
           </div>
+        </div>
+      </section>
+
+      <section class="section new-at-section" id="new-at" aria-labelledby="new-at-title">
+        <div class="section-heading section-heading--center new-at-heading">
+          <p class="eyebrow">New at Caffe Elite</p>
+          <h2 id="new-at-title">Something new for your next visit.</h2>
+          <p class="section-intro">
+            Freshly made favourites, seasonal flavours and a little more to look forward to.
+          </p>
+        </div>
+
+        <article class="promo-feature promo-feature--hero" id="fresh-baguettes" aria-labelledby="fresh-baguettes-title">
+          <div class="promo-feature-copy">
+            <p class="promo-kicker">Fresh Baguettes</p>
+            <h3 id="fresh-baguettes-title">Made fresh to order.</h3>
+            <ul class="promo-list" aria-label="Fresh baguette choices">
+              <li>Beef Pastrami &amp; Cheese</li>
+              <li>Classic Ham &amp; Cheese</li>
+              <li>Tuna Mayo</li>
+              <li>Vegetarian Egg</li>
+            </ul>
+            <p
+              class="promo-price"
+              data-price-product="baguette-beef-pastrami-cheese"
+              data-price-prefix="From"
+            ></p>
+            <a class="button primary" href="#menu-fresh-baguettes">View Baguettes</a>
+          </div>
+          <figure class="promo-media promo-media--wide">
+            <img src="assets/promos/fresh-baguettes.jpg" alt="Fresh baguettes at Caffe Elite" loading="eager" />
+          </figure>
+        </article>
+
+        <div class="promo-duo" aria-label="New Caffe Elite product highlights">
+          <article class="promo-feature promo-feature--compact promo-feature--bolognese" id="bolognese-bowl" aria-labelledby="bolognese-title">
+            <figure class="promo-media">
+              <img src="assets/promos/bolognese-bowl.jpg" alt="Bolognese bowl at Caffe Elite" loading="lazy" />
+            </figure>
+            <div class="promo-feature-copy">
+              <p class="promo-kicker">New</p>
+              <h3 id="bolognese-title">Bolognese Bowl</h3>
+              <p class="promo-subtitle">Rich, hearty &amp; full of flavour.</p>
+              <p>Freshly made comfort food for lunch or collection.</p>
+              <p class="promo-price" data-price-product="pasta-bolognese-bowl"></p>
+              <a class="button outline" href="#menu-pasta">Order Now</a>
+            </div>
+          </article>
+
+          <article class="promo-feature promo-feature--compact promo-feature--autumn" id="autumn-drinks" aria-labelledby="autumn-title">
+            <figure class="promo-media">
+              <img src="assets/promos/autumn-caffe-elite.jpg" alt="Autumn drinks at Caffe Elite" loading="lazy" />
+            </figure>
+            <div class="promo-feature-copy">
+              <p class="promo-kicker">Seasonal</p>
+              <h3 id="autumn-title">Autumn at Caffe Elite</h3>
+              <p class="promo-subtitle">Warm flavours for cosy days.</p>
+              <ul class="promo-list promo-list--compact" aria-label="Autumn drink flavours">
+                <li>Pumpkin Spice Latte</li>
+                <li>Salted Caramel Latte</li>
+                <li>Toffee Nut Latte</li>
+                <li>Hazelnut Cinnamon Latte</li>
+              </ul>
+              <p
+                class="promo-price"
+                data-price-product="autumn-pumpkin-spice-latte"
+                data-price-suffix="each"
+              ></p>
+              <a class="button outline" href="#menu-autumn-drinks">Discover Autumn Drinks</a>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -95,8 +163,7 @@
         </div>
         <div class="signature-grid" id="signatureGrid"></div>
       </section>
-
-      <section class="section reason-section" aria-labelledby="reason-title">
+      <section class="section reason-section" id="story" aria-labelledby="reason-title">
         <div class="section-heading section-heading--center">
           <p class="eyebrow">Why CAFE ELITE?</p>
           <h2 id="reason-title">Small cafe. High standards.</h2>
@@ -179,6 +246,7 @@
           <p class="eyebrow">Full menu</p>
           <h2 id="menu-title">Choose your collection order</h2>
         </div>
+        <div class="menu-category-nav" id="menuCategoryNav" aria-label="Menu categories"></div>
         <div class="menu-grid" id="menuGrid"></div>
       </section>
 
@@ -268,7 +336,7 @@
     </main>
 
     <footer class="site-footer">
-      <p>CAFE ELITE</p>
+      <img class="footer-logo" src="assets/caffe-elite-logo.jpg" alt="CAFE ELITE Coffee House" />
       <p>33 High Street, Leominster HR6 8LZ</p>
     </footer>
 
