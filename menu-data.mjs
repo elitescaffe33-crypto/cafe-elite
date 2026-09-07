@@ -122,7 +122,7 @@ export const menuData = [
         price: MENU_PRICES.garlicYogurtPasta,
         description: "A warm, comforting pasta bowl with creamy garlic yogurt.",
         image: "assets/garlic-yogurt-pasta.jpg",
-        badge: "Cafe Favourite",
+        badge: "Hot Food",
       },
       {
         id: "signature-classic-ham-cheese-sandwich",
@@ -133,7 +133,7 @@ export const menuData = [
         price: MENU_PRICES.sandwich,
         description: "Chicken ham, cheddar, crisp lettuce and tomato.",
         image: "assets/classic-ham-cheese.jpg",
-        badge: "Classic",
+        badge: "Sandwich",
       },
       {
         id: "signature-coffee-sandwich-snack",
@@ -143,7 +143,7 @@ export const menuData = [
         price: MENU_PRICES.sandwichDeal,
         description: "A cafe favourite with one coffee, sandwich and snack.",
         image: "assets/menu-sandwich-deal.jpg",
-        badge: "Customer Favourite",
+        badge: "Meal Deal",
         deal: {
           coffee: coffeeChoices,
           sandwich: sandwichChoices,

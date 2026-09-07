@@ -465,7 +465,7 @@ function updateMessage() {
   const total = getBasketTotal().toFixed(2);
 
   orderMessage.value = [
-    "CAFE ELITE order",
+    "Caffe Elite order",
     `Service: ${service}`,
     "Payment: Pay on collection",
     `Name: ${name}`,
@@ -541,7 +541,7 @@ async function sendCollectionOrder() {
   return;
 
   if (ORDER_NOTIFICATION_EMAIL) {
-    const subject = encodeURIComponent("New CAFE ELITE collection order");
+    const subject = encodeURIComponent("New Caffe Elite collection order");
     const body = encodeURIComponent(orderMessage.value);
     window.location.href = `mailto:${ORDER_NOTIFICATION_EMAIL}?subject=${subject}&body=${body}`;
     return;
@@ -626,7 +626,7 @@ function payOnlineWithStripe() {
 function submitOrderForm() {
   const formData = new FormData(orderForm);
   const fields = {
-    _subject: "New CAFE ELITE collection order",
+    _subject: "New Caffe Elite collection order",
     _captcha: "false",
     _template: "table",
     _next: window.location.href.split("#")[0] + "#order-sent",
