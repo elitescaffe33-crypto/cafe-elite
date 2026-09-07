@@ -10,6 +10,7 @@ const CAFE_MUSIC_TRACKS = [];
 const CAFE_MUSIC_VOLUME = 0.1;
 
 const menuGrid = document.querySelector("#menuGrid");
+const menuSection = document.querySelector("#menu");
 const menuCategoryNav = document.querySelector("#menuCategoryNav");
 const signatureGrid = document.querySelector("#signatureGrid");
 const promoPriceTargets = document.querySelectorAll("[data-price-product]");
@@ -38,6 +39,7 @@ const basket = [];
 let activeMenuData = menuData;
 let activeSettings = defaultSiteSettings;
 let openDealKey = "";
+let activeMenuCategoryId = "pasta";
 
 function setupGoldSparks() {
   const field = document.querySelector(".gold-spark-field");
@@ -143,36 +145,73 @@ function closeCart() {
 
 function renderMenuCategoryNav() {
   if (!menuCategoryNav) return;
+  menuCategoryNav.setAttribute("role", "tablist");
   menuCategoryNav.innerHTML = activeMenuData
-    .map((group) => `<a href="#menu-${getGroupId(group)}">${group.category}</a>`)
+    .map((group) => {
+      const groupId = getGroupId(group);
+      const isActive = groupId === activeMenuCategoryId;
+      return `<button class="menu-category-tab ${isActive ? "is-active" : ""}" id="menu-tab-${groupId}" type="button" role="tab" aria-selected="${isActive}" aria-controls="menu-panel" tabindex="${isActive ? "0" : "-1"}" data-menu-tab="${groupId}">${group.category}</button>`;
+    })
     .join("");
 }
 
+function getActiveMenuGroupIndex() {
+  const requestedIndex = activeMenuData.findIndex((group) => getGroupId(group) === activeMenuCategoryId);
+  if (requestedIndex >= 0) return requestedIndex;
+  const pastaIndex = activeMenuData.findIndex((group) => getGroupId(group) === "pasta");
+  return pastaIndex >= 0 ? pastaIndex : 0;
+}
+
 function renderMenu() {
+  const groupIndex = getActiveMenuGroupIndex();
+  const group = activeMenuData[groupIndex];
+  if (!group) {
+    menuGrid.innerHTML = "";
+    renderMenuCategoryNav();
+    return;
+  }
+
+  activeMenuCategoryId = getGroupId(group);
   renderMenuCategoryNav();
-  menuGrid.innerHTML = activeMenuData
-    .map((group, groupIndex) => {
-      const groupId = getGroupId(group);
-      return `
-        <article class="menu-card menu-card--${groupId}" id="menu-${groupId}">
-          <h3>${group.category}</h3>
-          ${group.description ? `<p class="menu-card-intro">${group.description}</p>` : ""}
-          <ul>
-            ${group.items
-              .map(
-                (item, itemIndex) => `
-                  <li>${item.deal ? renderDealItem(item, groupIndex, itemIndex) : renderStandardItem(item, groupIndex, itemIndex)}</li>
-                `,
-              )
-              .join("")}
-          </ul>
-        </article>
-      `;
-    })
-    .join("");
+  menuGrid.innerHTML = `
+    <article class="menu-card menu-card--${activeMenuCategoryId}" id="menu-panel" role="tabpanel" aria-labelledby="menu-tab-${activeMenuCategoryId}">
+      <div class="menu-card-heading">
+        <h3>${group.category}</h3>
+        ${group.description ? `<p class="menu-card-intro">${group.description}</p>` : ""}
+      </div>
+      <ul>
+        ${group.items
+          .map(
+            (item, itemIndex) => `
+              <li>${item.deal ? renderDealItem(item, groupIndex, itemIndex) : renderStandardItem(item, groupIndex, itemIndex)}</li>
+            `,
+          )
+          .join("")}
+      </ul>
+    </article>
+  `;
 
   renderSignaturePicks();
   renderHomepagePromoPrices();
+}
+
+function selectMenuCategory(categoryId, { scroll = false, focusTab = false } = {}) {
+  if (!activeMenuData.some((group) => getGroupId(group) === categoryId)) return;
+  activeMenuCategoryId = categoryId;
+  openDealKey = "";
+  renderMenu();
+  history.replaceState(null, "", `#menu-${categoryId}`);
+
+  if (scroll) {
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+    menuSection.scrollIntoView({ behavior, block: "start" });
+  }
+
+  window.requestAnimationFrame(() => {
+    const activeTab = menuCategoryNav.querySelector(`[data-menu-tab="${categoryId}"]`);
+    activeTab?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    if (focusTab) activeTab?.focus({ preventScroll: true });
+  });
 }
 
 function renderSignaturePicks() {
@@ -213,19 +252,22 @@ function renderStandardItem(item, groupIndex, itemIndex) {
   const price = getItemPrice(item);
   const ingredients = Array.isArray(item.ingredients) && item.ingredients.length ? item.ingredients.join(", ") : "";
   return `
-    <button class="menu-item-button ${item.image ? "has-image" : ""}" type="button" data-group="${groupIndex}" data-item="${itemIndex}" data-product-id="${item.id || getItemKey(item)}">
-      <span class="menu-item-copy">
-        <span class="menu-item-head">
+    <article class="menu-product-card ${item.image ? "has-image" : ""}" data-product-id="${item.id || getItemKey(item)}">
+      ${item.image ? `<img class="menu-product-image" src="${item.image}" alt="${item.name}" loading="lazy">` : ""}
+      <div class="menu-product-body">
+        <div class="menu-item-head">
           ${item.badge ? `<span class="item-badge">${item.badge}</span>` : ""}
-          <span class="menu-item-name">${item.name}</span>
-        </span>
-        ${item.description ? `<span class="menu-item-description">${item.description}</span>` : ""}
-        ${item.secondaryDescription ? `<span class="menu-item-description menu-item-description--secondary">${item.secondaryDescription}</span>` : ""}
-        ${ingredients ? `<span class="menu-item-ingredients">${ingredients}</span>` : ""}
-        <span class="price ${price ? "" : "is-empty"}">${price || "Add price"}</span>
-      </span>
-      ${item.image ? `<img class="menu-item-photo" src="${item.image}" alt="${item.name}">` : ""}
-    </button>
+          <h4 class="menu-item-name">${item.name}</h4>
+        </div>
+        ${item.description ? `<p class="menu-item-description">${item.description}</p>` : ""}
+        ${item.secondaryDescription ? `<p class="menu-item-description menu-item-description--secondary">${item.secondaryDescription}</p>` : ""}
+        ${ingredients ? `<details class="menu-product-ingredients"><summary>Ingredients</summary><p>${ingredients}</p></details>` : ""}
+        <div class="menu-product-footer">
+          <span class="price ${price ? "" : "is-empty"}">${price || "Add price"}</span>
+          <button class="button primary menu-add" type="button" data-group="${groupIndex}" data-item="${itemIndex}">Add</button>
+        </div>
+      </div>
+    </article>
   `;
 }
 
@@ -234,34 +276,37 @@ function renderDealItem(item, groupIndex, itemIndex) {
   const dealEntries = Object.entries(item.deal);
   const hasChoices = dealEntries.length > 0;
   const key = `${groupIndex}-${itemIndex}`;
+  const panelId = `deal-panel-${groupIndex}-${itemIndex}`;
   const isOpen = openDealKey === key;
   return `
-    <div class="deal-builder ${item.image ? "has-image" : ""} ${isOpen ? "is-open" : ""}" data-group="${groupIndex}" data-item="${itemIndex}" data-product-id="${item.id || getItemKey(item)}">
-      ${item.image ? `<img class="deal-artwork" src="${item.image}" alt="${item.name}" loading="lazy">` : ""}
-      <button class="deal-toggle" type="button" aria-expanded="${hasChoices && isOpen ? "true" : "false"}">
-        <span class="menu-item-copy">
-          <span class="menu-item-head">
-            ${item.badge ? `<span class="item-badge">${item.badge}</span>` : ""}
-            <span class="menu-item-name">${item.name}</span>
-          </span>
-          ${item.description ? `<span class="menu-item-description">${item.description}</span>` : ""}
+    <article class="deal-builder menu-product-card menu-product-card--deal ${item.image ? "has-image" : ""} ${isOpen ? "is-open" : ""}" data-group="${groupIndex}" data-item="${itemIndex}" data-product-id="${item.id || getItemKey(item)}">
+      ${item.image ? `<img class="menu-product-image deal-artwork" src="${item.image}" alt="${item.name}" loading="lazy">` : ""}
+      <div class="menu-product-body">
+        <div class="menu-item-head">
+          ${item.badge ? `<span class="item-badge">${item.badge}</span>` : ""}
+          <h4 class="menu-item-name">${item.name}</h4>
+        </div>
+        ${item.description ? `<p class="menu-item-description">${item.description}</p>` : ""}
+        <div class="menu-product-footer">
           <span class="price">${getItemPrice(item)}</span>
-        </span>
-        <span class="deal-chevron">${hasChoices ? (isOpen ? "Close" : "Choose") : "Add"}</span>
-      </button>
-      ${
-        hasChoices
-          ? `<div class="deal-panel">
-              <div class="deal-fields">
-                ${dealEntries
-                  .map(([label, values]) => `<label>${label.replace(/^\w/, (letter) => letter.toUpperCase())} <select data-choice="${label}">${options(values)}</select></label>`)
-                  .join("")}
-              </div>
-              <button class="status-button deal-add" type="button">Add deal</button>
-            </div>`
-          : ""
-      }
-    </div>
+          <button class="button outline deal-toggle" type="button" aria-expanded="${hasChoices && isOpen ? "true" : "false"}" ${hasChoices ? `aria-controls="${panelId}"` : ""}>
+            ${hasChoices ? (isOpen ? "Close" : "Choose") : "Add"}
+          </button>
+        </div>
+        ${
+          hasChoices
+            ? `<div class="deal-panel" id="${panelId}">
+                <div class="deal-fields">
+                  ${dealEntries
+                    .map(([label, values]) => `<label>${label.replace(/^\w/, (letter) => letter.toUpperCase())} <select data-choice="${label}">${options(values)}</select></label>`)
+                    .join("")}
+                </div>
+                <button class="button primary deal-add" type="button">Add deal</button>
+              </div>`
+            : ""
+        }
+      </div>
+    </article>
   `;
 }
 
@@ -653,7 +698,7 @@ menuGrid.addEventListener("click", (event) => {
     return;
   }
 
-  const button = event.target.closest(".menu-item-button");
+  const button = event.target.closest(".menu-add");
   if (!button) return;
   addItemToBasket(Number(button.dataset.group), Number(button.dataset.item));
 });
@@ -667,13 +712,40 @@ signatureGrid?.addEventListener("click", (event) => {
 
   const jumpButton = event.target.closest(".signature-jump");
   if (!jumpButton) return;
+  const targetGroup = activeMenuData[Number(jumpButton.dataset.targetGroup)];
+  if (!targetGroup) return;
+  activeMenuCategoryId = getGroupId(targetGroup);
   openDealKey = `${jumpButton.dataset.targetGroup}-${jumpButton.dataset.targetItem}`;
   renderMenu();
-  const targetGroup = activeMenuData[Number(jumpButton.dataset.targetGroup)];
-  const target = targetGroup ? document.querySelector(`#menu-${getGroupId(targetGroup)}`) : document.querySelector("#menu");
-  target?.scrollIntoView({ behavior: "smooth", block: "start" });
+  menuSection.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
+menuCategoryNav.addEventListener("click", (event) => {
+  const tab = event.target.closest("[data-menu-tab]");
+  if (!tab) return;
+  selectMenuCategory(tab.dataset.menuTab, { focusTab: true });
+});
+
+menuCategoryNav.addEventListener("keydown", (event) => {
+  if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+  const tabs = [...menuCategoryNav.querySelectorAll("[data-menu-tab]")];
+  const currentIndex = tabs.findIndex((tab) => tab.dataset.menuTab === activeMenuCategoryId);
+  if (currentIndex < 0) return;
+  event.preventDefault();
+  const nextIndex = event.key === "Home"
+    ? 0
+    : event.key === "End"
+      ? tabs.length - 1
+      : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+  selectMenuCategory(tabs[nextIndex].dataset.menuTab, { focusTab: true });
+});
+
+document.addEventListener("click", (event) => {
+  const categoryLink = event.target.closest("[data-menu-category]");
+  if (!categoryLink) return;
+  event.preventDefault();
+  selectMenuCategory(categoryLink.dataset.menuCategory, { scroll: true });
+});
 basketList.addEventListener("click", (event) => {
   const button = event.target.closest(".remove-item");
   if (!button) return;
@@ -705,6 +777,9 @@ siteNav.addEventListener("click", () => {
   siteNav.classList.remove("is-open");
   navToggle.setAttribute("aria-expanded", "false");
 });
+
+const hashCategory = window.location.hash.startsWith("#menu-") ? window.location.hash.slice(6) : "";
+if (menuData.some((group) => getGroupId(group) === hashCategory)) activeMenuCategoryId = hashCategory;
 
 setupGoldSparks();
 setupBackgroundMusic();
