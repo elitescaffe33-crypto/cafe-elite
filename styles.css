@@ -1658,6 +1658,30 @@ textarea {
     display: flex;
   }
 
+  .site-header--admin {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .site-header--admin .is-admin-nav {
+    position: static;
+    display: flex;
+    flex: 1 0 100%;
+    min-width: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .site-header--admin .is-admin-nav a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+  }
+
   .cart-toggle {
     order: 2;
     margin-left: auto;

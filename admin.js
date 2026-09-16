@@ -34,10 +34,16 @@ loginButton.addEventListener("click", () => {
 
 document.querySelectorAll(".is-admin-nav a[href^='#']").forEach((link) => {
   link.addEventListener("click", () => {
-    const panel = document.querySelector(link.getAttribute("href"));
-    if (panel?.tagName === "DETAILS") panel.open = true;
+    openAdminSection(link.hash);
   });
 });
+
+function openAdminSection(hash = window.location.hash) {
+  const panel = document.getElementById((hash || "#settings").slice(1));
+  if (panel?.classList.contains("admin-accordion")) panel.open = true;
+}
+
+window.addEventListener("hashchange", () => openAdminSection());
 
 settingsForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -180,6 +186,7 @@ async function openAdmin() {
     await loadContacts();
     loginPanel.hidden = true;
     dashboard.hidden = false;
+    openAdminSection();
     showMessage("");
   } catch (error) {
     dashboard.hidden = true;
