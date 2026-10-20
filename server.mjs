@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { extname, join, normalize } from "node:path";
+import { mkdir, readFile, writeFile, realpath } from "node:fs/promises";
+import { extname, join, posix, relative, resolve, sep } from "node:path";
 import { getItemKey, getItemOrderName, menuData, priceToPence, slugify } from "./menu-data.mjs";
 import { defaultSiteSettings, getOrderingStatus, mergeSettings } from "./site-settings.mjs";
 
@@ -759,21 +759,59 @@ async function handleStripeWebhook(request, response) {
 }
 
 async function serveStatic(request, response) {
-  const url = new URL(request.url || "/", `http://${request.headers.host}`);
-  const cleanPath = normalize(decodeURIComponent(url.pathname))
-    .replace(/^([/\\]*\.\.[/\\])+/, "")
-    .replace(/^[/\\]+/, "");
-  const filePath = join(root, cleanPath || "index.html");
+  const reject = (status, message) => {
+    response.writeHead(status, {
+      "content-type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+    });
+    response.end(message);
+  };
+  // Decode exactly once, before normalization; never use Host as a URL base.
+  const rawPath = (request.url || "/").split(/[?#]/, 1)[0];
+  let decodedPath;
+  try { decodedPath = decodeURIComponent(rawPath); }
+  catch { return reject(400, "Bad request"); }
+  if (!decodedPath.startsWith("/") || decodedPath.startsWith("//") || /[\\:\x00-\x1f\x7f]/.test(decodedPath)) return reject(400, "Bad request");
+  if (decodedPath.split("/").some(part => part === ".." || (part !== "." && /[. ]$/.test(part)) || /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part))) return reject(400, "Bad request");
+  const cleanPath = posix.normalize(decodedPath).replace(/^\/+/, "") || "index.html";
+  // Exact public files in deployed commit 74bd84a. New assets require explicit review.
+  const publicFiles = new Set([
+    "index.html", "admin.html", "success.html", "styles.css",
+    "script.js", "admin.js", "menu-data.mjs", "site-settings.mjs",
+    "assets/assets/cafe-front.jpg", "assets/assets/pasta-bowls.jpg",
+    "assets/cafe-front.jpg", "assets/caffe-elite-logo.jpg", "assets/caffe-elite-logo.svg",
+    "assets/carrot-cake.jpg", "assets/chocolate-cupcake.jpg", "assets/classic-ham-cheese.jpg",
+    "assets/cornetto-hazelnut-chocolate.jpg", "assets/fudge-cake.jpg", "assets/garlic-yogurt-pasta.jpg",
+    "assets/lemon-cake.jpg", "assets/menu-autumn-lattes.jpg", "assets/menu-baguette-deal.jpg",
+    "assets/menu-bolognese-bowl.jpg", "assets/menu-sandwich-deal.jpg", "assets/orange-cake.jpg",
+    "assets/pasta-bowls.jpg", "assets/pink-cupcake.jpg", "assets/promos/autumn-caffe-elite.jpg",
+    "assets/promos/bolognese-bowl.jpg", "assets/promos/fresh-baguettes.jpg", "assets/solero-exotic.jpg",
+    "assets/tiramisu.jpg", "assets/tomato-pasta.jpg", "assets/vanilla-cupcake.jpg",
+    "assets/vegetarian-egg.jpg", "assets/victoria-sponge-cake.jpg",
+    "chocolate-cupcake.jpg", "cornetto-hazelnut-chocolate.jpg", "download.jpg", "fudge-cake.jpg",
+    "garlic-yogurt-pasta.jpg", "lemon-cake.jpg", "pink-cupcake.jpg", "solero-exotic.jpg",
+    "tomato-pasta.jpg", "vanilla-cupcake.jpg", "victoria-sponge-cake.jpg",
+  ]);
+  if (!publicFiles.has(cleanPath)) return reject(404, "Not found");
+  if (!["GET", "HEAD"].includes(request.method)) {
+    response.setHeader("Allow", "GET, HEAD");
+    return reject(405, "Method not allowed");
+  }
 
   try {
+    const filePath = await realpath(resolve(root, cleanPath));
+    const actualPath = relative(await realpath(root), filePath).split(sep).join("/");
+    // A public filename must not become a symlink/junction to a private file.
+    if (!publicFiles.has(actualPath)) return reject(404, "Not found");
     const body = await readFile(filePath);
     response.writeHead(200, {
       "content-type": contentTypes[extname(filePath).toLowerCase()] || "application/octet-stream",
+      "X-Content-Type-Options": "nosniff",
     });
     response.end(body);
   } catch {
-    response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
-    response.end("Not found");
+    reject(404, "Not found");
   }
 }
 
