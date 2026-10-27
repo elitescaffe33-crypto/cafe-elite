@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 150" role="img" aria-labelledby="title desc">
-  <title id="title">CAFFE ELITE Coffee House</title>
-  <desc id="desc">Crowned CE monogram with laurel wreath and Caffe Elite Coffee House wordmark.</desc>
+  <title id="title">CAFE ELITE Coffee House</title>
+  <desc id="desc">Crowned CE monogram with laurel wreath and CAFE ELITE Coffee House wordmark.</desc>
   <defs>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#8f540b" />
@@ -27,6 +27,6 @@
   <text x="90" y="92" text-anchor="middle" fill="#fff7e7" font-family="Georgia, 'Times New Roman', serif" font-size="42" font-weight="700">CE</text>
   <path d="M195 88h58" stroke="url(#gold)" stroke-width="3" stroke-linecap="round" />
   <path d="M448 88h58" stroke="url(#gold)" stroke-width="3" stroke-linecap="round" />
-  <text x="350" y="72" text-anchor="middle" fill="#fff7e7" font-family="Georgia, 'Times New Roman', serif" font-size="42" letter-spacing="3">CAFFE ELITE</text>
+  <text x="350" y="72" text-anchor="middle" fill="#fff7e7" font-family="Georgia, 'Times New Roman', serif" font-size="42" letter-spacing="3">CAFE ELITE</text>
   <text x="350" y="109" text-anchor="middle" fill="url(#gold)" font-family="Arial, sans-serif" font-size="17" font-weight="700" letter-spacing="7">COFFEE HOUSE</text>
 </svg>

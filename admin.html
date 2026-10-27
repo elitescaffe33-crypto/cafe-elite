@@ -1,130 +1,107 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CAFE ELITE Admin</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <header class="site-header site-header--admin">
-      <a class="brand" href="index.html" aria-label="CAFE ELITE home">
-        <span class="brand-mark">CE</span>
-        <span>
-          <strong>CAFE ELITE</strong>
-          <small>Admin</small>
-        </span>
-      </a>
-      <nav class="site-nav is-admin-nav" aria-label="Admin navigation">
-        <a href="index.html">Website</a>
-        <a href="#settings">Settings</a>
-        <a href="#prices">Prices</a>
-        <a href="#orders">Orders</a>
-        <a href="#customers">Customers</a>
-      </nav>
-    </header>
-
-    <main class="admin-page">
-      <section class="section admin-hero">
-        <p class="eyebrow">Admin panel</p>
-        <h1>Settings</h1>
-        <p>Manage opening hours, order options and recent order history.</p>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cafe Elite Manager</title>
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="theme-color" content="#122431">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Cafe Elite Manager">
+  <link rel="apple-touch-icon" href="assets/cafe-elite-manager-icon.png">
+  <link rel="manifest" href="manager.webmanifest">
+  <link rel="stylesheet" href="admin-refinements.css">
+</head>
+<body class="manager-shell">
+  <a class="skip-link" href="#managerMain">Skip to content</a>
+  <div id="drawerBackdrop" class="drawer-backdrop" hidden></div>
+  <aside id="managerSidebar" class="manager-sidebar" aria-label="Manager navigation">
+    <div class="sidebar-brand"><a class="manager-brand" href="#overview" aria-label="Cafe Elite Manager dashboard"><span class="brand-seal">CE</span><strong>CAFE<br>ELITE</strong></a><button type="button" class="icon-button drawer-close" id="closeSidebar" aria-label="Close navigation"><span data-icon="x"></span></button></div>
+    <nav class="is-admin-nav" aria-label="Admin navigation">
+      <a href="index.html"><span data-icon="house"></span>Website</a>
+      <a href="#settings"><span data-icon="settings"></span>Settings</a>
+      <a href="#prices"><span data-icon="tag"></span>Prices</a>
+      <a href="#orders"><span data-icon="clipboard-list"></span>Orders<span id="sidebarOrderCount" class="nav-count" hidden></span></a>
+      <a href="#customers"><span data-icon="users"></span>Customers</a>
+      <div class="sidebar-menu">
+        <button type="button" id="menuDisclosure" aria-expanded="true" aria-controls="sidebarCategories"><span data-icon="utensils"></span>Menu<span class="disclosure-arrow" data-icon="chevron-down"></span></button>
+        <div id="sidebarCategories" class="sidebar-categories"></div>
+      </div>
+    </nav>
+    <a class="sidebar-owner" href="#overview"><span class="owner-avatar">A</span><span><strong>Owner</strong><small>Dashboard</small></span><span data-icon="chevron-down"></span></a>
+    <button type="button" class="sidebar-signout" id="mobileLogout"><span data-icon="log-out"></span>Sign out</button>
+    <button type="button" class="sidebar-refresh" id="mobileReload"><span data-icon="rotate-ccw"></span>Refresh settings</button>
+  </aside>
+  <header class="manager-topbar" id="managerTopbar">
+    <button class="icon-button" id="sidebarToggle" type="button" aria-label="Open navigation" aria-controls="managerSidebar" aria-expanded="false"><span data-icon="menu"></span></button>
+    <a class="manager-brand mobile-brand" href="#overview" aria-label="Cafe Elite Manager dashboard"><span class="brand-seal">CE</span><strong>CAFE<br>ELITE</strong></a>
+    <label class="manager-search"><span data-icon="search"></span><span class="sr-only">Search products in selected category</span><input id="productSearch" type="search" placeholder="Search products..." autocomplete="off" disabled></label>
+    <button type="button" class="icon-button status-button" id="statusButton" title="Order status" aria-label="Open order status"><span data-icon="bell"></span><i id="managerOrderDot" hidden></i></button>
+    <details class="owner-account" id="ownerAccount"><summary aria-label="Owner account"><span class="owner-avatar">A</span><span data-icon="chevron-down"></span></summary><div><a href="#overview"><span data-icon="layout-dashboard"></span>Dashboard</a><button type="button" id="reloadSettings"><span data-icon="rotate-ccw"></span>Refresh settings</button><button type="button" id="adminLogout"><span data-icon="log-out"></span>Sign out</button></div></details>
+  </header>
+  <main class="admin-page" id="managerMain" tabindex="-1">
+    <div class="manager-page-heading">
+      <p id="managerBreadcrumb" class="manager-breadcrumb" hidden>Menu <span data-icon="chevron-right"></span><span id="breadcrumbCategory"></span></p>
+      <h1><span id="pageTitle">Cafe Elite Manager</span><span id="mobileCategoryTitle" hidden></span><span id="headingCategoryCount" class="heading-count" hidden></span></h1>
+      <p id="managerSubtitle">Owner access</p>
+    </div>
+    <section class="admin-login manager-card" id="loginPanel" aria-labelledby="loginTitle"><h2 id="loginTitle">Sign in</h2><label>Admin password<input id="adminPassword" type="password" autocomplete="current-password"></label><button class="button primary" id="loginButton" type="button">Sign in</button></section>
+    <p id="adminMessage" class="admin-message" role="status" aria-live="polite"></p>
+    <div id="adminDashboard" hidden><div class="admin-grid">
+      <section id="overview" class="manager-overview manager-card" aria-labelledby="overviewTitle"><h2 id="overviewTitle">Dashboard</h2><dl class="manager-stats"><div><dt>Online ordering</dt><dd id="managerOrdering">Loading</dd></div><div><dt>Today's hours</dt><dd id="managerHours">Loading</dd></div><div><dt>Open orders</dt><dd id="managerOrderCount">Loading</dd></div></dl><p id="managerNotice" role="status"></p><div class="section-actions"><a class="button primary" href="#orders">View orders</a><a class="button secondary" href="#prices">Products &amp; Menu</a></div></section>
+      <section id="settings" hidden>
+        <form id="settingsForm" class="manager-card">
+          <div class="panel-heading"><h2>Hours &amp; ordering</h2><button type="button" id="cancelSettings" class="button secondary">Cancel</button></div>
+          <div class="admin-switches">
+            <label class="switch-field"><span>Online ordering</span><input name="orderingEnabled" type="checkbox" role="switch"></label>
+            <label class="switch-field"><span>Collection</span><input name="collection" type="checkbox" role="switch"></label>
+            <label class="switch-field"><span>Delivery</span><input name="delivery" type="checkbox" role="switch"></label>
+            <label class="switch-field"><span>Pay on collection</span><input name="payOnCollection" type="checkbox" role="switch"></label>
+            <label class="switch-field"><span>Stripe online payment</span><input name="stripe" type="checkbox" role="switch"></label>
+          </div>
+          <h3>Weekly opening hours</h3>
+          <label class="mobile-day-picker">Day<select id="hoursDay"></select></label>
+          <div class="hours-table" id="hoursTable"></div>
+          <div class="settings-actions"><button class="button primary" type="submit">Save changes</button></div>
+        </form>
       </section>
-
-      <section class="section admin-login" id="loginPanel">
-        <div class="order-panel">
-          <h2>Login</h2>
-          <label>
-            Admin password
-            <input id="adminPassword" type="password" autocomplete="current-password" />
-          </label>
-          <button class="button primary" id="loginButton" type="button">Open admin</button>
-          <p id="adminMessage" class="admin-message"></p>
-        </div>
-      </section>
-
-      <section class="section admin-dashboard" id="adminDashboard" hidden>
-        <div class="admin-grid">
-          <details class="admin-accordion" id="settings">
-            <summary><span>Site settings</span><small>Hours and order controls</small></summary>
-            <form class="order-panel" id="settingsForm">
-              <div class="section-heading compact">
-                <p class="eyebrow">Order controls</p>
-                <h2>Site settings</h2>
-              </div>
-
-              <div class="admin-switches">
-                <label><input name="orderingEnabled" type="checkbox" /> Online ordering</label>
-                <label><input name="collection" type="checkbox" /> Collection</label>
-                <label><input name="delivery" type="checkbox" /> Delivery</label>
-                <label><input name="payOnCollection" type="checkbox" /> Pay on collection</label>
-                <label><input name="stripe" type="checkbox" /> Stripe online payment</label>
-              </div>
-
-              <div class="hours-table" id="hoursTable"></div>
-
-              <button class="button primary" type="submit">Save settings</button>
-            </form>
-          </details>
-
-          <details class="admin-accordion" id="prices">
-            <summary><span>Menu prices</span><small>Edit, add or remove products</small></summary>
-            <form class="order-panel" id="pricesForm">
-              <div class="section-heading compact">
-                <p class="eyebrow">Menu controls</p>
-                <h2>Menu prices</h2>
-              </div>
-              <div class="add-product-panel">
-                <h3>Add product</h3>
-                <div class="form-grid">
-                  <label>Category <input name="newCategory" type="text" placeholder="Snacks" /></label>
-                  <label>Name <input name="newName" type="text" placeholder="New item" /></label>
-                  <label>Price <input name="newPrice" type="text" placeholder="£1.99" /></label>
-                  <label class="wide">Description <input name="newDescription" type="text" placeholder="Optional" /></label>
+      <section id="prices" hidden>
+        <div id="categoryTiles" class="category-tiles" aria-label="Menu categories"></div>
+        <div class="product-workspace" id="productWorkspace" hidden>
+          <section id="productEditor" class="manager-card product-editor" aria-labelledby="editorTitle" hidden>
+            <form id="productForm">
+              <div class="editor-heading"><button type="button" class="icon-button mobile-editor-back" id="mobileEditorBack" aria-label="Back to product list"><span data-icon="chevron-left"></span></button><h2 id="editorTitle" tabindex="-1">Edit Product</h2><span id="editorStatus" class="status-pill"></span><button type="button" id="closeProductEditor" class="text-button"><span data-icon="chevron-left"></span><span id="backCategory">Back</span></button></div>
+              <div class="editor-layout">
+                <div class="editor-media"><div id="productPhoto" class="product-photo"></div><div id="photoChoices" class="photo-choices"></div><details class="photo-options"><summary aria-label="Choose existing photo" title="Choose existing photo"><span data-icon="pencil"></span></summary><label class="photo-select-label">Choose existing photo<select name="productImage"></select></label><button type="button" class="upload-disabled" disabled aria-describedby="uploadUnavailable"><span data-icon="plus"></span>Upload new photo</button><p id="uploadUnavailable" class="manager-hint">Uploads are not enabled.</p></details></div>
+                <div class="editor-fields">
+                  <label class="name-field">Product name<input name="productName" required maxlength="100"></label>
+                  <label class="description-field">Description<span class="textarea-wrap"><textarea name="productDescription" rows="3" maxlength="1000"></textarea><small id="descriptionCount">0/1000</small></span></label>
+                  <div class="price-category"><label>Price (&pound;)<input name="productPrice" required type="number" min="0.01" max="999.99" step="0.01" inputmode="decimal"></label><label>Category<select name="productCategory" required></select></label></div>
+                  <div class="visibility-switches">
+                    <label class="switch-field"><span>Visible on website<small>Show this product to customers.</small></span><input name="productVisible" type="checkbox" role="switch"></label>
+                    <label class="switch-field"><span>Sold out<small>Temporarily unavailable.</small></span><input name="productSoldOut" type="checkbox" role="switch"></label>
+                  </div>
                 </div>
-                <button class="button secondary" id="addProductButton" type="button">Add product</button>
               </div>
-              <div class="price-editor" id="priceEditor"></div>
-              <button class="button primary" type="submit">Save menu</button>
+              <p id="productError" role="alert"></p>
+              <div class="editor-actions"><button type="button" id="hideProduct" class="button danger"><span data-icon="eye-off"></span>Hide product</button><div><button type="button" id="cancelProductEditor" class="button secondary">Cancel</button><button type="submit" class="button primary" id="publishProduct">Save changes</button></div></div>
+              <details class="manager-options"><summary>Options &amp; ingredient records</summary><p id="editorOptions"></p><p>Ingredients, allergens and variants are unchanged. New products need ingredient and allergen review before sale.</p></details>
+              <details class="manager-comparison"><summary>Review changes</summary><div><section><h3>Current</h3><div id="productBefore"></div></section><section><h3>After save</h3><div id="productAfter"></div></section></div></details>
             </form>
-          </details>
-
-          <details class="admin-accordion" id="orders">
-            <summary><span>Order history</span><small>Recent orders and status</small></summary>
-            <section class="order-panel">
-              <div class="section-heading compact">
-                <p class="eyebrow">Recent orders</p>
-                <h2>Order history</h2>
-              </div>
-              <button class="button secondary" id="refreshOrders" type="button">Refresh orders</button>
-              <div class="orders-list" id="ordersList"></div>
-            </section>
-          </details>
-
-          <details class="admin-accordion" id="customers">
-            <summary><span>Contacts</span><small>Customer email and phone list</small></summary>
-            <section class="order-panel">
-              <div class="section-heading compact">
-                <p class="eyebrow">Customer list</p>
-                <h2>Contacts</h2>
-              </div>
-              <div class="order-tools">
-                <button class="button secondary" id="refreshContacts" type="button">Refresh contacts</button>
-                <button class="button secondary" id="copyContacts" type="button">Copy CSV</button>
-              </div>
-              <div class="contacts-list" id="contactsList"></div>
-            </section>
-          </details>
+          </section>
+          <aside class="manager-card category-jump"><h3><span data-icon="bookmark"></span>Jump to category</h3><nav id="jumpCategories" aria-label="Jump to category"></nav></aside>
         </div>
+        <section class="manager-card product-list-panel">
+          <div class="panel-heading"><h2 id="productListTitle">Menu items</h2><button class="button primary" id="addProductButton" type="button"><span data-icon="plus"></span>Add new item</button></div>
+          <div class="mobile-product-search"><!-- The single search input is moved here on narrow screens. --></div>
+          <div class="list-filters"><label hidden>Category<select id="productCategory"></select></label><label>Status<select id="productStatus"><option value="">All statuses</option><option value="active">Active</option><option value="sold_out">Sold out</option><option value="hidden">Hidden</option></select></label><p id="productCount" role="status"></p></div>
+          <div class="product-table-header" aria-hidden="true"><span>Image</span><span>Product name</span><span>Price</span><span>Status</span><span>Actions</span></div><div id="priceEditor" class="price-editor"></div>
+        </section>
       </section>
-    </main>
-
-    <script type="module" src="admin.js"></script>
-  </body>
+      <section id="orders" class="manager-card" hidden><div class="panel-heading"><h2>Orders</h2><button class="button secondary" id="refreshOrders" type="button"><span data-icon="rotate-ccw"></span>Refresh orders</button></div><div class="orders-list" id="ordersList"></div></section>
+      <section id="customers" class="manager-card" hidden><div class="panel-heading"><h2>Customers</h2><div class="section-actions"><button class="button secondary" id="refreshContacts" type="button">Refresh contacts</button><button class="button secondary" id="copyContacts" type="button">Copy CSV</button></div></div><div class="contacts-list" id="contactsList"></div></section>
+    </div></div>
+  </main>
+  <script type="module" src="admin.js"></script>
+</body>
 </html>

@@ -1,0 +1,11 @@
+{
+  "id": "/admin.html",
+  "name": "Cafe Elite Manager",
+  "short_name": "Elite Manager",
+  "start_url": "/admin.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8f9fb",
+  "theme_color": "#102b45",
+  "icons": [{ "src": "/assets/cafe-elite-manager-icon.png", "type": "image/png", "sizes": "512x512", "purpose": "any" }]
+}

@@ -1,0 +1,828 @@
+/* Focused ordering and accessibility refinements. */
+
+/* Automatic pasta offers: compact bands, original product photography unchanged. */
+.menu-card--pasta > ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 1100px) {
+  .menu-card--pasta > ul { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .menu-card--pasta > ul { grid-template-columns: minmax(0, 1fr); }
+  .menu-card--pasta .menu-product-body { gap: 6px; padding: 14px; }
+}
+.pasta-promotions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin: 0 0 24px; background: #0c2035; color: #fff; border-block: 2px solid #c9a45b; }
+.pasta-promotion { padding: 18px 22px; min-width: 0; }
+.pasta-promotion + .pasta-promotion { border-left: 1px solid #77818a; }
+.pasta-promotion h4 { margin: 0 0 6px; font-size: .85rem; text-transform: uppercase; letter-spacing: 0; color: #f4d58e; -webkit-text-fill-color: currentColor; background: none; }
+.pasta-promotion strong { display: block; font-size: 1.4rem; line-height: 1.3; color: #fff; -webkit-text-fill-color: currentColor; }
+.pasta-promotion p { margin: 8px 0; color: #fff; font-size: .9rem; line-height: 1.5; }
+.pasta-promotion small { display: block; font-size: .8rem; line-height: 1.5; color: #eee9df; }
+.cart-drawer li.basket-pasta-deal { display: block; border-block: 1px solid #c9a45b; margin-block: 12px; padding: 16px 0; background: none; }
+.basket-pasta-deal > ul { padding: 0; margin: 0; list-style: none; }
+.cart-drawer .basket-pasta-deal h3 { color: #f4d58e; font-size: 1rem; -webkit-text-fill-color: currentColor; background: none; }
+.pasta-deal-totals { margin: 12px 0 0; font-size: .95rem; }
+.pasta-deal-totals > div { display: flex; justify-content: space-between; gap: 12px; padding-block: 4px; }
+.pasta-deal-totals dd { margin: 0; font-weight: 700; }
+.cart-drawer .pasta-saving { margin: 8px 0 0; color: #f4d58e; font-weight: 700; font-size: .9rem; }
+@media (max-width: 600px) {
+  .pasta-promotions { grid-template-columns: minmax(0, 1fr); margin-bottom: 16px; }
+  .pasta-promotion { padding: 14px 16px; }
+  .pasta-promotion + .pasta-promotion { border-left: 0; border-top: 1px solid #77818a; }
+  .pasta-promotion strong { font-size: 1.2rem; }
+}
+
+/* Opaque text avoids the low-contrast brown stops in the shared gold gradient. */
+.hero h1, .hero .eyebrow, .hero-copy {
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  text-shadow: none;
+  opacity: 1;
+  mix-blend-mode: normal;
+}
+.hero h1 { color: #fff0bf; }
+.hero .eyebrow, .hero-copy { color: #fff7e7; }
+.cart-basket-icon { display: block; width: 24px; height: 24px; flex: 0 0 24px; }
+.menu-product-footer .menu-add { min-height: 44px; }
+@media (max-width: 600px) {
+  .site-header .cart-toggle { width: auto; min-width: 76px; min-height: 44px; gap: 6px; padding-inline: 10px; }
+  .site-header .cart-count { margin: 0; flex-shrink: 0; }
+}
+
+.skip-link { position: fixed; top: 8px; left: 12px; z-index: 100; padding: 12px 16px; background: var(--cream); color: var(--ink); transform: translateY(-160%); }
+.skip-link:focus { transform: none; }
+.status-strip { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 28px; padding: 18px 24px; color: var(--cream); background: var(--ink); font-size: .88rem; line-height: 1.6; }
+.status-strip a { color: var(--gold-bright); }
+.allergen-notice { max-width: 1160px; margin: 0 auto 24px; padding: 18px 22px; border: 2px solid #c5a15f; border-left: 4px solid #a57b2a; border-radius: 10px; background: #fff8e8; color: #263343; font-size: .94rem; line-height: 1.65; text-align: center; box-shadow: 0 3px 12px rgb(35 30 23 / 6%); }
+.allergen-notice strong { font-weight: 750; }
+.allergen-notice .allergen-notice-title { display: block; margin-bottom: 7px; color: #152d48; font-size: clamp(1.12rem, 2.3vw, 1.5rem); line-height: 1.35; font-weight: 850; letter-spacing: .018em; text-transform: uppercase; }
+.allergen-notice a { color: #103968; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 600px) { .allergen-notice { padding: 15px 12px; font-size: .91rem; } }
+.allergen-info { font-size: .85rem; }
+.menu-directory { color: var(--ink); padding: 16px; border-bottom: 1px solid #c8c2b8; }
+.menu-directory summary { min-height: 44px; cursor: pointer; font-weight: 700; }
+.menu-directory li { padding: 12px 0; }
+.visit-section { width: 100%; padding: 52px max(20px, calc((100% - 1160px) / 2)); color: var(--cream); background: var(--ink); }
+.visit-section .section-heading { max-width: 1160px; margin: 0 auto 28px; }
+.visit-section .section-heading h2 { color: var(--cream); font-size: 2.6rem; line-height: 1.2; }
+#visit .eyebrow { color: var(--gold-bright); -webkit-text-fill-color: currentColor; }
+.menu-item-description, .menu-card-intro, .new-product-summary { color: #445165; }
+.new-product-kicker { color: #865b13; }
+.visit-section address { font-style: normal; line-height: 1.7; }
+.visit-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; max-width: 1160px; margin: auto; }
+.visit-grid .hours-public-card { width: 100%; margin: 0 0 22px; }
+.visit-photo { margin: 0; min-width: 0; }
+.visit-photo img { width: 100%; height: 100%; max-height: 450px; object-fit: cover; border-radius: 6px; }
+.visit-map { max-width: 1160px; margin: 24px auto 0; }
+.visit-map p { font-size: .85rem; color: #e9ddc7; }
+.visit-map iframe { width: 100%; height: 340px; border: 0; border-radius: 6px; }
+.site-footer { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+.site-footer nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 24px; }
+.site-footer nav a { display: inline-flex; align-items: center; min-height: 44px; color: var(--cream); text-decoration: underline; text-underline-offset: 4px; }
+.site-footer p { margin: 0; }
+.information-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: var(--ink); }
+.information-header img { max-width: 70vw; height: auto; }
+.information-header a { color: var(--cream); }
+.information-header > a { display: inline-flex; align-items: center; min-height: 44px; }
+.information-page { width: min(800px, calc(100% - 40px)); margin: auto; color: var(--ink); font-size: 1rem; }
+.information-page h1 { font-size: 2.2rem; line-height: 1.2; color: var(--ink); }
+.information-page h2 { font-size: 1.25rem; color: var(--ink); margin: 28px 0 10px; }
+.information-page p { line-height: 1.7; }
+.information-page a:not(.button) { color: #735018; text-decoration: underline; }
+.cart-drawer .field-hint a { color: var(--gold-bright); text-decoration: underline; }
+.cart-drawer .notes-consent { border-top: 1px solid #a28750; padding-top: 16px; margin: 16px 0; }
+.cart-drawer .notes-consent[hidden] { display: none; }
+.cart-drawer .notes-consent h4 { color: #fff4dc; font: 700 1rem/1.4 Arial, sans-serif; margin: 0 0 10px; }
+.cart-drawer .notes-consent-choice { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; align-items: start; min-height: 44px; color: #f8f4eb; font-size: 1rem; font-weight: 400; line-height: 1.55; cursor: pointer; overflow-wrap: anywhere; }
+.cart-drawer .notes-consent-choice input { width: 22px; height: 22px; min-width: 22px; min-height: 22px; margin: 3px 0; padding: 0; accent-color: #e3b94f; }
+.cart-drawer .notes-consent-choice input:focus-visible { outline: 3px solid #ffe08a; outline-offset: 4px; }
+.cart-drawer #removeOrderNotes { min-height: 44px; white-space: normal; }
+.cart-drawer #notesConsentAnnouncement { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.information-page .eyebrow { color: #735018; background: none; -webkit-text-fill-color: currentColor; text-shadow: none; }
+.information-page h1, .information-page h2 { -webkit-text-fill-color: currentColor; text-shadow: none; overflow-wrap: anywhere; }
+.confirmation-page { background: var(--cream); }
+.success-page { min-height: 0; padding-block: 48px 64px; gap: 24px; }
+.success-page h1, .success-page p { margin: 0; }
+.success-page p:not(.eyebrow) { color: var(--ink); -webkit-text-fill-color: currentColor; font-size: 1rem; opacity: 1; }
+.confirmation-details { display: grid; gap: 20px; margin: 0; padding-block: 24px; border-block: 1px solid #a99778; }
+.confirmation-details dt { font-weight: 700; }
+.confirmation-details dd { margin: 4px 0 0; overflow-wrap: anywhere; line-height: 1.7; }
+.success-page .button { justify-self: start; max-width: 100%; white-space: normal; text-align: center; }
+.order-confirmation { background: var(--cream); color: var(--ink); }
+.order-confirmation p { line-height: 1.7; overflow-wrap: anywhere; }
+.cart-drawer .button.stripe:not(:disabled) { color: var(--ink); -webkit-text-fill-color: var(--ink); background: var(--cream); border-color: var(--cream); }
+.button, .eyebrow, .item-badge, .new-product-kicker, .signature-badge { letter-spacing: 0; }
+.new-product-media { aspect-ratio: 16 / 9; }
+.menu-product-image { aspect-ratio: 16 / 10; }
+.collection-flow, .reason-section { padding-block: 44px; }
+@media (max-width: 768px) {
+  .visit-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .visit-section .section-heading h2 { font-size: 2rem; }
+  .status-strip { justify-content: flex-start; gap: 4px; flex-direction: column; padding: 14px 20px; }
+  .information-page h1 { font-size: 1.8rem; }
+  .visit-photo img { height: auto; aspect-ratio: 16 / 10; }
+}
+
+/* These two owner-supplied landscape assets must not inherit portrait/mobile crops. */
+.menu-product-card[data-product-id="pasta-chicken-tomato"] .menu-product-image,
+.menu-product-card[data-product-id="cake-vanilla-cheesecake"] .menu-product-image {
+  height: auto;
+  aspect-ratio: auto 4 / 3;
+  object-fit: contain;
+  object-position: center;
+}
+
+/* Keep the supplied portrait food photography intact in the menu. */
+.menu-product-image[src^="assets/cakes/"],
+.menu-product-image[src^="assets/baguettes/"],
+.menu-product-image[src^="assets/sandwiches/"] {
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: contain;
+}
+
+.menu-card--cakes > ul {
+  align-items: start;
+}
+
+.menu-card--cakes .menu-product-card {
+  height: auto;
+}
+@media (max-width: 600px) {
+  .menu-product-card { min-height: 0; height: auto; }
+  .menu-product-image[src^="assets/cakes/"],
+  .menu-product-image[src^="assets/baguettes/"],
+  .menu-product-image[src^="assets/sandwiches/"] {
+    height: 180px;
+    aspect-ratio: auto;
+    object-fit: cover;
+    object-position: center 48%;
+  }
+  .menu-product-body { padding: 12px; gap: 6px; }
+  .menu-product-image[src^="assets/cakes/"] { height: 240px; }
+}
+:root {
+  --header-height: 86px;
+  --visible-height: 100dvh;
+  --visible-top: 0px;
+}
+
+[hidden] { display: none !important; }
+html { scroll-padding-top: calc(var(--header-height) + 20px); }
+.section, #menu-panel { scroll-margin-top: calc(var(--header-height) + 20px); }
+#signature > .section-heading h2 { color: var(--ink); }
+#signature > .section-heading .section-intro { color: #445165; }
+#signature > .section-heading .eyebrow { color: #865b13; }
+#signature > .section-heading h2,
+#signature > .section-heading .section-intro,
+#signature > .section-heading .eyebrow {
+  -webkit-text-fill-color: currentColor;
+  background: none;
+  opacity: 1;
+  text-shadow: none;
+  mix-blend-mode: normal;
+}
+.signature-card h3, .signature-card p { color: var(--cream); }
+.signature-card p { line-height: 1.55; }
+.signature-card-body, .menu-product-body { min-width: 0; }
+.menu-product-body { display: flex; flex-direction: column; }
+.menu-product-footer { margin-top: auto; }
+.menu-item-name, .signature-card h3, .new-product-card h3 { overflow-wrap: anywhere; }
+.menu-product-footer, .signature-card-foot, .new-product-footer { flex-wrap: wrap; }
+.menu-product-footer .price, .signature-card-foot strong { white-space: nowrap; }
+.menu-product-ingredients summary { min-height: 44px; display: flex; align-items: center; text-decoration: underline; text-underline-offset: 3px; }
+.menu-product-ingredients p { line-height: 1.6; }
+.deal-fields label { color: var(--ink); background: none; -webkit-text-fill-color: currentColor; }
+.deal-fields select { font-size: 1rem; color: var(--ink); -webkit-text-fill-color: var(--ink); background: #fffaf0; }
+
+.button.primary, .cart-toggle, .signature-badge, .menu-category-tab.is-active {
+  color: var(--ink);
+  -webkit-text-fill-color: var(--ink);
+  background: var(--gold-bright);
+  text-shadow: none;
+}
+.button.primary:hover, .cart-toggle:hover { background: #ffdb80; }
+.button, .cart-close, .menu-category-tab, .remove-item { min-height: 44px; }
+button:disabled { cursor: not-allowed; opacity: 1; }
+.button:disabled { color: #4d5662; background: #d8d6d0; border-color: #a2a5a8; -webkit-text-fill-color: #4d5662; box-shadow: none; transform: none; }
+a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--gold-bright);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px var(--ink);
+}
+.menu-category-tab:focus-visible, .category-scroll:focus-visible { outline-color: var(--ink); box-shadow: none; outline-offset: -4px; }
+
+.menu-category-browser {
+  position: sticky;
+  top: var(--header-height);
+  z-index: 12;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: stretch;
+  width: min(1160px, 100%);
+  margin: 0 auto 20px;
+  padding: 4px;
+  background: #fffaf0;
+  border: 1px solid rgba(7, 21, 39, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(7, 21, 39, 0.08);
+}
+.menu-category-browser .menu-category-nav {
+  position: relative;
+  top: auto;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 4px;
+  gap: 6px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  scrollbar-width: thin;
+}
+.category-scroll {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  padding: 0;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  font: 2rem/1 Georgia, serif;
+  cursor: pointer;
+}
+.category-scroll:disabled { color: #b5b0a6; }
+.category-scroll:not(:disabled):hover { background: var(--paper); }
+.menu-category-tab.is-active { border-color: #725219; text-decoration: underline; text-underline-offset: 4px; }
+
+.cart-drawer {
+  position: fixed;
+  inset: calc(var(--visible-top) + 16px) 16px auto auto;
+  width: min(520px, calc(100% - 32px));
+  height: auto;
+  max-width: none;
+  max-height: calc(var(--visible-height) - 32px);
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--cream);
+  background: var(--ink);
+  transform: none;
+  opacity: 1;
+  visibility: visible;
+  overflow: hidden;
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+}
+.cart-drawer:not([open]) { display: none; }
+.cart-drawer::before { display: none; }
+.cart-drawer::backdrop { background: rgba(3, 10, 18, 0.65); }
+.basket-open { position: fixed; width: 100%; overflow: hidden; }
+.cart-drawer-head { flex: 0 0 auto; align-items: center; }
+.cart-drawer-head .eyebrow { margin: 0 0 6px; color: var(--gold-bright); background: none; -webkit-text-fill-color: currentColor; }
+.cart-drawer h2 { font-size: 1.5rem; line-height: 1.2; margin: 0; color: var(--cream); }
+.cart-drawer h3 { font-size: 1.2rem; line-height: 1.35; color: var(--cream); margin: 0 0 16px; }
+.cart-drawer-body { flex: 1 1 auto; min-height: 0; min-width: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 4px 5px calc(20px + env(safe-area-inset-bottom)); scrollbar-gutter: stable; }
+.cart-status { margin: 0 0 18px; color: #e9ddc7; font-size: 0.9rem; line-height: 1.5; }
+.cart-drawer li { grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: start; padding-block: 14px; }
+.basket-item-copy { display: grid; gap: 8px; overflow-wrap: anywhere; font-size: 0.95rem; }
+.basket-item-copy small { color: #e9ddc7; line-height: 1.5; font-size: 0.85rem; }
+.basket-item-copy span { color: var(--gold-bright); font-weight: 700; }
+.basket-quantity { display: grid; grid-template-columns: 44px 24px 44px; align-items: center; text-align: center; }
+.basket-quantity button { min-width: 44px; height: 44px; padding: 0; color: var(--cream); background: #19334e; border: 1px solid #768391; border-radius: 4px; font: 1.35rem/1 Inter, sans-serif; cursor: pointer; }
+.cart-drawer .remove-item { grid-column: 2; justify-self: end; background: transparent; color: var(--cream); text-decoration: underline; padding: 6px 8px; }
+.cart-drawer .basket-total { margin: 16px 0; color: var(--gold-bright); }
+.cart-drawer .order-section { width: 100%; margin: 0; padding: 0; background: transparent; border: 0; }
+.cart-drawer .order-panel { padding: 0; margin: 0; background: transparent; border: 0; box-shadow: none; }
+.cart-drawer label { color: var(--cream); background: none; -webkit-text-fill-color: currentColor; font-size: 0.92rem; line-height: 1.4; }
+.cart-drawer input, .cart-drawer textarea { color: var(--ink); -webkit-text-fill-color: var(--ink); background: #fffaf0; font-size: 1rem; min-width: 0; width: 100%; border: 1px solid #9eacbb; border-radius: 6px; }
+.cart-drawer input { min-height: 46px; }
+.cart-drawer input::placeholder, .cart-drawer textarea::placeholder { color: #63666d; -webkit-text-fill-color: #63666d; }
+.cart-drawer input:disabled { background: #dbd9d4; color: #4d5662; }
+.cart-drawer .marketing-consent { display: grid; grid-template-columns: 22px minmax(0, 1fr); align-items: start; }
+.cart-drawer .marketing-consent input { width: 20px; height: 20px; min-height: 20px; margin: 2px 0 0; accent-color: var(--gold-bright); }
+.cart-drawer .field-hint, .cart-drawer .payment-help { color: #e9ddc7; font-size: 0.85rem; line-height: 1.55; margin: 14px 0; }
+.cart-drawer .field-error { color: #ffb7a9; -webkit-text-fill-color: currentColor; font-weight: 500; font-size: 0.85rem; line-height: 1.45; }
+.cart-drawer [aria-invalid="true"] { border: 2px solid #b83829; }
+.cart-drawer .form-actions { display: grid; gap: 12px; margin-top: 20px; }
+.cart-drawer .button.secondary { color: var(--cream); -webkit-text-fill-color: var(--cream); background: transparent; border-color: #8d9aa8; }
+.cart-drawer .button { width: 100%; white-space: normal; }
+.payment-details { white-space: pre-line; overflow-wrap: anywhere; line-height: 1.65; color: var(--cream); max-height: none; overflow: visible; }
+#reviewBasket { margin-top: 18px; }
+.checkout-feedback { color: #ffcabf; padding: 14px; border: 1px solid #efb09f; border-radius: 6px; line-height: 1.5; }
+.mobile-basket { display: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.hours-disclosure summary strong, .public-hours-row strong { color: var(--cream); background: none; -webkit-text-fill-color: currentColor; text-shadow: none; }
+.hours-disclosure summary small, .public-hours-row small, .hours-note { color: #e9ddc7; line-height: 1.55; }
+.visit-order { margin-top: 12px; }
+
+@media (max-width: 768px) {
+  .mobile-basket { display: block; position: fixed; z-index: 25; inset: auto 0 0; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: var(--ink); border-top: 1px solid var(--gold); }
+  .mobile-basket .button { width: 100%; min-height: 48px; font-size: 0.94rem; padding-inline: 8px; white-space: normal; }
+  body.has-basket { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+  body.basket-open .mobile-basket, body.keyboard-open .mobile-basket { display: none; }
+  .cart-drawer { inset: calc(var(--visible-top) + 8px) 8px auto; width: calc(100% - 16px); max-height: calc(var(--visible-height) - 16px - env(safe-area-inset-bottom)); padding: 16px 12px; gap: 12px; }
+  .cart-drawer .form-grid { grid-template-columns: 1fr; gap: 16px; }
+  .menu-category-browser { grid-template-columns: 44px minmax(0, 1fr) 44px; }
+}
+@media (max-width: 360px) {
+  .cart-drawer li { grid-template-columns: minmax(0, 1fr); }
+  .basket-quantity { justify-self: start; }
+  .cart-drawer .remove-item { grid-column: 1; justify-self: start; }
+  .new-product-footer .button { width: 100%; }
+  .new-at-heading h2, .signature-section .section-heading h2, .menu-section .section-heading h2 { font-size: 1.9rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* Approved drink customisation: milk included, each syrup +£0.50. */
+.drink-option-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  gap: 10px;
+  padding: 12px;
+  margin-block: 12px;
+  background: rgba(7, 23, 35, 0.78);
+  border: 1px solid rgba(218, 178, 104, 0.6);
+  border-radius: 8px;
+}
+.drink-option-fields label { display: grid; gap: 6px; color: #fff4df; font: 600 0.86rem/1.45 Inter, sans-serif; }
+.drink-option-fields select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 9px 8px;
+  border: 1px solid #9eacbb;
+  border-radius: 6px;
+  background: #fffaf0;
+  color: #162535;
+  font: 500 0.92rem/1.35 Inter, sans-serif;
+}
+.drink-option-fields select:focus-visible { outline: 3px solid var(--gold-bright); outline-offset: 2px; }
+.drink-option-fields small { grid-column: 1 / -1; color: #f6e9d2; font: 400 0.8rem/1.5 Inter, sans-serif; }
+.deal-fields .drink-option-fields { grid-column: 1 / -1; width: 100%; margin: 2px 0 0; }
+.site-footer a[href^="tel:"], .site-footer a[href^="mailto:"] { overflow-wrap: anywhere; }
+
+/* Package C: compact drink cards with accessible, on-demand customisation. */
+.menu-product-footer .drink-add { min-height: 46px; }
+.drink-customisation {
+  margin-block: 4px 8px;
+  overflow: hidden;
+  border: 1px solid #c9b887;
+  border-radius: 8px;
+  background: #fff7e7;
+}
+.drink-customisation > summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  min-height: 48px;
+  padding: 9px 12px;
+  color: #42310d;
+  cursor: pointer;
+  font-weight: 700;
+  line-height: 1.35;
+  list-style: none;
+}
+.drink-customisation > summary::-webkit-details-marker { display: none; }
+.drink-customisation > summary::before {
+  content: "▸";
+  display: inline-block;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+.drink-customisation[open] > summary::before { content: "▾"; }
+.drink-customisation > summary > span { flex: 1 1 auto; }
+.drink-customisation-current {
+  color: #74511a;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.drink-customisation[open] > summary { border-bottom: 1px solid #c9b887; }
+.drink-customisation .drink-option-fields { margin: 10px; }
+.menu-product-card .drink-add:focus-visible,
+.drink-customisation > summary:focus-visible { outline: 3px solid #0b3158; outline-offset: 2px; }
+
+/* 20 October owner visual review: a prominent Full Menu heading and larger original pasta photographs. */
+.menu-section > .section-heading > .eyebrow {
+  width: fit-content;
+  margin: 0;
+  font-family: Cinzel, Georgia, serif;
+  font-weight: 800;
+  font-size: clamp(1.85rem, 4.8vw, 3.2rem);
+  line-height: 1.15;
+  letter-spacing: 0;
+  color: #80550e;
+  -webkit-text-fill-color: currentColor;
+  text-shadow: none;
+  background: none;
+}
+.menu-section > .section-heading > .eyebrow::after {
+  content: "";
+  display: block;
+  width: min(110px, 60%);
+  height: 3px;
+  margin-top: 9px;
+  border-radius: 2px;
+  background: #aa7b26;
+}
+.menu-product-card[data-product-id="pasta-bolognese-bowl"] .menu-product-image,
+.menu-product-card[data-product-id="pasta-garlic-yogurt-pasta"] .menu-product-image,
+.menu-product-card[data-product-id="pasta-tomato-pasta"] .menu-product-image {
+  width: 100%;
+  height: auto;
+  aspect-ratio: auto;
+  max-height: none;
+  object-fit: contain;
+  object-position: center;
+  background: #071527;
+}
+.signature-card .signature-photo[src$="menu-bolognese-bowl.jpg"] {
+  /* Focus on the real bowl, not the baked-in promotional headline at left. */
+  object-position: 100% center;
+}
+@media (max-width: 600px) {
+  .menu-section > .section-heading > .eyebrow {
+    font-size: clamp(1.85rem, 7.1vw, 2.25rem);
+  }
+}
+
+/* Owner-reviewed photo-first Signature Picks: photos are not covered by copy. */
+.signature-section > .section-heading {
+  max-width: min(100%, 900px);
+  margin-bottom: clamp(28px, 4vw, 42px);
+  text-align: center;
+}
+.signature-section > .section-heading .eyebrow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  color: #865b13;
+  -webkit-text-fill-color: currentColor;
+  font-size: clamp(0.85rem, 1.8vw, 1.05rem);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+.signature-section > .section-heading .eyebrow::before,
+.signature-section > .section-heading .eyebrow::after {
+  content: "";
+  display: block;
+  width: clamp(22px, 8vw, 54px);
+  height: 1px;
+  background: #aa7b26;
+}
+.signature-section > .section-heading #signature-title {
+  color: var(--ink);
+  -webkit-text-fill-color: currentColor;
+  font-family: Cinzel, Georgia, serif;
+  font-size: clamp(2.4rem, 9.4vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  overflow-wrap: normal;
+  text-wrap: balance;
+}
+.signature-section > .section-heading .section-intro {
+  max-width: 680px;
+  margin-inline: auto;
+  line-height: 1.55;
+}
+
+/* Keep the four existing product photographs visible as their own clean card area. */
+.signature-grid .signature-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #091b2d;
+  overflow: hidden;
+  isolation: isolate;
+}
+.signature-grid .signature-card::after {
+  content: none;
+}
+.signature-card .signature-photo-frame {
+  display: block;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  flex: 0 0 auto;
+  overflow: hidden;
+  background: #071527;
+}
+.signature-card .signature-photo-frame > .signature-photo {
+  position: absolute;
+  inset: 0;
+  z-index: auto;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+  object-position: center 55%;
+}
+.signature-card .signature-photo-frame > .signature-photo[src$="menu-bolognese-bowl.jpg"] {
+  /* Original promotion artwork includes baked-in lettering on the left.
+     Zoom the original photo within its frame to showcase the bowl, not the lettering. */
+  object-position: 100% 54%;
+  transform: scale(1.6);
+  transform-origin: 100% 55%;
+}
+.signature-card .signature-photo-frame > .signature-photo[src$="orange-cake.jpg"] {
+  object-position: center 63%;
+}
+.signature-grid .signature-card-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-self: stretch;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  color: #fff7e7;
+  background: #091b2d;
+}
+.signature-grid .signature-card .signature-badge {
+  align-self: flex-start;
+  padding: 5px 10px;
+  font-size: 0.64rem;
+  line-height: 1.4;
+}
+.signature-grid .signature-card h3 {
+  margin: 0;
+  font-size: clamp(1.1rem, 2vw, 1.36rem);
+  line-height: 1.18;
+  color: #fff7e7;
+  -webkit-text-fill-color: currentColor;
+}
+.signature-grid .signature-card p {
+  margin: 0;
+  color: #e7e0d4;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.signature-grid .signature-card-foot {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: auto;
+  padding-top: 5px;
+}
+.signature-grid .signature-card-foot strong {
+  color: var(--gold-bright);
+  font-size: clamp(1.1rem, 2.1vw, 1.3rem);
+}
+.signature-grid .signature-card-foot .button {
+  width: auto;
+  min-width: 88px;
+  min-height: 46px;
+  padding: 9px 16px;
+  flex: 0 0 auto;
+}
+@media (max-width: 680px) {
+  .signature-grid .signature-card {
+    min-height: 0;
+    scroll-snap-align: start;
+  }
+  .signature-grid .signature-card .signature-photo-frame {
+    aspect-ratio: 4 / 3;
+  }
+  .signature-grid .signature-card-body {
+    padding: 15px;
+  }
+  .signature-grid .signature-card h3 {
+    font-size: 1.2rem;
+  }
+}
+
+/* Full Menu has 11 shopping categories; Signature Picks remains its own featured section. */
+/* Meal Deals: show the real existing poster at a readable natural size, with live choice summaries. */
+.menu-card--meal-deals .menu-product-card--deal {
+  overflow: hidden;
+  border-color: #d5c09b;
+}
+.menu-card--meal-deals .menu-product-card--deal > .deal-artwork {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: none;
+  aspect-ratio: auto 64 / 45;
+  object-fit: contain;
+  object-position: center;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: #fffaf0;
+}
+.menu-card--meal-deals .menu-product-card--deal > .menu-product-body {
+  gap: 12px;
+}
+.menu-card--meal-deals .menu-item-head .item-badge {
+  margin-bottom: 2px;
+}
+.meal-deal-includes {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid #d7c39a;
+  border-radius: 8px;
+  background: #fff7e7;
+}
+.meal-deal-includes-label {
+  color: #674713;
+  font-size: 0.79rem;
+  font-weight: 800;
+  letter-spacing: 0.025em;
+}
+.meal-deal-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.meal-deal-chips span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f6e2b3;
+  color: #152940;
+  border: 1px solid #e6c77c;
+  font-size: 0.83rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+.meal-deal-includes small {
+  color: #4a5260;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+.menu-card--meal-deals .menu-product-footer .button.deal-toggle {
+  min-height: 48px;
+  padding-inline: 18px;
+  color: #071527;
+  -webkit-text-fill-color: #071527;
+  background: var(--gold-bright);
+  border: 1px solid #ae8429;
+  font-weight: 800;
+}
+.menu-card--meal-deals .menu-product-footer .button.deal-toggle:hover {
+  background: #ffdc88;
+}
+.menu-card--meal-deals .menu-product-footer .button.deal-toggle:focus-visible {
+  outline: 3px solid #071527;
+  outline-offset: 3px;
+  box-shadow: none;
+}
+
+/* Sandwich white/brown bread choice is explicit, no added price and no silent default. */
+.sandwich-bread-fields {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  margin-block: 4px 12px;
+  border: 1px solid #d3bc87;
+  border-radius: 9px;
+  background: #fff4d9;
+}
+.sandwich-bread-fields label {
+  display: grid;
+  gap: 7px;
+  color: #263346;
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+.sandwich-bread-fields select {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid #876b3c;
+  border-radius: 7px;
+  background: #fffdf8;
+  color: #142940;
+  font: 600 1rem/1.4 Inter, sans-serif;
+}
+.sandwich-bread-fields select:invalid { color: #7f5861; }
+.sandwich-bread-fields select:focus-visible { outline: 3px solid #092f55; outline-offset: 2px; }
+.sandwich-bread-fields small {
+  color: #4d5662;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.menu-product-footer .sandwich-add { min-height: 46px; }
+.deal-fields .sandwich-bread-fields { grid-column: 1 / -1; width: 100%; }
+
+/* Extra sandwich bread selector makes the meal-deal builder taller: never clip Add deal. */
+.menu-card--meal-deals .deal-builder.is-open .deal-panel {
+  max-height: 1200px;
+}
+
+/* Clear ingredient disclosure for the Classic Ham & Cheese option in meal-deal selectors. */
+.meal-deal-ham-note {
+  display: block;
+  padding: 10px 12px;
+  border-left: 3px solid #d7a63b;
+  border-radius: 4px;
+  color: #293849;
+  background: #fff6e1;
+  font: 600 0.85rem/1.5 Inter, sans-serif;
+}
+.deal-fields .meal-deal-ham-note { grid-column: 1 / -1; }
+
+/* Four owner-confirmed muffin flavours must be chosen, not guessed. */
+.muffin-choice-fields {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  margin-block: 5px 12px;
+  border: 1px solid #cfa96d;
+  border-radius: 9px;
+  background: #fff5e3;
+}
+.muffin-choice-fields label {
+  display: grid;
+  gap: 7px;
+  color: #293344;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+.muffin-choice-fields select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid #8b754e;
+  border-radius: 7px;
+  background: #fffdf8;
+  color: #162739;
+  font: 600 1rem/1.4 Inter, sans-serif;
+}
+.muffin-choice-fields select:invalid { color: #6d5668; }
+.muffin-choice-fields small { color: #4d5662; font-size: 0.8rem; line-height: 1.5; }
+.deal-fields .muffin-choice-fields { grid-column: 1/-1; }
+.menu-product-footer .muffin-add { min-height: 46px; }
+
+/* A visible pre-payment route to trained allergen advice, not a legal "allergy-safe" guarantee. */
+.payment-allergy-title { display: block; text-align: center; margin-bottom: 7px; font-size: 1.06rem; letter-spacing: .015em; line-height: 1.4; color: #172d48; }
+.payment-allergy-warning {
+  padding: 14px 16px;
+  margin-block: 12px;
+  border: 2px solid #a67a1a;
+  border-radius: 9px;
+  background: #fff4d7;
+  color: #263343;
+  font-size: 0.94rem;
+  line-height: 1.6;
+}
+.payment-allergy-warning a {
+  color: #103968;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Supplier pack claims stay separate from shared-kitchen safety information. */
+.supplier-dietary-note { margin-top: 12px; padding-top: 12px; border-top: 1px solid #dfd3b9; }
+.supplier-gf-badge { display: inline-block; padding: 6px 10px; border: 1px solid #b79759; border-radius: 4px; background: #172d48; color: #fff3cf; font: 800 .78rem/1.4 Inter, sans-serif; letter-spacing: 0; }
+.supplier-dietary-note small { display: block; margin-top: 7px; color: #465363; font-size: .8rem; line-height: 1.5; }
+.cupcake-assortment-image { display: block; width: 100%; height: auto; aspect-ratio: 1280 / 853; object-fit: contain; }
+.cupcake-choice-label { display: grid; gap: 7px; margin-top: 10px; color: #263346; font: 700 .9rem/1.5 Inter, sans-serif; }
+.cupcake-choice-label select { width: 100%; min-width: 0; min-height: 46px; padding: 9px 8px; border: 1px solid #876b3c; border-radius: 6px; background: #fff; color: #142940; font: 600 1rem/1.4 Inter, sans-serif; }
+.cupcake-choice-label select:focus-visible { outline: 3px solid #092f55; outline-offset: 2px; }
+.cupcake-allergy-hint { margin: 8px 0; color: #465363; font-size: .82rem; line-height: 1.5; }
+.cupcake-card .cupcake-add { min-height: 46px; min-width: 70px; }
+.menu-allergen-link { margin: 8px 0 14px; font-size: .88rem; }
+.menu-allergen-link a, .food-allergy-section a { color: #123b60; text-decoration: underline; text-underline-offset: 3px; }
+.food-allergy-section { padding-block: 28px; border-top: 2px solid #a68036; background: #fff8e8; color: #172d48; }
+.food-allergy-section h2 { color: #172d48; background: none; -webkit-text-fill-color: currentColor; font-size: 1.4rem; line-height: 1.3; }
+.food-allergy-section p { max-width: 78ch; margin: 10px 0; font-size: .95rem; line-height: 1.6; }
+.food-allergy-section { scroll-margin-top: 100px; }
+.payment-allergy-warning .payment-allergy-title { font-size: 1rem; text-transform: none; }
+.new-product-card--chicken .new-product-media,
+.new-product-card--chicken .new-product-media img { aspect-ratio: auto; }
+.new-product-card--chicken .new-product-media img { object-fit: contain; }
+@media (min-width: 760px) { .new-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.menu-product-card[data-product-id="snack-mini-cheddars"] .menu-product-image,
+.menu-product-card[data-product-id="snack-ready-salted-chips"] .menu-product-image {
+  height: 240px;
+  aspect-ratio: auto;
+  object-fit: contain;
+  background: #fff;
+}

@@ -1,0 +1,56 @@
+# Installed dependencies and generated build/test output.
+node_modules/
+/coverage/
+/test-results/
+/playwright-report/
+*.log
+
+# Local credentials. Reviewed, value-free templates remain source files.
+.env
+.env.*
+!.env.example
+!.env.*.example
+/.printer-env
+/.printer-env.*
+!/.printer-env.example
+/.npmrc
+/.netrc
+/.auth/
+/.stripe/
+/.supabase/
+/supabase/.temp/
+/playwright/.auth/
+/credentials/
+/secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*.agekey
+.pgpass
+pgpass.conf
+pg_service.conf
+
+# Runtime records, private recovery material and disposable databases.
+/data/
+/backups/
+/private-backups/
+/recovery/
+/pgdata/
+/.local-db/
+/tmp/
+/temp/
+*.dump
+*.backup
+*.age
+*.sql.gz
+*.sql.zst
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+
+# Generated screenshots/payment audits only. Preview source is in scripts/.
+/preview/
+/docs/owner-review/evidence/

@@ -1,9 +1,13 @@
 services:
   - type: web
     name: cafe-elite
-    env: node
-    plan: free
-    buildCommand: "npm install"
+    runtime: node
+    region: ohio
+    plan: starter
+    branch: main
+    autoDeployTrigger: off
+    healthCheckPath: /api/health
+    buildCommand: "npm ci --ignore-scripts --no-audit --no-fund && npm run build"
     startCommand: "npm start"
     envVars:
       - key: ORDER_NOTIFICATION_EMAIL

@@ -3,14 +3,15 @@ export const defaultSiteSettings = {
 
   ordering: {
     enabled: true,
+    preparationMinutes: 20,
     closedMessage: "Online ordering is currently closed. Please order during opening hours.",
     days: {
-      monday: { label: "Monday", open: "09:00", close: "16:00", lastOrder: "15:45" },
-      tuesday: { label: "Tuesday", open: "09:00", close: "16:00", lastOrder: "15:45" },
-      wednesday: { label: "Wednesday", open: "09:00", close: "16:00", lastOrder: "15:45" },
-      thursday: { label: "Thursday", open: "09:00", close: "16:00", lastOrder: "15:45" },
-      friday: { label: "Friday", open: "09:00", close: "16:00", lastOrder: "15:45" },
-      saturday: { label: "Saturday", open: "09:00", close: "16:00", lastOrder: "15:45" },
+      monday: { label: "Monday", open: "09:00", close: "17:00", lastOrder: "16:45" },
+      tuesday: { label: "Tuesday", open: "09:00", close: "17:00", lastOrder: "16:45" },
+      wednesday: { label: "Wednesday", open: "09:00", close: "17:00", lastOrder: "16:45" },
+      thursday: { label: "Thursday", open: "09:00", close: "17:00", lastOrder: "16:45" },
+      friday: { label: "Friday", open: "09:00", close: "17:00", lastOrder: "16:45" },
+      saturday: { label: "Saturday", open: "09:00", close: "17:00", lastOrder: "16:45" },
       sunday: { label: "Sunday", open: "10:00", close: "15:00", lastOrder: "14:45" },
     },
   },

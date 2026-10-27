@@ -9,6 +9,7 @@ export const MENU_PRICES = Object.freeze({
   bologneseThree: gbp("24.99"),
   bologneseFamily: gbp("32.99"),
   tomatoPasta: gbp("6.99"),
+  chickenTomatoPasta: gbp("8.99"),
   garlicYogurtPasta: gbp("6.99"),
   twoBowls: gbp("11.99"),
   threeBowls: gbp("18.99"),
@@ -29,12 +30,55 @@ export const MENU_PRICES = Object.freeze({
   softDrink: gbp("1.50"),
   juice: gbp("1.75"),
   cake: gbp("2.99"),
-  muffin: gbp("2.50"),
+  muffin: gbp("1.99"),
   snack: gbp("1.99"),
   yogurt: gbp("0.59"),
 });
 
 export const SYRUP_PRICE = MENU_PRICES.syrup;
+
+// Retired IDs remain reserved so old admin overrides cannot revive them.
+export const RETIRED_PRODUCT_IDS = Object.freeze([
+  "snack-carrot-loaf-slice", "snack-lemon-loaf-slice", "snack-chocolate-loaf-slice",
+  "snack-cornetto-hazelnut-chocolate", "snack-solero-exotic",
+  "extra-add-syrup", "extra-homemade-yogurt-pot",
+]);
+export function isRetiredProduct(item) {
+  return [item?.id, item?.sourceId, item?.priceKey].some(id => RETIRED_PRODUCT_IDS.includes(id));
+}
+
+// Archived IDs remain available to historical records, not new online orders.
+export function onlineMenuGroups(groups) {
+  return groups.map(group => ({ ...group, items: group.items.filter(item => !isRetiredProduct(item)) }))
+    .filter(group => group.items.length);
+}
+
+export const CUPCAKE_VARIANTS = Object.freeze([
+  { id: "snack-chocolate-cupcake", name: "Chocolate Cupcake" },
+  { id: "snack-vanilla-cupcake", name: "Vanilla Cupcake" },
+  { id: "snack-lemon-cupcake", name: "Lemon Cupcake" },
+  { id: "snack-pink-cupcake", name: "Strawberry Cupcake" },
+]);
+
+// Exact legacy settings signatures verified by the owner; never fuzzy-match products.
+const redundantLegacyCustomProducts = [
+  { id: "tea-pomegranate", name: "Pomegranate", category: "Teas", legacyId: null, price: gbp("2.40") },
+  { id: "tea-blueberry", name: "Blueberry", category: "Teas", legacyId: null, price: gbp("2.40") },
+  { id: "tea-fresh-orange", name: "Fresh Orange", category: "Teas", legacyId: null, price: gbp("2.40") },
+  { id: "tea-italian-lemon", name: "Italian Lemon", category: "Teas", legacyId: null, price: gbp("2.40") },
+  { id: "cake-vanilla-cheesecake", name: "Cheesecake", category: "Cakes", legacyId: "custom-cakes-cheesecake", price: gbp("2.99") },
+];
+
+export function isRedundantLegacyCustomItem(item) {
+  if (!item || (item.description != null && item.description !== "")) return false;
+  const legacy = redundantLegacyCustomProducts.find(entry =>
+    item.name === entry.name && item.category === entry.category && item.price === entry.price
+    && (entry.legacyId === null ? item.id == null : item.id === entry.legacyId)
+    && (item.priceKey == null || item.priceKey === entry.legacyId));
+  // Only suppress an override while its canonical product exists in the base catalogue.
+  return Boolean(legacy && menuData.some(group => group.category === legacy.category
+    && group.items.some(product => product.id === legacy.id && product.name === legacy.name)));
+}
 
 const coffeeChoices = [
   "Latte",
@@ -64,16 +108,11 @@ const baguetteChoices = [
 const snackChoices = [
   "Muffins",
   "Cookies",
-  "Carrot Loaf Slice",
-  "Lemon Loaf Slice",
-  "Chocolate Loaf Slice",
   "Chocolate Cupcake",
   "Vanilla Cupcake",
   "Pink Cupcake",
   "Mini Cheddars",
   "Ready Salted Chips",
-  "Cornetto Hazelnut & Chocolate",
-  "Solero Exotic",
 ];
 
 const bowlChoices = [
@@ -96,6 +135,30 @@ const syrupChoices = [
   "Salted Caramel Sugar Free",
 ];
 
+// Drink customisation is a priced choice on the drink, not a client-trusted line item.
+// Preserve approved catalogue prices and the legacy standalone syrup reference.
+export const MUFFIN_FLAVOURS = Object.freeze(["Blueberry", "Cherry", "Chocolate Chip", "Double Chocolate"]);
+export const SANDWICH_BREAD_CHOICES = Object.freeze(["White", "Brown"]);
+export function requiresSandwichBreadChoice(item) {
+  // Only sliced-bread sandwiches and deals containing a sandwich.
+  // Fresh baguettes have a distinct bread product and must not offer this choice.
+  return Boolean(item && (item.categoryId === "sandwiches" || Array.isArray(item.deal?.sandwich)));
+}
+export const MILK_CHOICES = Object.freeze(["No milk", "Whole milk", "Semi-skimmed milk", "Oat milk"]);
+export const SYRUP_MODIFIER_CHOICES = Object.freeze(["No syrup", ...syrupChoices]);
+const noMilkByDefault = new Set(["Americano", "Espresso", "2X Espresso"]);
+
+export function isDrinkCustomisable(item) {
+  return Boolean(item && (["coffee", "autumn-drinks"].includes(item.categoryId) || Array.isArray(item.deal?.coffee)));
+}
+export function defaultDrinkMilk(item, selectedOptions = {}) {
+  const drink = item.deal?.coffee ? (selectedOptions.coffee || item.deal.coffee[0]) : item.name;
+  return noMilkByDefault.has(drink) ? "No milk" : "Whole milk";
+}
+export function drinkSyrupSurchargePence(selectedOptions = {}) {
+  return selectedOptions.syrup && selectedOptions.syrup !== "No syrup" ? priceToPence(SYRUP_PRICE) : 0;
+}
+
 function withCategory(id, category, items, meta = {}) {
   return {
     id,
@@ -115,50 +178,46 @@ export const menuData = [
     "Signature Picks",
     [
       {
-        id: "signature-garlic-yogurt-pasta",
-        sourceId: "pasta-garlic-yogurt-pasta",
-        priceKey: "pasta-garlic-yogurt-pasta",
-        name: "Garlic Yogurt Pasta",
-        price: MENU_PRICES.garlicYogurtPasta,
-        description: "A warm, comforting pasta bowl with creamy garlic yogurt.",
-        image: "assets/garlic-yogurt-pasta.jpg",
-        badge: "Hot Food",
+        id: "signature-bolognese-bowl",
+        sourceId: "pasta-bolognese-bowl",
+        priceKey: "pasta-bolognese-bowl",
+        displayName: "Bolognese Pasta",
+        name: "Bolognese Bowl",
+        price: MENU_PRICES.bologneseBowl,
+        description: "Rich, hearty & full of flavour.",
+        image: "assets/menu-bolognese-bowl.jpg",
+        badge: "Pasta Favourite",
       },
       {
-        id: "signature-classic-ham-cheese-sandwich",
-        sourceId: "sandwich-classic-ham-cheese",
-        priceKey: "sandwich-classic-ham-cheese",
-        name: "Classic Ham & Cheese",
-        basketName: "Classic Ham & Cheese Sandwich",
-        price: MENU_PRICES.sandwich,
-        description: "Chicken ham, cheddar, crisp lettuce and tomato.",
-        image: "assets/classic-ham-cheese.jpg",
-        badge: "Sandwich",
+        id: "signature-chicken-tomato-pasta",
+        sourceId: "pasta-chicken-tomato",
+        priceKey: "pasta-chicken-tomato",
+        name: "Chicken Tomato Pasta",
+        price: MENU_PRICES.chickenTomatoPasta,
+        description: "Tender chicken and penne in homemade tomato sauce.",
+        image: "assets/cafe-elite-chicken-tomato-pasta.webp",
+        badge: "Pasta Favourite",
       },
       {
-        id: "signature-coffee-sandwich-snack",
-        sourceId: "deal-coffee-sandwich-snack",
-        priceKey: "deal-coffee-sandwich-snack",
-        name: "Coffee + Sandwich + Snack",
-        price: MENU_PRICES.sandwichDeal,
-        description: "A cafe favourite with one coffee, sandwich and snack.",
-        image: "assets/menu-sandwich-deal.jpg",
-        badge: "Meal Deal",
-        deal: {
-          coffee: coffeeChoices,
-          sandwich: sandwichChoices,
-          snack: snackChoices,
-        },
+        id: "signature-beef-pastrami-baguette",
+        sourceId: "baguette-beef-pastrami-cheese",
+        priceKey: "baguette-beef-pastrami-cheese",
+        name: "Beef Pastrami & Cheese",
+        basketName: "Beef Pastrami & Cheese Baguette",
+        price: MENU_PRICES.freshBaguette,
+      description: "Beef pastrami, mozzarella, lettuce and tomato in a fresh baguette.",
+        image: "assets/baguettes/beef-pastrami-cheese.jpg",
+        badge: "Fresh Baguette",
       },
       {
-        id: "signature-carrot-cake",
-        sourceId: "cake-carrot-cake",
-        priceKey: "cake-carrot-cake",
-        name: "Carrot Cake",
+        id: "signature-orange-cake",
+        sourceId: "cake-orange-cake",
+        priceKey: "cake-orange-cake",
+        name: "Orange Cake",
         price: MENU_PRICES.cake,
-        description: "A classic slice to enjoy with your coffee.",
-        image: "assets/carrot-cake.jpg",
-        badge: "Treat",
+        description: "One of our customers' favourites.",
+        image: "assets/cakes/orange-cake.jpg",
+        badge: "Customer Favourite",
       },
     ],
     { featured: true },
@@ -166,12 +225,14 @@ export const menuData = [
   withCategory("pasta", "Pasta", [
     {
       id: "pasta-bolognese-bowl",
+      displayName: "Bolognese Pasta",
       name: "Bolognese Bowl",
       price: MENU_PRICES.bologneseBowl,
       description: "Rich, hearty & full of flavour.",
       secondaryDescription: "Freshly made comfort food for lunch or collection.",
       image: "assets/menu-bolognese-bowl.jpg",
       badge: "NEW",
+      ingredients: ["De Cecco Spaghetti", "Minced beef", "Onion", "Carrot", "Garlic", "Olive oil", "Tomato puree", "Chopped tomatoes", "Passata", "Beef stock", "Oregano", "Salt", "Black pepper"],
     },
     {
       id: "deal-bolognese-any-two",
@@ -205,12 +266,22 @@ export const menuData = [
       name: "Tomato Pasta",
       price: MENU_PRICES.tomatoPasta,
       image: "assets/tomato-pasta.jpg",
+      ingredients: ["De Cecco Spaghetti", "Homemade CAFE ELITE tomato sauce"],
     },
     {
       id: "pasta-garlic-yogurt-pasta",
       name: "Garlic Yogurt Pasta",
       price: MENU_PRICES.garlicYogurtPasta,
       image: "assets/garlic-yogurt-pasta.jpg",
+      ingredients: ["De Cecco Penne", "Homemade yogurt", "Garlic", "Salt"],
+    },
+    {
+      id: "pasta-chicken-tomato",
+      name: "Chicken Tomato Pasta",
+      price: MENU_PRICES.chickenTomatoPasta,
+      image: "assets/cafe-elite-chicken-tomato-pasta.webp",
+      description: "Tender chicken pieces and penne pasta tossed in our homemade tomato sauce.",
+      ingredients: ["De Cecco Penne", "Homemade CAFE ELITE tomato sauce", "Cooked chicken breast strips"],
     },
     {
       id: "deal-any-two-bowls",
@@ -256,24 +327,27 @@ export const menuData = [
         id: "baguette-beef-pastrami-cheese",
         name: "Beef Pastrami & Cheese",
         basketName: "Beef Pastrami & Cheese Baguette",
+        image: "assets/baguettes/beef-pastrami-cheese.jpg",
         price: MENU_PRICES.freshBaguette,
-        description: "Generous beef pastrami with mozzarella and tomato in a freshly prepared baguette.",
-        ingredients: ["Butter", "Pastrami", "Mozzarella", "Tomato"],
+      description: "Generous beef pastrami with mozzarella, lettuce and tomato in a freshly prepared baguette.",
+      ingredients: ["Butter", "Pastrami", "Mozzarella", "Tomato", "Lettuce"],
         badge: "NEW",
       },
       {
         id: "baguette-classic-ham-cheese",
         name: "Classic Ham & Cheese",
         basketName: "Classic Ham & Cheese Baguette",
+        image: "assets/baguettes/classic-ham-cheese.jpg",
         price: MENU_PRICES.freshBaguette,
-        description: "A classic combination of chicken ham, cheddar, lettuce and tomato.",
-        ingredients: ["Mayo", "Lettuce", "Chicken Ham", "Cheddar Cheese", "Tomato"],
+        description: "Made with sliced chicken breast instead of traditional pork ham, cheddar cheese, lettuce, tomato and mayonnaise.",
+        ingredients: ["Mayonnaise", "Lettuce", "Sliced Chicken Breast", "Cheddar Cheese", "Tomato"],
         badge: "NEW",
       },
       {
         id: "baguette-tuna-mayo",
         name: "Tuna Mayo",
         basketName: "Tuna Mayo Baguette",
+        image: "assets/baguettes/tuna-mayo.jpg",
         price: MENU_PRICES.freshBaguette,
         description: "Creamy tuna mayo with crisp lettuce and gherkin.",
         ingredients: ["Lettuce", "Tuna Mayo", "Gherkin"],
@@ -281,8 +355,11 @@ export const menuData = [
       },
       {
         id: "baguette-vegetarian-egg",
+        displayName: "Egg Mayo & Cucumber",
+        displayBasketName: "Egg Mayo & Cucumber Baguette",
         name: "Vegetarian Egg",
         basketName: "Vegetarian Egg Baguette",
+        image: "assets/baguettes/egg-mayo-cucumber.jpg",
         price: MENU_PRICES.freshBaguette,
         description: "Boiled egg, cucumber and lettuce with mayonnaise.",
         ingredients: ["Mayo", "Lettuce", "Boiled Egg", "Cucumber"],
@@ -323,27 +400,39 @@ export const menuData = [
       id: "sandwich-tuna-gherkin",
       name: "Tuna & Gherkin",
       basketName: "Tuna & Gherkin Sandwich",
+      image: "assets/sandwiches/tuna-gherkin.jpg",
       price: MENU_PRICES.sandwich,
       description: "Lettuce, tuna mayo and gherkin.",
       ingredients: ["Lettuce", "Tuna Mayo", "Gherkin"],
     },
     {
       id: "sandwich-vegetarian-egg",
+      displayName: "Egg Mayo & Cucumber",
+      displayBasketName: "Egg Mayo & Cucumber Sandwich",
       name: "Vegetarian Egg",
       basketName: "Vegetarian Egg Sandwich",
       price: MENU_PRICES.sandwich,
       description: "Mayo, lettuce, boiled egg and cucumber.",
       ingredients: ["Mayo", "Lettuce", "Boiled Egg", "Cucumber"],
-      image: "assets/vegetarian-egg.jpg",
+      image: "assets/sandwiches/egg-mayo-cucumber.jpg",
     },
     {
       id: "sandwich-classic-ham-cheese",
       name: "Classic Ham & Cheese",
       basketName: "Classic Ham & Cheese Sandwich",
       price: MENU_PRICES.sandwich,
-      description: "Mayo, lettuce, chicken ham, cheddar cheese and tomato.",
-      ingredients: ["Mayo", "Lettuce", "Chicken Ham", "Cheddar Cheese", "Tomato"],
-      image: "assets/classic-ham-cheese.jpg",
+      description: "Made with sliced chicken breast instead of traditional pork ham, cheddar cheese, lettuce, tomato and mayonnaise.",
+      ingredients: ["Mayonnaise", "Lettuce", "Sliced Chicken Breast", "Cheddar Cheese", "Tomato"],
+      image: "assets/sandwiches/classic-ham-cheese.jpg",
+    },
+    {
+      id: "sandwich-beef-pastrami-cheese",
+      name: "Beef Pastrami & Cheese",
+      basketName: "Beef Pastrami & Cheese Sandwich",
+      price: MENU_PRICES.sandwich,
+      description: "Mayo, lettuce, beef pastrami, cheddar cheese and tomato.",
+      ingredients: ["Mayo", "Lettuce", "Beef Pastrami", "Cheddar Cheese", "Tomato"],
+      image: "assets/sandwiches/beef-pastrami-cheese.jpg",
     },
   ]),
   withCategory("coffee", "Coffee", [
@@ -413,27 +502,22 @@ export const menuData = [
     { id: "soft-water", name: "Water", price: MENU_PRICES.softDrink },
   ]),
   withCategory("cakes", "Cakes", [
-    { id: "cake-carrot-cake", name: "Carrot Cake", price: MENU_PRICES.cake, image: "assets/carrot-cake.jpg" },
-    { id: "cake-orange-cake", name: "Orange Cake", price: MENU_PRICES.cake, image: "assets/orange-cake.jpg" },
-    { id: "cake-victoria-sponge", name: "Victoria Sponge Cake", price: MENU_PRICES.cake, image: "assets/victoria-sponge-cake.jpg" },
-    { id: "cake-fudge-cake", name: "Fudge Cake", price: MENU_PRICES.cake, image: "assets/fudge-cake.jpg" },
-    { id: "cake-lemon-cake", name: "Lemon Cake", price: MENU_PRICES.cake, image: "assets/lemon-cake.jpg" },
-    { id: "cake-apple-pie", name: "Apple Pie", price: MENU_PRICES.cake },
-    { id: "cake-tiramisu", name: "Tiramisu", price: MENU_PRICES.cake, image: "assets/tiramisu.jpg" },
+    { id: "cake-carrot-cake", name: "Carrot Cake", price: MENU_PRICES.cake, image: "assets/cakes/carrot-cake.jpg" },
+    { id: "cake-orange-cake", name: "Orange Cake", price: MENU_PRICES.cake, image: "assets/cakes/orange-cake.jpg" },
+    { id: "cake-victoria-sponge", name: "Victoria Sponge Cake", price: MENU_PRICES.cake, image: "assets/cakes/victoria-sponge-cake.jpg" },
+    { id: "cake-fudge-cake", name: "Fudge Cake", price: MENU_PRICES.cake, image: "assets/cakes/fudge-cake.jpg" },
+    { id: "cake-lemon-cake", name: "Lemon Meringue Pie", price: MENU_PRICES.cake, image: "assets/cakes/lemon-cake.jpg" },
+    { id: "cake-vanilla-cheesecake", name: "Cheesecake", price: MENU_PRICES.cake, image: "assets/cakes/cafe-elite-cheesecake.webp", description: "Baked vanilla flavoured cheesecake with a biscuit base." },
   ]),
   withCategory("snacks", "Snacks", [
     { id: "snack-muffins", name: "Muffins", price: MENU_PRICES.muffin },
     { id: "snack-cookies", name: "Cookies", price: MENU_PRICES.snack },
-    { id: "snack-carrot-loaf-slice", name: "Carrot Loaf Slice", price: MENU_PRICES.snack },
-    { id: "snack-lemon-loaf-slice", name: "Lemon Loaf Slice", price: MENU_PRICES.snack },
-    { id: "snack-chocolate-loaf-slice", name: "Chocolate Loaf Slice", price: MENU_PRICES.snack },
     { id: "snack-chocolate-cupcake", name: "Chocolate Cupcake", price: MENU_PRICES.snack, image: "assets/chocolate-cupcake.jpg" },
     { id: "snack-vanilla-cupcake", name: "Vanilla Cupcake", price: MENU_PRICES.snack, image: "assets/vanilla-cupcake.jpg" },
-    { id: "snack-pink-cupcake", name: "Pink Cupcake", price: MENU_PRICES.snack, image: "assets/pink-cupcake.jpg" },
-    { id: "snack-mini-cheddars", name: "Mini Cheddars", price: MENU_PRICES.snack },
-    { id: "snack-ready-salted-chips", name: "Ready Salted Chips", price: MENU_PRICES.snack },
-    { id: "snack-cornetto-hazelnut-chocolate", name: "Cornetto Hazelnut & Chocolate", price: MENU_PRICES.snack, image: "assets/cornetto-hazelnut-chocolate.jpg" },
-    { id: "snack-solero-exotic", name: "Solero Exotic", price: MENU_PRICES.snack, image: "assets/solero-exotic.jpg" },
+    { id: "snack-lemon-cupcake", name: "Lemon Cupcake", price: MENU_PRICES.snack },
+    { id: "snack-pink-cupcake", name: "Pink Cupcake", displayName: "Strawberry Cupcake", price: MENU_PRICES.snack, image: "assets/pink-cupcake.jpg" },
+    { id: "snack-mini-cheddars", name: "Mini Cheddars", price: MENU_PRICES.snack, image: "assets/mini-cheddars.jpg" },
+    { id: "snack-ready-salted-chips", name: "Ready Salted Chips", price: MENU_PRICES.snack, image: "assets/ready-salted-chips.jpg" },
   ]),
   withCategory("extras", "Extras", [
     {
@@ -466,9 +550,20 @@ export function getItemKey(item) {
 }
 
 export function getItemOrderName(item) {
-  return item?.basketName || item?.name || "";
+  return item?.displayBasketName || item?.basketName || getItemDisplayName(item);
 }
 
 export function priceToPence(price) {
   return Math.round(Number(String(price || "").replace(/[\u00a3\u00c2,\s]/g, "")) * 100);
+}
+export function getItemDisplayName(item) {
+  return item?.displayName || item?.name || "";
+}
+
+export function getChoiceDisplayName(value) {
+  return value === "Vegetarian Egg" ? "Egg Mayo & Cucumber" : value === "Pink Cupcake" ? "Strawberry Cupcake" : value;
+}
+
+export function getDisplayDetails(details = "") {
+  return String(details).split(" + ").map(getChoiceDisplayName).join(" + ");
 }

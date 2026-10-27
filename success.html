@@ -3,15 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Payment Successful | Caffe Elite</title>
+    <title>Your collection order | CAFE ELITE</title>
+    <meta name="robots" content="noindex, nofollow" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="ux-refinements.css" />
   </head>
-  <body>
-    <main class="section success-page">
-      <p class="eyebrow">Payment successful</p>
-      <h1>Thank you</h1>
-      <p>Your Caffe Elite order has been paid online. Please collect it at your chosen time.</p>
-      <a class="button primary" href="/">Back to Caffe Elite</a>
+  <body class="confirmation-page">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <header class="information-header"><a href="/" aria-label="CAFE ELITE Home"><img src="assets/caffe-elite-logo.svg" width="250" height="95" alt="CAFE ELITE Coffee House" /></a></header>
+    <main id="main-content" class="section information-page success-page" tabindex="-1">
+      <p class="eyebrow">CAFE ELITE</p>
+      <h1 id="paymentStatusTitle">Your collection order</h1>
+      <p id="paymentStatusMessage" role="status">Checking your payment status...</p>
+      <dl class="confirmation-details">
+        <div id="paidReferenceDetails" hidden><dt>Order reference</dt><dd id="paidOrderReference"></dd></div>
+        <div id="paidCollectionDetails" hidden><dt>Collection time</dt><dd id="paidCollectionTime"></dd></div>
+        <div><dt>Collect from</dt><dd>CAFE ELITE<br />33 High Street<br />Leominster HR6 8LZ</dd></div>
+      </dl>
+      <p id="saveOrderHelp" hidden>Keep your order reference. You can print or save this confirmation and review our <a href="terms.html">collection ordering information</a>.</p>
+      <button class="button secondary" id="printOrderConfirmation" type="button" hidden>Print or save confirmation</button>
+      <noscript>Please speak to the cafe to confirm your payment and collection before placing another order.</noscript>
+      <a class="button primary" href="/">Back to CAFE ELITE</a>
     </main>
+    <script type="module" src="success.js"></script>
   </body>
 </html>

@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Caffe Elite | Leominster</title>
+    <title>CAFE ELITE Leominster | Fresh Food, Coffee &amp; Collection</title>
     <meta
       name="description"
-      content="Caffe Elite, 33 High Street Leominster HR6 8LZ. Fresh food, proper coffee and collection orders."
+      content="CAFE ELITE, 33 High Street Leominster HR6 8LZ. Fresh food, proper coffee and collection orders."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -14,84 +14,163 @@
       href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <link rel="icon" href="assets/caffe-elite-logo.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="ux-refinements.css" />
+    <!-- PUBLIC_METADATA -->
   </head>
   <body>
     <div class="top-anchor" id="top" aria-hidden="true"></div>
-    <div class="gold-spark-field" aria-hidden="true"></div>
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <header class="site-header">
-      <a class="brand" href="#top" aria-label="Caffe Elite — Home">
-        <img class="brand-logo" src="assets/caffe-elite-logo.svg" alt="Caffe Elite Coffee House" />
+      <a class="brand" href="#top" aria-label="CAFE ELITE — Home">
+        <img class="brand-logo" src="assets/caffe-elite-logo.svg" alt="CAFE ELITE Coffee House" />
       </a>
-      <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">
+      <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="primaryNavigation">
         <span></span>
         <span></span>
         <span></span>
       </button>
-      <nav class="site-nav" aria-label="Primary navigation">
+      <nav class="site-nav" id="primaryNavigation" aria-label="Primary navigation">
         <a href="#menu" data-menu-category="pasta">Food</a>
         <a href="#menu" data-menu-category="coffee">Coffee</a>
         <a href="#menu" data-menu-category="soft-drinks">Cold Drinks</a>
         <a href="#menu" data-menu-category="cakes">Treats</a>
         <a href="#story">Our Story</a>
       </nav>
-      <button class="cart-toggle" type="button" id="cartToggle" aria-expanded="false" aria-controls="cartDrawer">
+      <button class="cart-toggle" type="button" id="cartToggle" aria-label="Open basket" aria-expanded="false" aria-controls="cartDrawer">
+        <!-- Lucide shopping-basket, ISC license: assets/lucide-LICENSE.txt -->
+        <svg class="cart-basket-icon" aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 11-1 9" /><path d="m19 11-4-7" /><path d="M2 11h20" />
+          <path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.7-7.4" />
+          <path d="M4.5 15.5h15" /><path d="m5 11 4-7" /><path d="m9 11 1 9" />
+        </svg>
         <span class="cart-icon" aria-hidden="true">Basket</span>
         <span class="cart-count" id="cartCount">0</span>
       </button>
     </header>
 
-    <aside class="cart-drawer" id="cartDrawer" aria-hidden="true" aria-live="polite">
+    <dialog class="cart-drawer" id="cartDrawer" aria-labelledby="cart-title">
       <div class="cart-drawer-head">
-        <div>
-          <p class="eyebrow">Collection basket</p>
-          <h2>Your order</h2>
-        </div>
+        <div><p class="eyebrow">Collection order</p><h2 id="cart-title">Your basket</h2></div>
         <button class="cart-close" type="button" id="cartClose" aria-label="Close basket">Close</button>
       </div>
-      <ul id="basketList"></ul>
-      <p class="basket-empty" id="basketEmpty">No items added yet. Tap any menu item to add it.</p>
-      <p class="basket-total" id="basketTotal">Total: &pound;0.00</p>
-      <textarea id="orderMessage" readonly rows="8" aria-label="Prepared order message"></textarea>
-      <button class="button primary checkout-button" type="button" id="checkoutButton">Pay on collection</button>
-      <button class="button stripe checkout-button" type="button" id="stripeCheckoutButton">
-        Pay online with Stripe
-      </button>
-      <p class="cart-note">
-        Add customer details before sending. Online payment can be enabled with your Stripe payment link.
-      </p>
-    </aside>
-    <div class="cart-backdrop" id="cartBackdrop" hidden></div>
+      <div class="cart-drawer-body">
+        <p class="cart-status" id="cartOrderingStatus" role="status"></p>
+        <section id="basketStep" aria-label="Basket review">
+          <ul id="basketList"></ul>
+          <p class="basket-empty" id="basketEmpty">Your basket is empty. Browse the menu to choose your favourites.</p>
+          <p class="basket-total" id="basketTotal">Total: &pound;0.00</p>
+          <button class="button primary checkout-button" id="continueToDetails" type="button" disabled>Continue to collection details</button>
+        </section>
+        <section class="order-section" id="order" aria-labelledby="order-title" hidden>
+          <h3 id="order-title" tabindex="-1">Collection details</h3>
+          <form class="order-panel" id="orderForm" novalidate>
+            <div class="form-grid">
+              <label for="field-customerName">Name (required)
+                <input name="customerName" type="text" autocomplete="name" placeholder="Your name" required id="field-customerName" aria-describedby="error-customerName" />
+                <small class="field-error" id="error-customerName" hidden></small>
+              </label>
+              <label for="field-phone">Phone (required)
+                <input name="phone" type="tel" autocomplete="tel" placeholder="Phone number" required id="field-phone" aria-describedby="error-phone" inputmode="tel" />
+                <small class="field-error" id="error-phone" hidden></small>
+              </label>
+              <label for="field-email">Email (optional)
+                <input name="email" type="email" autocomplete="email" placeholder="Email address" id="field-email" aria-describedby="error-email" inputmode="email" />
+                <small class="field-error" id="error-email" hidden></small>
+              </label>
+              <label for="field-time">Collection time (required)
+                <input name="time" type="time" required id="field-time" aria-describedby="error-time collectionTimeHint" />
+                <small class="field-error" id="error-time" hidden></small>
+              </label>
+              <label class="wide">
+                Order notes (optional)
+                <textarea name="notes" id="field-notes" rows="3" maxlength="2000" autocomplete="off" aria-describedby="allergyNote" placeholder="Written preparation requests, e.g. no mayo or an ingredient to avoid. For serious allergies, call us before paying."></textarea>
+              </label>
+            </div>
+            <p class="field-hint" id="collectionTimeHint"></p>
+            <p class="field-hint" id="allergyNote">Write any ingredient to avoid or preparation instruction here so our team can read it. For serious allergies or if you need ingredient information confirmed, call <a href="tel:+447423772364">07423 772364</a> before paying. Please do not include a medical diagnosis. Notes alone do not confirm that an allergy can be accommodated.</p>
+            <section class="notes-consent" id="notesConsentPanel" aria-labelledby="notesConsentTitle" hidden>
+              <h4 id="notesConsentTitle">Consent for optional order notes</h4>
+              <label class="notes-consent-choice" for="field-notesConsent">
+                <input type="checkbox" name="notesConsent" id="field-notesConsent" autocomplete="off" aria-describedby="notesConsentHelp error-notesConsent" disabled>
+                <span id="notesConsentStatement">I explicitly consent to CAFFE ELITE LTD using any food-allergy or health information I choose to include in these order notes solely to assess, prepare and hand over this order. I can withdraw my consent by contacting elitescaffe33@gmail.com or 07423 772364. A written note does not guarantee that my allergy request can be safely accommodated.</span>
+              </label>
+              <p class="field-hint" id="notesConsentHelp">Your choice is separate from payment and marketing. You can remove the notes and order normally without this consent. <a href="privacy.html#order-notes" target="_blank" rel="noopener">Privacy policy (opens in a new tab)</a>.</p>
+              <button class="button secondary" id="removeOrderNotes" type="button">Remove notes</button>
+              <p class="field-error" id="error-notesConsent" role="alert" hidden></p>
+            </section>
+            <p class="visually-hidden" id="notesConsentAnnouncement" role="status" aria-live="polite"></p>
+            <p class="field-hint">Read about <a href="privacy.html">your information</a> and <a href="terms.html">collection orders</a>.</p>
+            <div class="form-actions">
+              <button class="button primary" type="submit">Continue to payment</button>
+              <button class="button secondary" type="button" id="openBasketFromForm">Back to basket</button>
+            </div>
+          </form>
+        </section>
+        <section id="paymentStep" aria-labelledby="payment-title" hidden>
+          <h3 id="payment-title" tabindex="-1">Choose how to pay</h3>
+          <p id="paymentDetails" class="payment-details"></p>
+          <p class="payment-allergy-warning"><strong class="payment-allergy-title">Food allergy or intolerance?</strong> For a serious allergy, call <a href="tel:+447423772364">07423 772364</a> before paying or submitting a collection order. Use <strong>Order notes</strong> for written requests; an order note alone does not confirm an allergy request. Check information again at collection. <a href="allergens.html">Ingredients, options &amp; cross-contact information</a>.</p>
+          <button class="button secondary" id="editCollectionDetails" type="button">Edit collection details</button>
+          <p class="basket-total" id="paymentTotal"></p>
+          <p class="payment-help" id="collectionPaymentHelp">Pay at the cafe when you collect your order.</p>
+          <button class="button primary checkout-button" type="button" id="checkoutButton">Pay on collection</button>
+          <p class="payment-help" id="stripePaymentHelp">Pay by card before collection. Secure payment is handled by Stripe.</p>
+          <button class="button stripe checkout-button" type="button" id="stripeCheckoutButton">Pay securely online</button>
+          <button class="button secondary" id="reviewBasket" type="button">Review basket</button>
+        </section>
+        <p id="checkoutFeedback" class="checkout-feedback" role="alert" hidden></p>
+        <textarea id="orderMessage" readonly hidden aria-label="Prepared order message"></textarea>
+      </div>
+    </dialog>
+    <div class="mobile-basket" id="mobileBasket" hidden>
+      <button class="button primary" id="mobileBasketButton" type="button" aria-controls="cartDrawer" aria-expanded="false">View basket</button>
+    </div>
+    <p class="sr-only" id="basketAnnouncement" role="status" aria-live="polite"></p>
 
-    <main>
+    <main id="main-content" tabindex="-1">
+      <section id="orderConfirmation" class="section order-confirmation" tabindex="-1" aria-labelledby="confirmation-title" hidden>
+        <h2 id="confirmation-title">Order confirmed</h2>
+        <p id="confirmationDetails"></p>
+        <p>Collect from 33 High Street, Leominster HR6 8LZ. Please give your name when you arrive.</p>
+      </section>
       <section class="hero" id="home" aria-labelledby="hero-title">
         <div class="hero-media" aria-hidden="true">
-          <img src="assets/cafe-front.jpg" alt="" />
+          <img src="assets/cafe-front.jpg" alt="" width="1280" height="960" fetchpriority="high" decoding="async" />
         </div>
         <div class="hero-content">
-          <p class="eyebrow">Caffe Elite &mdash; Leominster</p>
+          <p class="eyebrow">CAFE ELITE &mdash; Leominster</p>
           <h1 id="hero-title">Fresh food. Proper coffee. Made with care.</h1>
           <p class="hero-copy">
-            Fresh baguettes, warm pasta bowls and seasonal drinks from an independent High Street coffee house.
+            Fresh food and proper coffee from an independent High Street caf&eacute; in Leominster.
           </p>
           <div class="hero-actions">
-            <a class="button primary" href="#new-at">See what's new</a>
-            <a class="button secondary" href="#collection">Order for collection</a>
+            <a class="button primary" href="#menu" data-order-start>Order for Collection</a>
+            <a class="button secondary" href="#menu" data-menu-category="pasta">View Menu</a>
           </div>
         </div>
       </section>
 
+      <div class="status-strip" aria-label="Today's service">
+        <a href="#visit">33 High Street, Leominster</a>
+        <span id="heroTodayHours">View opening hours</span>
+        <span id="collectionStatus">Collection available</span>
+        <span id="deliveryStatus" hidden></span>
+        <span id="orderingStatus">View today's ordering availability</span>
+      </div>
+
       <section class="section new-at-section" id="new-at" aria-labelledby="new-at-title">
         <div class="section-heading section-heading--center new-at-heading">
-          <p class="eyebrow">New at Caffe Elite</p>
+          <p class="eyebrow">New at CAFE ELITE</p>
           <h2 id="new-at-title">Something new for your next visit.</h2>
           <p class="section-intro">Freshly made favourites and seasonal flavours, ready for your next visit.</p>
         </div>
 
-        <div class="new-product-grid" aria-label="New Caffe Elite favourites">
+        <div class="new-product-grid" aria-label="New CAFE ELITE favourites">
           <article class="new-product-card" id="fresh-baguettes" aria-labelledby="fresh-baguettes-title">
             <figure class="new-product-media">
-              <img src="assets/promos/fresh-baguettes.jpg" alt="Fresh baguettes at Caffe Elite" loading="eager" />
+              <img src="assets/promos/fresh-baguettes.jpg" alt="Fresh baguettes at CAFE ELITE" loading="lazy" width="1280" height="720" />
             </figure>
             <div class="new-product-body">
               <p class="new-product-kicker">Freshly made</p>
@@ -106,7 +185,7 @@
 
           <article class="new-product-card" id="bolognese-bowl" aria-labelledby="bolognese-title">
             <figure class="new-product-media">
-              <img src="assets/promos/bolognese-bowl.jpg" alt="Bolognese bowl at Caffe Elite" loading="lazy" />
+              <img src="assets/promos/bolognese-bowl.jpg" alt="Bolognese bowl at CAFE ELITE" loading="lazy" width="1280" height="720" />
             </figure>
             <div class="new-product-body">
               <p class="new-product-kicker">New</p>
@@ -119,9 +198,24 @@
             </div>
           </article>
 
+          <article class="new-product-card new-product-card--chicken" id="new-chicken-tomato" aria-labelledby="new-chicken-title">
+            <figure class="new-product-media">
+              <img src="assets/cafe-elite-chicken-tomato-pasta.webp" alt="Chicken Tomato Pasta at CAFE ELITE" loading="lazy" width="1536" height="1024" />
+            </figure>
+            <div class="new-product-body">
+              <p class="new-product-kicker">New</p>
+              <h3 id="new-chicken-title">Chicken Tomato Pasta</h3>
+              <p class="new-product-summary">Tender chicken pieces and penne pasta tossed in our homemade tomato sauce.</p>
+              <div class="new-product-footer">
+                <p class="promo-price" data-price-product="pasta-chicken-tomato">&pound;8.99</p>
+                <a class="button primary" href="#menu-pasta" data-menu-category="pasta" data-menu-product="pasta-chicken-tomato">Choose pasta</a>
+              </div>
+            </div>
+          </article>
+
           <article class="new-product-card new-product-card--autumn" id="autumn-drinks" aria-labelledby="autumn-title">
             <figure class="new-product-media">
-              <img src="assets/promos/autumn-caffe-elite.jpg" alt="Autumn drinks at Caffe Elite" loading="lazy" />
+              <img src="assets/promos/autumn-caffe-elite.jpg" alt="Autumn drinks at CAFE ELITE" loading="lazy" width="1280" height="720" />
             </figure>
             <div class="new-product-body">
               <p class="new-product-kicker">Seasonal</p>
@@ -138,10 +232,10 @@
 
       <section class="section signature-section" id="signature" aria-labelledby="signature-title">
         <div class="section-heading section-heading--center">
-          <p class="eyebrow">Signature picks</p>
-          <h2 id="signature-title">Start with the favourites</h2>
+          <p class="eyebrow">Our signature</p>
+          <h2 id="signature-title">Signature Picks</h2>
           <p class="section-intro">
-            Four good places to start, chosen from across the Caffe Elite menu.
+            Four favourites, handpicked from across the CAFE ELITE menu.
           </p>
         </div>
         <div class="signature-grid" id="signatureGrid"></div>
@@ -151,8 +245,13 @@
           <p class="eyebrow">Full menu</p>
           <h2 id="menu-title">Choose your collection order</h2>
         </div>
-        <div class="menu-category-nav" id="menuCategoryNav" aria-label="Menu categories"></div>
-        <div class="menu-grid" id="menuGrid"></div>
+        <div class="menu-category-browser" id="menuCategoryBrowser">
+          <button class="category-scroll" id="categoriesPrevious" type="button" aria-label="Previous menu categories" aria-controls="menuCategoryNav" disabled>&#8249;</button>
+          <div class="menu-category-nav" id="menuCategoryNav" aria-label="Menu categories"></div>
+          <button class="category-scroll" id="categoriesNext" type="button" aria-label="More menu categories" aria-controls="menuCategoryNav">&#8250;</button>
+        </div>
+        <p class="menu-allergen-link"><a href="#allergens">Allergen information</a></p>
+        <div class="menu-grid" id="menuGrid"><!-- SERVER_MENU --></div>
       </section>
 
       <section class="section collection-flow" id="collection" aria-labelledby="collection-title">
@@ -177,96 +276,46 @@
           <article>
             <span>03</span>
             <h3>Collect</h3>
-            <p>Pay online or on collection, then pick up from 33 High Street.</p>
+            <p>Choose an available payment option, then collect from 33 High Street.</p>
           </article>
-        </div>
-        <div class="notice-band" aria-label="Service notice">
-          <span id="collectionStatus">Collection available</span>
-          <span id="deliveryStatus">Delivery currently unavailable</span>
-          <span id="orderingStatus">Online ordering open until 15:45</span>
-        </div>
-      </section>
-
-      <section class="section order-section" id="order" aria-labelledby="order-title">
-        <div class="section-heading">
-          <p class="eyebrow">Customer details</p>
-          <h2 id="order-title">Confirm collection details</h2>
-        </div>
-        <div class="order-layout">
-          <form class="order-panel" id="orderForm">
-            <div class="form-grid">
-              <label>
-                Name
-                <input name="customerName" type="text" autocomplete="name" placeholder="Your name" required />
-              </label>
-              <label>
-                Phone
-                <input name="phone" type="tel" autocomplete="tel" placeholder="Phone number" required />
-              </label>
-              <label>
-                Email
-                <input name="email" type="email" autocomplete="email" placeholder="Email address" />
-              </label>
-              <label>
-                Collection time
-                <input name="time" type="time" required />
-              </label>
-              <label class="wide marketing-consent">
-                <input name="marketingConsent" type="checkbox" />
-                <span>Send me occasional cafe offers and updates by email or text.</span>
-              </label>
-              <label class="wide">
-                Notes
-                <textarea name="notes" rows="4" placeholder="Milk choice, allergy notes, syrup, etc."></textarea>
-              </label>
-            </div>
-            <div class="form-actions">
-              <button class="button primary" type="submit">Save details</button>
-              <button class="button secondary" type="button" id="openBasketFromForm">Open basket</button>
-            </div>
-          </form>
-          <div class="order-help">
-            <h3>Collection, made easy</h3>
-            <p>Choose your favourites and we'll prepare them for collection.</p>
-            <p>Pay securely online with Stripe, or choose pay on collection when available.</p>
-          </div>
         </div>
       </section>
 
       <section class="section reason-section" id="story" aria-labelledby="reason-title">
         <div class="section-heading section-heading--center">
-          <p class="eyebrow">Why Caffe Elite?</p>
+          <p class="eyebrow">Why CAFE ELITE?</p>
           <h2 id="reason-title">Small cafe. High standards.</h2>
         </div>
-        <div class="trust-strip" aria-label="Why customers choose Caffe Elite">
+        <div class="trust-strip" aria-label="Why customers choose CAFE ELITE">
           <div>
-            <strong>Prepared with care</strong>
-            <span>Fresh cafe favourites made for a clean, reliable collection experience.</span>
+            <strong>Made to order</strong>
+            <span>Fresh baguettes and sandwiches prepared when you order.</span>
           </div>
           <div>
-            <strong>Local and personal</strong>
-            <span>An independent High Street coffee house, not a faceless chain.</span>
+            <strong>Independent &amp; local</strong>
+            <span>An independent High Street coffee house in Leominster.</span>
           </div>
           <div>
-            <strong>Simple to order</strong>
-            <span>Choose online, pay securely if you want, and collect from the cafe.</span>
+            <strong>Proper coffee</strong>
+            <span>Good coffee, made with care.</span>
           </div>
         </div>
-        <div class="reviews-shell" aria-hidden="true" hidden>
-          Future Google reviews module placeholder.
-        </div>
+        <div id="reviews" hidden></div>
       </section>
 
-      <section class="section hours-section" id="hours" aria-labelledby="hours-title">
+      <section class="section visit-section" id="visit" aria-labelledby="visit-title">
         <div class="section-heading">
-          <p class="eyebrow">Opening times</p>
-          <h2 id="hours-title">Hours</h2>
+          <p class="eyebrow">Find us on High Street</p>
+          <h2 id="visit-title">Visit CAFE ELITE</h2>
+          <address>33 High Street<br />Leominster HR6 8LZ</address>
         </div>
+        <div class="visit-grid">
+        <div id="hours">
         <details class="hours-public-card hours-disclosure">
           <summary>
             <span>
-              <strong>View opening hours</strong>
-              <small>Tap to see today and weekly opening times</small>
+              <strong id="todayHours">View opening hours</strong>
+              <small id="todayOrderHours">View weekly opening times</small>
             </span>
             <span class="hours-disclosure-icon" aria-hidden="true">+</span>
           </summary>
@@ -277,50 +326,46 @@
             </p>
           </div>
         </details>
-      </section>
-
-      <section class="section gallery" id="gallery" aria-labelledby="gallery-title">
-        <div class="section-heading">
-          <p class="eyebrow">Cafe visuals</p>
-          <h2 id="gallery-title">Cafe front</h2>
-        </div>
-        <div class="photo-grid">
-          <figure>
-            <img src="assets/cafe-front.jpg" alt="Caffe Elite cafe front" />
-            <figcaption>Caffe Elite on High Street, Leominster</figcaption>
-          </figure>
-        </div>
-      </section>
-
-      <section class="section visit" id="visit" aria-labelledby="visit-title">
-        <div>
-          <p class="eyebrow">Visit us</p>
-          <h2 id="visit-title">33 High Street, Leominster HR6 8LZ</h2>
-          <p>
-            Open the Google Maps link for directions to Caffe Elite. The embedded map points to the
-            same address.
-          </p>
           <a
             class="button primary"
             href="https://www.google.com/maps/search/?api=1&query=33%20High%20Street%20Leominster%20HR6%208LZ"
             target="_blank"
             rel="noreferrer"
           >
-            Open Google Maps
+            Directions
           </a>
+          <a class="button outline visit-order" href="#menu" data-order-start>Order for Collection</a>
         </div>
+        <figure class="visit-photo"><img src="assets/cafe-front.jpg" alt="CAFE ELITE on High Street, Leominster" loading="lazy" width="1280" height="960" /></figure>
+        </div>
+        <div class="visit-map">
+        <button class="button outline" id="loadMap" type="button">Load Google map</button>
+        <p id="mapPrivacy">Loading the map connects to Google. You can also use Directions above.</p>
         <iframe
-          title="Map to Caffe Elite"
+          id="visitMap" hidden
+          title="Map to CAFE ELITE"
           loading="lazy"
           referrerpolicy="no-referrer-when-downgrade"
-          src="https://www.google.com/maps?q=33%20High%20Street%20Leominster%20HR6%208LZ&output=embed"
+          data-src="https://www.google.com/maps?q=33%20High%20Street%20Leominster%20HR6%208LZ&output=embed"
         ></iframe>
+        </div>
+      </section>
+      <section class="section food-allergy-section" id="allergens" tabindex="-1" aria-labelledby="allergy-heading">
+        <h2 id="allergy-heading">Food Allergies &amp; Intolerances</h2>
+        <p>Please check the Ingredients &amp; allergen info on each product before ordering. For serious allergies, or to confirm ingredients and options, call <a href="tel:+447423772364">07423 772364</a> before paying.</p>
+        <p>Our kitchen uses shared equipment; we cannot guarantee freedom from cross-contact. Use Order notes for written requests, but a written note alone is not confirmation that an allergy can be accommodated. Confirm information again at collection.</p>
+        <a href="allergens.html">Full allergen information</a>
       </section>
     </main>
 
     <footer class="site-footer">
-      <img class="footer-logo" src="assets/caffe-elite-logo.svg" alt="Caffe Elite Coffee House" />
-      <p>33 High Street, Leominster HR6 8LZ</p>
+      <img class="footer-logo" src="assets/caffe-elite-logo.svg" alt="CAFE ELITE Coffee House" />
+      <p>CAFFE ELITE LTD · 33 High Street, Leominster HR6 8LZ</p>
+      <p class="registered-company-details">Company No. 16996277 · Registered in England and Wales · Registered office: 33 High Street, Leominster, United Kingdom, HR6 8LZ.</p>
+      <p>Call <a href="tel:+447423772364">07423 772364</a> · <a href="mailto:elitescaffe33@gmail.com">elitescaffe33@gmail.com</a></p>
+      <p>Menu prices are final; no extra service or collection fee.</p>
+      <nav aria-label="Footer navigation"><a href="#menu" data-menu-category="pasta">Menu</a><a href="#menu" data-order-start>Order</a><a href="allergens.html">Allergens</a><a href="privacy.html">Privacy</a><a href="terms.html">Ordering information</a></nav>
+      <p>&copy; <span id="copyrightYear"></span> CAFE ELITE</p>
     </footer>
 
     <script type="module" src="script.js"></script>
