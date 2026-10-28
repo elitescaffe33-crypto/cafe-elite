@@ -4,6 +4,7 @@ import { applyManagedMenu } from "./menu-management.mjs";
 import { isApprovedPublicAsset } from "./public-asset-allowlist.mjs";
 import { createProductManager } from "./manager-ui.mjs";
 import { hydrateIcons } from "./manager-icons.mjs";
+import { visibleOrderReference } from "./order-reference.mjs";
 hydrateIcons();
 
 const passwordInput = document.querySelector("#adminPassword");
@@ -520,6 +521,7 @@ function renderOrder(order) {
         </div>
         <span>${date}</span>
       </div>
+      <p><b>Order #:</b> <strong>${escapeHtml(visibleOrderReference(order))}</strong></p>
       <p><b>Name:</b> ${escapeHtml(order.customerName || "Not provided")}</p>
       <p><b>Phone:</b> ${
         phone
@@ -551,6 +553,7 @@ function formatPrintableOrder(order, paymentLabel, date) {
     "CAFE ELITE",
     "33 High Street, Leominster HR6 8LZ",
     "------------------------------",
+    `Order #: ${visibleOrderReference(order)}`,
     `Order time: ${date}`,
     `Payment: ${paymentLabel}`,
     `Status: ${order.status || "new"}`,

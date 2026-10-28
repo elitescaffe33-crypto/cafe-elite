@@ -2,6 +2,7 @@ import { createHash, createHmac, timingSafeEqual, randomUUID } from "node:crypto
 import { OrderError, isRecord, canonicalItems, normaliseAndPriceOrder } from "./order-catalogue.mjs";
 import { changeOrder } from "./order-store.mjs";
 import { validateCollectionTime } from "./collection-time.mjs";
+import { visibleOrderReference } from "./order-reference.mjs";
 import { getOrderingStatus } from "./site-settings.mjs";
 import { ORDER_NOTES_CONSENT, NOTES_CONSENT_ERROR, orderNotesConsentEvidence } from "./order-notes-consent.mjs";
 
@@ -38,7 +39,7 @@ function fingerprint(request) {
   return createHash("sha256").update(JSON.stringify(request)).digest("hex");
 }
 function orderMessage(order) {
-  return ["CAFE ELITE collection order", `Reference: ${order.id}`, `Status: ${order.status}`, `Payment: ${order.paymentState === "paid" ? "Paid online" : order.payment}`,
+  return ["CAFE ELITE collection order", `Reference: ${visibleOrderReference(order)}`, `Status: ${order.status}`, `Payment: ${order.paymentState === "paid" ? "Paid online" : order.payment}`,
     `Customer name: ${order.customerName}`, `Phone: ${order.phone}`, `Email: ${order.email || "Not provided"}`,
     `Collection time: ${order.collectionTime}`, `Total: ${order.amount}`, "Items:", order.items,
     `Notes: ${String(order.notes || "None").replace(/[\r\n]+/g, " ")}`].join("\n");
@@ -116,7 +117,7 @@ export function createOrderService({ store, loadSettings, buildMenuData, createS
       const claimed = await changeOrder(store, id, order => order.notificationStatus === "pending" ? { notificationStatus: "sending", notificationClaim: token, notificationAttemptedAt: now().toISOString() } : null);
       if (claimed.notificationClaim !== token) return;
       try {
-        await notify({ subject: claimed.paymentState === "paid" ? "Paid CAFE ELITE online order" : "New CAFE ELITE collection order", text: claimed.message, idempotencyKey: `order-notification-${id}` });
+        await notify({ subject: claimed.paymentState === "paid" ? "Paid CAFE ELITE online order" : "New CAFE ELITE collection order", text: orderMessage(claimed), idempotencyKey: `order-notification-${id}` });
         await changeOrder(store, id, order => order.notificationClaim === token ? { notificationStatus: "sent" } : null);
       } catch {
         log("notification_delivery_uncertain", id);
@@ -137,7 +138,7 @@ export function createOrderService({ store, loadSettings, buildMenuData, createS
       const order = await prepare(payload, "collection");
       // Notification delivery can never turn a saved order into an HTTP failure.
       await notifyOnce(order.id);
-      return { ok: true, orderId: order.id, collectionTime: order.collectionTime, total: order.pricing.total, currency: order.pricing.currency };
+      return { ok: true, orderId: order.id, orderReference: visibleOrderReference(order), collectionTime: order.collectionTime, total: order.pricing.total, currency: order.pricing.currency };
     },
     async checkout(payload) {
       let order = await prepare(payload, "online");
@@ -200,7 +201,7 @@ export function createOrderService({ store, loadSettings, buildMenuData, createS
       if (!attemptPattern.test(id || "")) return { paid: false, orderReference: "", collectionTime: "" };
       const order = await store.get(id);
       const paid = sessionMatchesOrder(session, order) && session.payment_status === "paid" && order.paymentState === "paid" && order.status !== "cancelled";
-      return { paid, orderReference: paid ? order.id : "", collectionTime: paid ? order.collectionTime : "" };
+      return { paid, orderReference: paid ? visibleOrderReference(order) : "", collectionTime: paid ? order.collectionTime : "" };
     },
   };
 }

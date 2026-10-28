@@ -1029,7 +1029,7 @@ function showOrderSentMessage(result, collectionTime) {
   const closing = getCafeHours(new Date(), activeSettings).today?.close;
   const late = closing && collectionTime > closing
     ? " This collection time is shortly after normal closing; the cafe will contact you if it needs adjustment." : "";
-  document.querySelector("#confirmationDetails").textContent = `Today at ${collectionTime} (London time). Reference: ${result.orderId}. Payment due on collection.${late}`;
+  document.querySelector("#confirmationDetails").textContent = `Today at ${collectionTime} (London time). Reference: ${result.orderReference || result.orderId}. Payment due on collection.${late}`;
   const confirmation = document.querySelector("#orderConfirmation");
   confirmation.hidden = false;
   basket.length = 0;

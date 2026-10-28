@@ -24,7 +24,7 @@ export function fromRow(row) {
     payment: row.payment, status: row.status, stripeSessionId: row.stripe_session_id,
     amount: row.amount, customerName: row.customer_name, phone: row.phone, email: row.email,
     collectionTime: row.collection_time, items: row.items, notes: row.notes, message: row.message,
-    revision: row.revision ?? 0 };
+    orderNumber: row.order_number ?? null, revision: row.revision ?? 0 };
 }
 
 // Supabase PK insertion and revision compare-and-swap are atomic across app instances.
