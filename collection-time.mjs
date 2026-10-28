@@ -21,12 +21,13 @@ export function getCollectionWindow(date = new Date(), settings = defaultSiteSet
   const status = getOrderingStatus(date, settings);
   const hours = getCafeHours(date, settings);
   if (!status.isOpen || !hours.today) return { available: false, message: status.message, min: "", max: "" };
-  // Last-order time limits when the order can be PLACED, not when it can be collected.
-  // At least 15 full minutes from the current instant; round up partial minutes.
+  // The preparation estimate is advisory, not a minimum booking lead time.
+  // Customers may request a collection time this minute or any later available minute.
+  // The last-order cutoff still controls when orders may be placed.
   const configuredPreparation = Number(settings.ordering.preparationMinutes);
   const prep = Number.isInteger(configuredPreparation) && configuredPreparation >= 15 && configuredPreparation <= 60
     ? configuredPreparation : 15;
-  const earliest = Math.max(timeToMinutes(hours.today.open), hours.minutes + (hours.second > 0 ? 1 : 0) + prep);
+  const earliest = Math.max(timeToMinutes(hours.today.open), hours.minutes);
   const closing = timeToMinutes(hours.today.close);
   const latest = Math.min(1439, Math.max(closing, timeToMinutes(hours.today.lastOrder) + prep));
   if (!Number.isFinite(earliest) || !Number.isFinite(latest) || earliest > latest) {
@@ -34,17 +35,16 @@ export function getCollectionWindow(date = new Date(), settings = defaultSiteSet
   }
   const format = value => `${String(Math.floor(value / 60)).padStart(2, "0")}:${String(value % 60).padStart(2, "0")}`;
   const min = format(earliest), max = format(latest);
-  const lateNotice = latest > closing ? " Late collection after normal closing is subject to cafe confirmation." : "";
   return {
     available: true, min, max,
-    message: `Today, ${min} - ${max} (London time). Earliest collection is in at least ${prep} minutes. Preparation may take longer during busy periods; you can choose a later time.${lateNotice}`,
+    message: "Please note: collection orders usually take around 15 minutes or longer to prepare, especially during busy periods.",
   };
 }
 
 export function validateCollectionTime(value, date = new Date(), settings = defaultSiteSettings) {
   const window = getCollectionWindow(date, settings);
   if (!window.available) return window.message;
-  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(value || ""))) return "Choose a collection time for today.";
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(String(value || ""))) return "Choose your preferred collection time.";
   if (value < window.min || value > window.max) return `Choose a time between ${window.min} and ${window.max} today (London time).`;
   return "";
 }

@@ -88,6 +88,8 @@
 .information-page p { line-height: 1.7; }
 .information-page a:not(.button) { color: #735018; text-decoration: underline; }
 .cart-drawer .field-hint a { color: var(--gold-bright); text-decoration: underline; }
+/* Preparation timing is information, never a blocking collection-time validation error. */
+.cart-drawer #collectionTimeHint.is-preparation-notice { color:#ff9d92; -webkit-text-fill-color:#ff9d92; font-weight:700; line-height:1.55; }
 .cart-drawer .notes-consent { border-top: 1px solid #a28750; padding-top: 16px; margin: 16px 0; }
 .cart-drawer .notes-consent[hidden] { display: none; }
 .cart-drawer .notes-consent h4 { color: #fff4dc; font: 700 1rem/1.4 Arial, sans-serif; margin: 0 0 10px; }

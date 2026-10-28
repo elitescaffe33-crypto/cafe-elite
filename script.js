@@ -51,7 +51,7 @@ const orderingStatus = document.querySelector("#orderingStatus");
 const publicHoursList = document.querySelector("#publicHoursList");
 const publicHoursNote = document.querySelector("#publicHoursNote");
 const collectionTimeInput = orderForm.querySelector('input[name="time"]');
-let collectionTimeManuallyChosen = false;
+collectionTimeInput.value = ""; // Each order requires an explicit collection-time choice.
 const orderNotesInput = orderForm.elements.namedItem("notes");
 const notesConsentInput = orderForm.elements.namedItem("notesConsent");
 let consentedNotes = "", lastNotes = "";
@@ -103,7 +103,6 @@ try {
 function clearCheckoutAttempt() {
   attemptId = "";
   attemptFingerprint = "";
-  collectionTimeManuallyChosen = false;
   collectionTimeInput.value = "";
   notesConsentInput.checked = false;
   consentedNotes = "";
@@ -301,13 +300,12 @@ function syncCollectionTime() {
   collectionTimeInput.min = availability.min;
   collectionTimeInput.max = availability.max;
   collectionTimeInput.disabled = !availability.available;
-  // Automatically suggest the earliest 15-minute slot. Never overwrite a time
-  // the customer chose, or silently change an already reviewed payment screen.
-  if (!collectionTimeManuallyChosen && cartStep !== "payment") {
-    collectionTimeInput.value = availability.available ? availability.min : "";
-  }
-  collectionTimeInput.setCustomValidity(validateCollectionTime(collectionTimeInput.value, now, activeSettings));
-  document.querySelector("#collectionTimeHint").textContent = availability.message;
+  // Never choose a time for the customer or show an error before submission.
+  // Time remains required and is checked against current opening hours at checkout.
+  collectionTimeInput.setCustomValidity("");
+  const notice = document.querySelector("#collectionTimeHint");
+  notice.textContent = availability.message;
+  notice.classList.toggle("is-preparation-notice", availability.available);
   return availability;
 }
 
@@ -1239,7 +1237,6 @@ basketList.addEventListener("click", (event) => {
 
 orderForm.addEventListener("input", (event) => {
   const field = event.target;
-  if (field === collectionTimeInput) collectionTimeManuallyChosen = true;
   if (field.setCustomValidity) field.setCustomValidity("");
   if (field.name) {
     field.removeAttribute("aria-invalid");
@@ -1248,10 +1245,6 @@ orderForm.addEventListener("input", (event) => {
   }
   if (field === orderNotesInput) syncNotesConsent();
   updateMessage();
-});
-
-orderForm.addEventListener("change", (event) => {
-  if (event.target === collectionTimeInput) collectionTimeManuallyChosen = true;
 });
 
 orderForm.addEventListener("submit", (event) => {

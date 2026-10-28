@@ -80,15 +80,15 @@
                 <small class="field-error" id="error-email" hidden></small>
               </label>
               <label for="field-time">Collection time (required)
-                <input name="time" type="time" required id="field-time" aria-describedby="error-time collectionTimeHint" />
+                <input name="time" type="time" required autocomplete="off" id="field-time" aria-describedby="error-time collectionTimeHint" />
                 <small class="field-error" id="error-time" hidden></small>
+                <small class="field-hint" id="collectionTimeHint"></small>
               </label>
               <label class="wide">
                 Order notes (optional)
                 <textarea name="notes" id="field-notes" rows="3" maxlength="2000" autocomplete="off" aria-describedby="allergyNote" placeholder="Written preparation requests, e.g. no mayo or an ingredient to avoid. For serious allergies, call us before paying."></textarea>
               </label>
             </div>
-            <p class="field-hint" id="collectionTimeHint"></p>
             <p class="field-hint" id="allergyNote">Write any ingredient to avoid or preparation instruction here so our team can read it. For serious allergies or if you need ingredient information confirmed, call <a href="tel:+447423772364">07423 772364</a> before paying. Please do not include a medical diagnosis. Notes alone do not confirm that an allergy can be accommodated.</p>
             <section class="notes-consent" id="notesConsentPanel" aria-labelledby="notesConsentTitle" hidden>
               <h4 id="notesConsentTitle">Consent for optional order notes</h4>
