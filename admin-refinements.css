@@ -182,6 +182,14 @@ textarea { resize:vertical; }
 .order-history-card p,.contact-card p { margin:10px 0; font-size:14px; }
 .order-card-head,.order-tools,.order-status-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:space-between; }
 .status-button:not(.icon-button),.order-tools button { padding:8px 12px; background:#faf5e9; border:1px solid var(--line); border-radius:6px; min-height:42px; }
+/* Manager order actions need dark text on light backgrounds, especially on iPhone. */
+.order-history-card .order-tools,.order-history-card .order-actions { display:flex; align-items:stretch; justify-content:flex-start; flex-wrap:wrap; gap:10px; margin-top:14px; }
+.order-history-card .order-tools .status-button { flex:1 1 130px; }
+.order-history-card .order-actions .status-button { flex:1 1 106px; }
+.order-history-card .status-button { color:#142b3c; -webkit-text-fill-color:#142b3c; background:#f4e9d2; border:1px solid #c6aa77; font-size:14px; font-weight:700; opacity:1; }
+.order-history-card .status-button:not(:disabled):hover { background:#ead39f; border-color:#a47730; }
+.order-history-card .status-button.is-active,.order-history-card .status-button:disabled { background:#e4b34c; color:#102333; -webkit-text-fill-color:#102333; border-color:#b47b20; cursor:default; opacity:1; }
+.order-history-card pre:not([hidden]) { white-space:pre-wrap; overflow-wrap:anywhere; word-break:normal; max-width:100%; min-width:0; font:inherit; font-size:14px; line-height:1.5; }
 .printable-order { white-space:pre-wrap; overflow-wrap:anywhere; font-size:14px; }
 body.sidebar-collapsed { --sidebar:0px; }
 body.sidebar-collapsed .manager-sidebar { display:none; }

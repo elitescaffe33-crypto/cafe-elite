@@ -108,7 +108,9 @@
 .success-page .button { justify-self: start; max-width: 100%; white-space: normal; text-align: center; }
 .order-confirmation { background: var(--cream); color: var(--ink); }
 .order-confirmation p { line-height: 1.7; overflow-wrap: anywhere; }
-.cart-drawer .button.stripe:not(:disabled) { color: var(--ink); -webkit-text-fill-color: var(--ink); background: var(--cream); border-color: var(--cream); }
+/* The actual final payment action is unmistakable after collection details are validated. */
+.cart-drawer #paymentStep .button.stripe:not(:disabled) { color:#102437; -webkit-text-fill-color:#102437; background:linear-gradient(120deg,#f6d17a 0%,#e3ad39 100%); border-color:#c69029; box-shadow:0 3px 12px #e3ad3940; }
+.cart-drawer #paymentStep .button.stripe:not(:disabled):hover { background:#f6d17a; border-color:#a87318; }
 .button, .eyebrow, .item-badge, .new-product-kicker, .signature-badge { letter-spacing: 0; }
 .new-product-media { aspect-ratio: 16 / 9; }
 .menu-product-image { aspect-ratio: 16 / 10; }

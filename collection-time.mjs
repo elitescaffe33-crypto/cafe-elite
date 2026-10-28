@@ -22,11 +22,11 @@ export function getCollectionWindow(date = new Date(), settings = defaultSiteSet
   const hours = getCafeHours(date, settings);
   if (!status.isOpen || !hours.today) return { available: false, message: status.message, min: "", max: "" };
   // Last-order time limits when the order can be PLACED, not when it can be collected.
-  // The owner's normal preparation target is 15–20 min; allow approximately 20 min.
+  // At least 15 full minutes from the current instant; round up partial minutes.
   const configuredPreparation = Number(settings.ordering.preparationMinutes);
   const prep = Number.isInteger(configuredPreparation) && configuredPreparation >= 15 && configuredPreparation <= 60
-    ? configuredPreparation : 20;
-  const earliest = Math.max(timeToMinutes(hours.today.open), hours.minutes + prep);
+    ? configuredPreparation : 15;
+  const earliest = Math.max(timeToMinutes(hours.today.open), hours.minutes + (hours.second > 0 ? 1 : 0) + prep);
   const closing = timeToMinutes(hours.today.close);
   const latest = Math.min(1439, Math.max(closing, timeToMinutes(hours.today.lastOrder) + prep));
   if (!Number.isFinite(earliest) || !Number.isFinite(latest) || earliest > latest) {
@@ -37,7 +37,7 @@ export function getCollectionWindow(date = new Date(), settings = defaultSiteSet
   const lateNotice = latest > closing ? " Late collection after normal closing is subject to cafe confirmation." : "";
   return {
     available: true, min, max,
-    message: `Today, ${min} - ${max} (London time). Please allow about ${prep} minutes for preparation.${lateNotice}`,
+    message: `Today, ${min} - ${max} (London time). Earliest collection is in at least ${prep} minutes. Preparation may take longer during busy periods; you can choose a later time.${lateNotice}`,
   };
 }
 

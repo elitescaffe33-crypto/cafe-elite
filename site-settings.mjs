@@ -3,7 +3,7 @@ export const defaultSiteSettings = {
 
   ordering: {
     enabled: true,
-    preparationMinutes: 20,
+    preparationMinutes: 15,
     closedMessage: "Online ordering is currently closed. Please order during opening hours.",
     days: {
       monday: { label: "Monday", open: "09:00", close: "17:00", lastOrder: "16:45" },
