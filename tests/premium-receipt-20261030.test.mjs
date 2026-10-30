@@ -148,7 +148,7 @@ test("new formatting module is served by exact public allowlist, but private dat
 });
 test("Manager Print uses the actual order object and browser HTML, Copy uses the new text receipt",async()=>{
   const source=await readFile(new URL("../admin.js",import.meta.url),"utf8");
-  assert.match(source,/import \{ receiptDocument, receiptPlainText \} from "\.\/receipt-layout\.mjs"/);
+  assert.match(source,/import \{ receiptDocument, receiptPlainText, renderReceiptMarkup \} from "\.\/receipt-layout\.mjs"/);
   assert.match(source,/currentOrders\.find\(item => item\.id === orderCard\?\.dataset\.orderId\)/);
   assert.match(source,/navigator\.clipboard\.writeText\(receiptPlainText\(order\)\)/);
   assert.match(source,/printOrder\(order\)/);
@@ -188,7 +188,9 @@ test("Manager print dialog receives only escaped receipt HTML and invokes browse
   };
   const alerts=[];
   const ctx={
-    window:{open(){return popup;}},
+    window:{open(){return popup;},matchMedia:()=>({matches:false})},
+    navigator:{standalone:false},
+    narrow:{matches:false},
     receiptDocument,
     Promise,
     showMessage:text=>alerts.push(text),
@@ -213,7 +215,9 @@ test("Manager reports popup blockers; never sends a network request or silently 
   const end=source.indexOf("\nfunction renderStatusButton",start);
   const messages=[];
   const fn=runInNewContext("("+source.slice(start,end)+")",{
-    window:{open:()=>null},
+    window:{open:()=>null,matchMedia:()=>({matches:false})},
+    navigator:{standalone:false},
+    narrow:{matches:false},
     receiptDocument,
     Promise,
     showMessage:text=>messages.push(text),

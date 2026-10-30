@@ -18,7 +18,7 @@
   <aside id="managerSidebar" class="manager-sidebar" aria-label="Manager navigation">
     <div class="sidebar-brand"><a class="manager-brand" href="#overview" aria-label="Cafe Elite Manager dashboard"><span class="brand-seal">CE</span><strong>CAFE<br>ELITE</strong></a><button type="button" class="icon-button drawer-close" id="closeSidebar" aria-label="Close navigation"><span data-icon="x"></span></button></div>
     <nav class="is-admin-nav" aria-label="Admin navigation">
-      <a href="index.html"><span data-icon="house"></span>Website</a>
+      <a href="index.html?from=manager"><span data-icon="house"></span>Website</a>
       <a href="#settings"><span data-icon="settings"></span>Settings</a>
       <a href="#prices"><span data-icon="tag"></span>Prices</a>
       <a href="#orders"><span data-icon="clipboard-list"></span>Orders<span id="sidebarOrderCount" class="nav-count" hidden></span></a>
@@ -34,11 +34,23 @@
   </aside>
   <header class="manager-topbar" id="managerTopbar">
     <button class="icon-button" id="sidebarToggle" type="button" aria-label="Open navigation" aria-controls="managerSidebar" aria-expanded="false"><span data-icon="menu"></span></button>
+    <button class="icon-button manager-nav-back" id="managerBack" type="button" aria-label="Back to previous Manager section" title="Back" hidden><span data-icon="chevron-left"></span></button>
     <a class="manager-brand mobile-brand" href="#overview" aria-label="Cafe Elite Manager dashboard"><span class="brand-seal">CE</span><strong>CAFE<br>ELITE</strong></a>
     <label class="manager-search"><span data-icon="search"></span><span class="sr-only">Search products in selected category</span><input id="productSearch" type="search" placeholder="Search products..." autocomplete="off" disabled></label>
     <button type="button" class="icon-button status-button" id="statusButton" title="Order status" aria-label="Open order status"><span data-icon="bell"></span><i id="managerOrderDot" hidden></i></button>
     <details class="owner-account" id="ownerAccount"><summary aria-label="Owner account"><span class="owner-avatar">A</span><span data-icon="chevron-down"></span></summary><div><a href="#overview"><span data-icon="layout-dashboard"></span>Dashboard</a><button type="button" id="reloadSettings"><span data-icon="rotate-ccw"></span>Refresh settings</button><button type="button" id="adminLogout"><span data-icon="log-out"></span>Sign out</button></div></details>
   </header>
+  <dialog id="managerReceiptPreview" class="manager-receipt-preview" aria-labelledby="managerReceiptTitle">
+    <div class="manager-receipt-toolbar">
+      <button type="button" id="managerReceiptBackTop" class="manager-receipt-back">← Back to Orders</button>
+      <h2 id="managerReceiptTitle">Receipt preview</h2>
+    </div>
+    <div id="managerReceiptContent" class="manager-receipt-content"></div>
+    <div class="manager-receipt-actions">
+      <button type="button" id="managerReceiptPrint" class="manager-receipt-action-primary">Print receipt</button>
+      <button type="button" id="managerReceiptBackBottom" class="manager-receipt-back">Back to Orders</button>
+    </div>
+  </dialog>
   <main class="admin-page" id="managerMain" tabindex="-1">
     <div class="manager-page-heading">
       <p id="managerBreadcrumb" class="manager-breadcrumb" hidden>Menu <span data-icon="chevron-right"></span><span id="breadcrumbCategory"></span></p>

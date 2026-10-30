@@ -5,7 +5,7 @@ import { isApprovedPublicAsset } from "./public-asset-allowlist.mjs";
 import { createProductManager } from "./manager-ui.mjs";
 import { hydrateIcons } from "./manager-icons.mjs";
 import { visibleOrderReference } from "./order-reference.mjs";
-import { receiptDocument, receiptPlainText } from "./receipt-layout.mjs";
+import { receiptDocument, receiptPlainText, renderReceiptMarkup } from "./receipt-layout.mjs";
 hydrateIcons();
 
 const passwordInput = document.querySelector("#adminPassword");
@@ -74,6 +74,11 @@ function expireSession() {
   ordersList.replaceChildren(); contactsList.replaceChildren();
   productManager.close();
   dashboard.hidden = true; loginPanel.hidden = false;
+  const receiptDialog = document.querySelector("#managerReceiptPreview");
+  if (receiptDialog.open) receiptDialog.close();
+  document.querySelector("#managerReceiptContent").replaceChildren();
+  document.querySelector("#managerBack").hidden = true;
+  managerSectionHistory.length = 0;
   settingsInitial = ""; settingsForm.reset(); hoursTable.replaceChildren();
   document.body.classList.remove("products-view");
   document.querySelector("#pageTitle").textContent = "Cafe Elite Manager";
@@ -109,7 +114,14 @@ const narrow = window.matchMedia("(max-width:1023px)");
 const sidebar = document.querySelector("#managerSidebar"), sidebarToggle = document.querySelector("#sidebarToggle");
 const topbar = document.querySelector("#managerTopbar"), main = document.querySelector("#managerMain");
 const backdrop = document.querySelector("#drawerBackdrop");
+const managerBackButton = document.querySelector("#managerBack");
+const managerReceiptPreview = document.querySelector("#managerReceiptPreview");
+const managerReceiptContent = document.querySelector("#managerReceiptContent");
+const managerSectionHistory = [];
 let drawerOpen = false, currentSectionHash = "#overview", settingsInitial = "", settingsSaving = false;
+function syncManagerBackButton() {
+  managerBackButton.hidden = !narrow.matches || !loginPanel.hidden || currentSectionHash === "#overview";
+}
 const settingsDirty = () => settingsInitial && JSON.stringify([...new FormData(settingsForm)]) !== settingsInitial;
 function closeSidebar(restoreFocus = true) {
   drawerOpen = false; document.body.classList.remove("drawer-open"); document.body.style.overflow = "";
@@ -153,6 +165,7 @@ function updateResponsiveControls() {
   if (narrow.matches) document.querySelector(".mobile-product-search").append(search);
   else topbar.insertBefore(search, document.querySelector("#statusButton"));
   updateHoursDay();
+  syncManagerBackButton();
   if (document.body.classList.contains("products-view")) document.querySelector("#managerSubtitle").textContent = narrow.matches ? "Manage " + productManager.category().toLowerCase() + " items." : "Manage your menu items, opening hours, order options and more.";
 }
 narrow.addEventListener("change", updateResponsiveControls);
@@ -171,11 +184,25 @@ document.addEventListener("click", event => {
   if (!["#overview", "#settings", "#prices", "#orders", "#customers"].includes(link.hash)) return;
   event.preventDefault(); openAdminSection(link.hash);
 });
-document.querySelectorAll('a[href="index.html"]').forEach(link => link.addEventListener("click", event => {
-  if (!canLeaveSection()) event.preventDefault();
+document.querySelectorAll('a[href="index.html?from=manager"]').forEach(link => link.addEventListener("click", event => {
+  if (!canLeaveSection()) { event.preventDefault(); return; }
+  // Only a safe section key is stored. Never persist the admin credential.
+  const section = ["#settings", "#orders", "#prices", "#customers"].includes(currentSectionHash)
+    ? currentSectionHash : currentSectionHash.startsWith("#menu/") ? "#prices" : "#overview";
+  try { sessionStorage.setItem("cafeEliteManagerReturnSection", section); } catch {}
 }));
+managerBackButton.addEventListener("click", () => {
+  if (managerReceiptPreview.open) { managerReceiptPreview.close(); return; }
+  if (drawerOpen) { closeSidebar(); return; }
+  const target = managerSectionHistory.at(-1) || "#overview";
+  if (target === currentSectionHash) return;
+  if (openAdminSection(target, { fromBack: true })) {
+    managerSectionHistory.pop();
+    syncManagerBackButton();
+  }
+});
 document.querySelector("#statusButton").addEventListener("click", () => openAdminSection("#overview"));
-function openAdminSection(hash = window.location.hash, { force = false } = {}) {
+function openAdminSection(hash = window.location.hash, { force = false, fromBack = false } = {}) {
   if (!force && !canLeaveSection()) { history.replaceState(null, "", currentSectionHash); closeSidebar(); return false; }
   const categoryId = hash.startsWith("#menu/") ? hash.slice(6) : "";
   const group = categoryId ? getEffectiveMenuData(true).find(group => encodeURIComponent(group.id) === categoryId) : null;
@@ -199,7 +226,13 @@ function openAdminSection(hash = window.location.hash, { force = false } = {}) {
   document.querySelector("#productSearch").disabled = !products || !adminPassword;
   document.querySelector("#menuDisclosure").classList.toggle("is-active", products);
   if (id === "#customers" && adminPassword) loadContacts().catch(error => showMessage(error.message));
-  currentSectionHash = group ? "#menu/" + encodeURIComponent(group.id) : id;
+  const nextSection = group ? "#menu/" + encodeURIComponent(group.id) : id;
+  if (!fromBack && nextSection !== currentSectionHash) {
+    managerSectionHistory.push(currentSectionHash);
+    if (managerSectionHistory.length > 20) managerSectionHistory.shift();
+  }
+  currentSectionHash = nextSection;
+  syncManagerBackButton();
   if (window.location.hash !== currentSectionHash) history.pushState(null, "", currentSectionHash);
   closeSidebar(false); document.querySelector("#ownerAccount").open = false; window.scrollTo({ top:0, behavior:"instant" });
   return true;
@@ -548,9 +581,34 @@ function renderOrder(order) {
   `;
 }
 
+function openReceiptPreview(order) {
+  // On iOS installed web apps a blank popup can trap the owner without any
+  // browser Back control. Keep the receipt within Manager's own dialog.
+  managerReceiptContent.innerHTML = renderReceiptMarkup(order);
+  if (!managerReceiptPreview.open) managerReceiptPreview.showModal();
+  document.querySelector("#managerReceiptBackTop").focus({ preventScroll: true });
+}
+function closeReceiptPreview() {
+  if (managerReceiptPreview.open) managerReceiptPreview.close();
+}
+for (const id of ["managerReceiptBackTop", "managerReceiptBackBottom"]) {
+  document.querySelector("#" + id).addEventListener("click", closeReceiptPreview);
+}
+document.querySelector("#managerReceiptPrint").addEventListener("click", () => {
+  if (managerReceiptPreview.open) window.print();
+});
+managerReceiptPreview.addEventListener("close", () => {
+  managerReceiptContent.replaceChildren();
+  const orders = document.querySelector("#ordersList");
+  const target = orders?.querySelector('[data-action="print"]');
+  if (target && !dashboard.hidden) target.focus({ preventScroll: true });
+});
 function printOrder(order) {
-  // All dynamic values are HTML-escaped by receiptDocument before reaching
-  // the print-only popup. This is a presentation change, not a payment action.
+  if (narrow.matches || window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true) {
+    openReceiptPreview(order);
+    return;
+  }
+  // Desktop browser printing remains unchanged.
   const printWindow = window.open("", "_blank", "width=450,height=850");
   if (!printWindow) {
     showMessage("Print window was blocked. Use Copy order instead.");

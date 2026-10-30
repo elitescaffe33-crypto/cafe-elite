@@ -941,3 +941,30 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
   .order-confirmation-content { padding: 20px 17px; }
   .order-confirmation-receipt { padding: 15px; }
 }
+
+
+/* Owner-only return route when public site was opened explicitly from Manager.
+   No privileged data or credentials are ever exposed in the URL. */
+.manager-return-link[hidden] { display:none!important; }
+.manager-return-link {
+  position:fixed;
+  z-index:32;
+  left:max(12px,env(safe-area-inset-left));
+  bottom:calc(14px + env(safe-area-inset-bottom));
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:48px;
+  max-width:calc(100vw - 24px);
+  padding:10px 16px;
+  border:2px solid #edc365;
+  border-radius:999px;
+  background:#0d263f;
+  color:#fff4da;
+  -webkit-text-fill-color:#fff4da;
+  box-shadow:0 5px 22px #0009;
+  font:800 0.95rem/1.35 Arial,sans-serif;
+  text-decoration:none;
+}
+body.has-basket .manager-return-link { bottom:calc(92px + env(safe-area-inset-bottom)); }
+.manager-return-link:focus-visible { outline:3px solid #ffdc81; outline-offset:3px; }

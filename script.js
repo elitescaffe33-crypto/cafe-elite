@@ -1329,6 +1329,19 @@ function categoryFromHash() {
 const hashCategory = categoryFromHash();
 if (hashCategory !== "signature-picks" && menuData.some((group) => getGroupId(group) === hashCategory)) activeMenuCategoryId = hashCategory;
 
+// Show a return route only when the owner deliberately entered the public
+// website through Manager. Ordinary customers never see this shortcut.
+const returnToManager = document.querySelector("#returnToManager");
+if (new URLSearchParams(window.location.search).get("from") === "manager") {
+  let section = "#overview";
+  try {
+    const saved = sessionStorage.getItem("cafeEliteManagerReturnSection");
+    if (["#overview", "#settings", "#orders", "#prices", "#customers"].includes(saved)) section = saved;
+  } catch { /* No local storage is required to return safely. */ }
+  returnToManager.href = "admin.html" + section;
+  returnToManager.hidden = false;
+}
+
 setupBackgroundMusic();
 document.querySelector("#copyrightYear").textContent = String(new Date().getFullYear());
 document.querySelector("#loadMap").addEventListener("click", () => {
