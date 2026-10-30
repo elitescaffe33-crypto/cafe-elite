@@ -34,6 +34,8 @@ const orderNotificationEmail = process.env.ORDER_NOTIFICATION_EMAIL || "elitesca
 const adminPassword = process.env.ADMIN_PASSWORD || "";
 const resendApiKey = process.env.RESEND_API_KEY || "";
 const resendFromEmail = process.env.RESEND_FROM_EMAIL || "";
+const oneShotMailTestSecret = process.env.CAFE_ELITE_ONE_SHOT_MAIL_TEST_SECRET || "";
+let oneShotMailTestAttempted = false;
 const supabaseUrl = (process.env.SUPABASE_URL || "").replace(/\/$/, "");
 const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 // A production checkout must never silently switch to ephemeral local JSON
@@ -412,6 +414,7 @@ async function sendResendMail({ subject, text, idempotencyKey }) {
   if (!response.ok) {
     throw new Error(data.message || data.error || `Resend failed with status ${response.status}`);
   }
+  return typeof data.id === "string" ? data.id : "";
 }
 
 async function handleStripeWebhook(request, response) {
@@ -488,6 +491,44 @@ async function handleRequest(request, response) {
       response.end(JSON.stringify({ error: "Preview only. Order, payment and customer-message submissions are blocked." }));
       return;
     }
+  }
+  // Temporary owner-approved one-shot email delivery check. No customer order, charge,
+  // order-store access, email recipient input, or admin account modifications.
+  // An unpredictable 256-bit secret is provisioned only in the Render environment.
+  // This route is removed immediately after testing and is never enabled in Preview.
+  if (request.method === "POST" && request.url === "/api/_internal/one-shot-mail-test") {
+    const supplied = request.headers["x-cafe-elite-test-token"];
+    const allowed = !previewMode && !safety.staging
+      && Date.now() < Date.parse("2026-11-01T00:00:00Z")
+      && /^[a-f0-9]{64}$/.test(oneShotMailTestSecret)
+      && typeof supplied === "string" && /^[a-f0-9]{64}$/.test(supplied)
+      && timingSafeEqual(Buffer.from(supplied, "hex"), Buffer.from(oneShotMailTestSecret, "hex"));
+    if (!allowed) { jsonReply(response, 404, { error: "Not found" }); return; }
+    if (resendFromEmail !== "CAFE ELITE <orders@cafeelite.co.uk>" || orderNotificationEmail !== "elitesorders@gmail.com") {
+      jsonReply(response, 503, { error: "Sender and recipient configuration mismatch." }); return;
+    }
+    if (oneShotMailTestAttempted) { jsonReply(response, 409, { error: "Test already attempted." }); return; }
+    if (request.headers["content-length"] && request.headers["content-length"] !== "0"
+      || request.headers["transfer-encoding"]) { jsonReply(response, 400, { error: "No request body allowed." }); return; }
+    oneShotMailTestAttempted = true;
+    try {
+      const emailId = await sendResendMail({
+        subject: "CAFE ELITE - Delivery test (not a customer order)",
+        text: [
+          "CAFE ELITE - Email delivery test",
+          "This is NOT a customer order. No payment was charged.",
+          "From: orders@cafeelite.co.uk",
+          "Destination: elitesorders@gmail.com",
+          "If you received this email, the new notification route works.",
+        ].join("\n"),
+        idempotencyKey: "cafe-elite-mail-delivery-check-20261030-v1",
+      });
+      if (!emailId) throw new Error("Resend response did not include an email ID.");
+      jsonReply(response, 200, { ok: true, provider: "Resend", emailId });
+    } catch {
+      jsonReply(response, 502, { ok: false, error: "Resend could not confirm the one-shot email send." });
+    }
+    return;
   }
   if (request.method === "POST" && ["/api/collection-order", "/api/create-checkout-session"].includes(request.url)) {
     if (request.headers["content-type"]?.split(";")[0].trim().toLowerCase() !== "application/json") {
