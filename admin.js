@@ -5,6 +5,7 @@ import { isApprovedPublicAsset } from "./public-asset-allowlist.mjs";
 import { createProductManager } from "./manager-ui.mjs";
 import { hydrateIcons } from "./manager-icons.mjs";
 import { visibleOrderReference } from "./order-reference.mjs";
+import { receiptDocument, receiptPlainText } from "./receipt-layout.mjs";
 hydrateIcons();
 
 const passwordInput = document.querySelector("#adminPassword");
@@ -263,16 +264,18 @@ ordersList.addEventListener("click", async (event) => {
   const actionButton = event.target.closest("[data-action]");
   if (actionButton) {
     const orderCard = actionButton.closest(".order-history-card");
-    const orderText = orderCard?.querySelector(".printable-order")?.textContent || "";
-
+    const order = currentOrders.find(item => item.id === orderCard?.dataset.orderId);
+    if (!order) {
+      showMessage("Order information is no longer available. Refresh orders and try again.");
+      return;
+    }
     if (actionButton.dataset.action === "copy") {
-      await navigator.clipboard.writeText(orderText);
+      await navigator.clipboard.writeText(receiptPlainText(order));
       showMessage("Order copied.");
       return;
     }
-
     if (actionButton.dataset.action === "print") {
-      printOrder(orderText);
+      printOrder(order);
       return;
     }
   }
@@ -510,10 +513,8 @@ function renderOrder(order) {
   const paymentLabel = order.paymentState === "paid" || order.type === "paid-online" ? "Paid online" : order.type === "online" ? (order.paymentState === "failed" ? "Online payment not completed" : "Awaiting online payment") : "Pay on collection";
   const status = order.status || "new";
   const phone = order.phone || "";
-  const printableOrder = formatPrintableOrder(order, paymentLabel, date);
-
   return `
-    <article class="order-history-card">
+    <article class="order-history-card" data-order-id="${escapeHtml(order.id)}">
       <div class="order-card-head">
         <div>
           <strong>${paymentLabel}</strong>
@@ -533,7 +534,6 @@ function renderOrder(order) {
       ${order.notificationStatus ? `<p><b>Order notification:</b> ${escapeHtml(({ pending: "Pending", not_ready: "Waiting for payment", sending: "Sending / awaiting delivery confirmation", sent: "Sent", failed_uncertain: "Delivery uncertain - check before resending" })[order.notificationStatus] || "Check delivery status")}</p>` : ""}
       <pre>${escapeHtml(order.items || order.message || "")}</pre>
       ${order.notes ? `<p><b>Notes:</b> ${escapeHtml(order.notes)}</p>` : ""}
-      <pre class="printable-order" hidden>${escapeHtml(printableOrder)}</pre>
       <div class="order-tools" aria-label="Order tools">
         <button class="status-button" type="button" data-action="print">Print</button>
         <button class="status-button" type="button" data-action="copy">Copy order</button>
@@ -548,52 +548,27 @@ function renderOrder(order) {
   `;
 }
 
-function formatPrintableOrder(order, paymentLabel, date) {
-  return [
-    "CAFE ELITE",
-    "33 High Street, Leominster HR6 8LZ",
-    "------------------------------",
-    `Order #: ${visibleOrderReference(order)}`,
-    `Order time: ${date}`,
-    `Payment: ${paymentLabel}`,
-    `Status: ${order.status || "new"}`,
-    `Name: ${order.customerName || "Not provided"}`,
-    `Phone: ${order.phone || "Not provided"}`,
-    `Collection: ${order.collectionTime || "Not provided"}`,
-    `Total: ${order.amount || "Pay at collection"}`,
-    "------------------------------",
-    "Items:",
-    order.items || order.message || "No items",
-    order.notes ? `Notes: ${order.notes}` : "Notes: None",
-    "------------------------------",
-  ].join("\n");
-}
-
-function printOrder(orderText) {
-  const printWindow = window.open("", "_blank", "width=420,height=680");
+function printOrder(order) {
+  // All dynamic values are HTML-escaped by receiptDocument before reaching
+  // the print-only popup. This is a presentation change, not a payment action.
+  const printWindow = window.open("", "_blank", "width=450,height=850");
   if (!printWindow) {
     showMessage("Print window was blocked. Use Copy order instead.");
     return;
   }
-
-  printWindow.document.write(`
-    <!doctype html>
-    <html>
-      <head>
-        <title>CAFE ELITE Order</title>
-        <style>
-          body { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; margin: 18px; color: #111; }
-          pre { white-space: pre-wrap; font-size: 14px; line-height: 1.35; }
-        </style>
-      </head>
-      <body><pre>${escapeHtml(orderText)}</pre></body>
-    </html>
-  `);
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
+  try {
+    printWindow.document.open();
+    printWindow.document.write(receiptDocument(order));
+    printWindow.document.close();
+    printWindow.focus();
+    const ready = printWindow.document.fonts?.ready || Promise.resolve();
+    Promise.resolve(ready).then(() => {
+      if (!printWindow.closed) printWindow.print();
+    }).catch(() => showMessage("Print preview could not be opened."));
+  } catch {
+    showMessage("Print preview could not be opened. Use Copy order instead.");
+  }
 }
-
 function renderStatusButton(orderId, currentStatus, status, label) {
   return `
     <button
