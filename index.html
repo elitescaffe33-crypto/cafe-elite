@@ -130,11 +130,32 @@
     <p class="sr-only" id="basketAnnouncement" role="status" aria-live="polite"></p>
 
     <main id="main-content" tabindex="-1">
-      <section id="orderConfirmation" class="section order-confirmation" tabindex="-1" aria-labelledby="confirmation-title" hidden>
-        <h2 id="confirmation-title">Order confirmed</h2>
-        <p id="confirmationDetails"></p>
-        <p>Collect from 33 High Street, Leominster HR6 8LZ. Please give your name when you arrive.</p>
-      </section>
+      <dialog id="orderConfirmation" class="order-confirmation-dialog" aria-labelledby="confirmation-title" aria-describedby="confirmation-intro">
+        <div class="order-confirmation-content">
+          <span class="order-confirmation-check" aria-hidden="true">✓</span>
+          <p class="order-confirmation-eyebrow">CAFE ELITE · COLLECTION</p>
+          <h2 id="confirmation-title" tabindex="-1">Order received!</h2>
+          <p id="confirmation-intro">Thank you! We have received your collection order. Keep your order number for when you arrive.</p>
+          <div class="order-confirmation-receipt">
+            <div class="order-confirmation-number">
+              <span>Order number</span>
+              <strong id="confirmationReference"></strong>
+            </div>
+            <div class="order-confirmation-row">
+              <span>Requested collection</span>
+              <strong id="confirmationTime"></strong>
+            </div>
+            <div class="order-confirmation-row">
+              <span>Amount to pay on collection</span>
+              <strong id="confirmationAmount"></strong>
+            </div>
+          </div>
+          <p class="order-confirmation-payment">No online payment has been taken. Please pay when you collect your order.</p>
+          <p class="order-confirmation-late" id="confirmationLateNotice" hidden></p>
+          <p class="order-confirmation-address">33 High Street, Leominster HR6 8LZ. Please give your name or order number when collecting.</p>
+          <button class="button primary order-confirmation-close" type="button" id="closeOrderConfirmation">Done — back to Café Elite</button>
+        </div>
+      </dialog>
       <section class="hero" id="home" aria-labelledby="hero-title">
         <div class="hero-media" aria-hidden="true">
           <img src="assets/cafe-front.jpg" alt="" width="1280" height="960" fetchpriority="high" decoding="async" />

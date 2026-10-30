@@ -78,7 +78,7 @@ test("public order and manager surfaces use display code; internal action IDs st
  assert.match(server,/Reference: \$\{visibleOrderReference\(order\)\}/);
  assert.match(admin,/Order #:.*visibleOrderReference\(order\)/);
  assert.match(admin,/data-order-id="\$\{escapeHtml\(orderId\)\}"/);
- assert.match(client,/Reference: \$\{result\.orderReference \|\| result\.orderId\}/);
+ assert.match(client,/querySelector\("#confirmationReference"\)\.textContent = result\.orderReference \|\| result\.orderId/);
 });
 test("operator SQL is locked, transactional and refuses number reuse",async()=>{
  const sql=await readFile(new URL("../scripts/order-display-number-LOCKED-DRAFT.sql",import.meta.url),"utf8");

@@ -29,6 +29,7 @@ const siteNav = document.querySelector(".site-nav");
 const cartToggle = document.querySelector("#cartToggle");
 const cartClose = document.querySelector("#cartClose");
 const cartDrawer = document.querySelector("#cartDrawer");
+const confirmationDialog = document.querySelector("#orderConfirmation");
 const mobileBasket = document.querySelector("#mobileBasket");
 const mobileBasketButton = document.querySelector("#mobileBasketButton");
 const basketAnnouncement = document.querySelector("#basketAnnouncement");
@@ -276,9 +277,19 @@ cartDrawer.addEventListener("close", () => {
   window.scrollTo({ top: basketScrollY, behavior: "instant" });
   cartToggle.setAttribute("aria-expanded", "false");
   mobileBasketButton.setAttribute("aria-expanded", "false");
-  const target = returnFocus?.isConnected && returnFocus.getClientRects().length ? returnFocus : cartToggle;
-  target?.focus({ preventScroll: true });
+  // Once a saved order is shown, do not steal focus back from its confirmation dialog.
+  if (!confirmationDialog.open) {
+    const target = returnFocus?.isConnected && returnFocus.getClientRects().length ? returnFocus : cartToggle;
+    target?.focus({ preventScroll: true });
+  }
 });
+confirmationDialog.addEventListener("close", () => {
+  cartToggle.focus({ preventScroll: true });
+});
+document.querySelector("#closeOrderConfirmation").addEventListener("click", () => {
+  confirmationDialog.close();
+});
+
 cartDrawer.addEventListener("click", (event) => {
   const rect = cartDrawer.getBoundingClientRect();
   if (event.target === cartDrawer && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) closeCart();
@@ -1025,19 +1036,35 @@ function submitOrderForm() {
 }
 
 function showOrderSentMessage(result, collectionTime) {
-  if (!result?.ok || !result.orderId) return;
+  // Only a successful, saved response can display a customer receipt.
+  if (result?.ok !== true || !result.orderId) return;
   const closing = getCafeHours(new Date(), activeSettings).today?.close;
-  const late = closing && collectionTime > closing
-    ? " This collection time is shortly after normal closing; the cafe will contact you if it needs adjustment." : "";
-  document.querySelector("#confirmationDetails").textContent = `Today at ${collectionTime} (London time). Reference: ${result.orderReference || result.orderId}. Payment due on collection.${late}`;
-  const confirmation = document.querySelector("#orderConfirmation");
-  confirmation.hidden = false;
+  const late = Boolean(closing && collectionTime > closing);
+  const amount = Number.isSafeInteger(result.total) && result.total >= 0 && result.currency === "gbp"
+    ? "£" + (result.total / 100).toFixed(2) : "Pay at collection";
+
+  document.querySelector("#confirmationReference").textContent = result.orderReference || result.orderId;
+  document.querySelector("#confirmationTime").textContent = "Today at " + collectionTime + " (London time)";
+  document.querySelector("#confirmationAmount").textContent = amount;
+  const lateNotice = document.querySelector("#confirmationLateNotice");
+  lateNotice.textContent = late
+    ? "This time is shortly after normal closing. The cafe will contact you if an adjustment is needed." : "";
+  lateNotice.hidden = !late;
+
+  // Put the receipt in the top layer, rather than scrolling to an off-screen
+  // section that Safari can scroll away from when the basket's close event fires.
+  if (cartDrawer.open) closeCart();
+  if (!confirmationDialog.open) confirmationDialog.showModal();
+  document.querySelector("#confirmation-title").focus({ preventScroll: true });
+
   basket.length = 0;
-  renderBasket();
-  closeCart();
-  confirmation.scrollIntoView({ block: "start", behavior: "auto" });
-  confirmation.focus({ preventScroll: true });
-  history.replaceState(null, "", window.location.pathname + window.location.search);
+  // Reset the hidden basket without queuing an animation-frame focus shift to a
+  // closed dialog, which would otherwise compete with this success receipt.
+  setCartStep("basket", false);
+  try { renderBasket(); }
+  catch { console.error("Basket reset could not be fully rendered after a saved order."); }
+  try { history.replaceState(null, "", window.location.pathname + window.location.search); }
+  catch { /* Browsers can restrict history changes; the receipt remains visible. */ }
 }
 
 menuGrid.addEventListener("click", (event) => {

@@ -830,3 +830,114 @@ a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visibl
   object-fit: contain;
   background: #fff;
 }
+
+
+/* A saved Pay on Collection order always opens a visible, keyboard-accessible
+   confirmation in the top layer. Never rely on scrolling the homepage after
+   the basket dialog closes: mobile Safari may restore the old scroll position. */
+.order-confirmation-dialog {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  width: min(480px, calc(100vw - 24px));
+  max-width: 480px;
+  max-height: calc(100dvh - 24px - env(safe-area-inset-bottom));
+  margin: auto;
+  padding: 0;
+  border: 2px solid #d9a441;
+  border-radius: 18px;
+  background: #fff9ee;
+  color: #12283c;
+  -webkit-text-fill-color: #12283c;
+  box-shadow: 0 28px 75px rgba(0, 0, 0, 0.6);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.order-confirmation-dialog:not([open]) { display: none; }
+.order-confirmation-dialog::backdrop { background: rgba(2, 12, 25, 0.78); }
+.order-confirmation-content { padding: 26px clamp(18px, 5vw, 32px); text-align: center; }
+.order-confirmation-check {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  border: 2px solid #b88a2e;
+  color: #1e4b3e;
+  -webkit-text-fill-color: #1e4b3e;
+  background: #eff9ef;
+  font: 900 2rem/1 Arial, sans-serif;
+}
+.order-confirmation-eyebrow {
+  margin: 0 0 6px;
+  color: #785319;
+  -webkit-text-fill-color: #785319;
+  font: 800 0.74rem/1.5 Inter, sans-serif;
+  letter-spacing: 0.08em;
+}
+.order-confirmation-dialog h2 {
+  margin: 0 0 12px;
+  color: #11283b;
+  -webkit-text-fill-color: #11283b;
+  font: 800 clamp(1.7rem, 6vw, 2.2rem)/1.22 Inter, Arial, sans-serif;
+}
+.order-confirmation-dialog h2:focus { outline: none; }
+.order-confirmation-dialog h2:focus-visible { outline: none; }
+.order-confirmation-dialog p { line-height: 1.55; overflow-wrap: anywhere; }
+#confirmation-intro { font-size: 1rem; margin: 0 0 20px; }
+.order-confirmation-receipt {
+  border: 1px solid #dcc89e;
+  border-radius: 12px;
+  background: #ffffff;
+  text-align: left;
+  margin: 0 0 16px;
+  padding: 18px;
+}
+.order-confirmation-number { display: grid; gap: 6px; padding-bottom: 15px; margin-bottom: 12px; border-bottom: 1px solid #e5d8bd; }
+.order-confirmation-number span, .order-confirmation-row span { font-size: 0.83rem; font-weight: 600; color: #4d5b67; -webkit-text-fill-color: #4d5b67; }
+.order-confirmation-number strong {
+  font: 800 clamp(2.1rem, 9vw, 3.1rem)/1.1 Inter, Arial, sans-serif;
+  color: #153953;
+  -webkit-text-fill-color: #153953;
+  letter-spacing: 0.035em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.order-confirmation-row { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 6px 16px; padding: 9px 0; }
+.order-confirmation-row strong { color: #142940; -webkit-text-fill-color: #142940; font-weight: 800; }
+.order-confirmation-payment {
+  margin: 12px 0;
+  padding: 11px 12px;
+  border-left: 4px solid #c19535;
+  border-radius: 4px;
+  background: #fff0cc;
+  text-align: left;
+  font-size: 0.91rem;
+  font-weight: 700;
+}
+.order-confirmation-late { margin: 12px 0; color: #8e3027; -webkit-text-fill-color: #8e3027; font-weight: 700; }
+.order-confirmation-late[hidden] { display: none; }
+.order-confirmation-address { margin: 12px 0 18px; color: #314354; -webkit-text-fill-color: #314354; font-size: 0.9rem; }
+.order-confirmation-dialog .order-confirmation-close {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid #a87b1b;
+  border-radius: 10px;
+  background: #edbb54;
+  color: #142940;
+  -webkit-text-fill-color: #142940;
+  font: 800 1rem/1.4 Inter, Arial, sans-serif;
+  text-align: center;
+  white-space: normal;
+  cursor: pointer;
+}
+.order-confirmation-dialog .order-confirmation-close:hover { background: #ffd47d; }
+.order-confirmation-dialog .order-confirmation-close:focus-visible { outline: 3px solid #092f55; outline-offset: 3px; }
+@media (max-width: 420px) {
+  .order-confirmation-content { padding: 20px 17px; }
+  .order-confirmation-receipt { padding: 15px; }
+}
