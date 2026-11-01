@@ -1,3 +1,5 @@
+import { ownerCurrentRecipeDeclarations } from "./public-allergen-sources.mjs";
+
 const gbp = (amount) => `\u00a3${amount}`;
 
 export const MENU_PRICES = Object.freeze({
@@ -281,7 +283,7 @@ export const menuData = [
       price: MENU_PRICES.chickenTomatoPasta,
       image: "assets/cafe-elite-chicken-tomato-pasta.webp",
       description: "Tender chicken pieces and penne pasta tossed in our homemade tomato sauce.",
-      ingredients: ["De Cecco Penne", "Homemade CAFE ELITE tomato sauce", "Cooked chicken breast strips"],
+      ingredients: [...ownerCurrentRecipeDeclarations["pasta-chicken-tomato"].ingredients],
     },
     {
       id: "deal-any-two-bowls",

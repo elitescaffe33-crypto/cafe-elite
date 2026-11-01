@@ -6,11 +6,34 @@ const tomatoSauce = [
 ];
 const tomatoSauceText = "Homemade CAFE ELITE tomato sauce (" + tomatoSauce.join(", ") + ")";
 
+// 1 November 2026: current Chicken Tomato Pasta recipe and labelled pasta
+// precautionary allergens, transcribed directly from the café owner. This
+// declaration applies ONLY to Chicken Tomato Pasta, not plain Tomato Pasta.
+export const ownerCurrentRecipeDeclarations = Object.freeze({
+  "pasta-chicken-tomato": Object.freeze({
+    ingredients: Object.freeze([
+      "Penne pasta (WHEAT)",
+      "cooked chicken breast (chicken, salt)",
+      "chopped tomatoes",
+      "tomato purée",
+      "butter (MILK)",
+      "sunflower oil",
+      "garlic",
+      "oregano",
+      "black pepper",
+      "salt",
+    ]),
+    allergens: Object.freeze(["WHEAT (GLUTEN)", "MILK"]),
+    mayContain: Object.freeze(["SOYA", "MUSTARD"]),
+    mayContainSource: "pasta",
+  }),
+});
+
 // The owner explicitly confirmed these recipes in the archived evidence.
 // Compound-food suppliers' untranscribed sub-ingredients are not invented.
 const ownerRecipeIngredients = Object.freeze({
   "pasta-tomato-pasta": ["De Cecco Spaghetti", tomatoSauceText],
-  "pasta-chicken-tomato": ["De Cecco Penne", tomatoSauceText, "Cooked chicken breast strips"],
+  "pasta-chicken-tomato": ownerCurrentRecipeDeclarations["pasta-chicken-tomato"].ingredients,
 });
 
 const sourceComponentIngredients = Object.freeze({

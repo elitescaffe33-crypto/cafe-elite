@@ -1,7 +1,7 @@
 import { getGroupId, getItemKey, getItemDisplayName, priceToPence, onlineMenuGroups } from "./menu-data.mjs";
 import { availablePastaOffers, visibleMenuItems } from "./smart-pasta-deals.mjs";
 import { partialAllergenHints } from "./partial-allergen-hints.mjs";
-import { recordedProductIngredients, selectedSupplierPanels } from "./public-allergen-sources.mjs";
+import { recordedProductIngredients, selectedSupplierPanels, ownerCurrentRecipeDeclarations } from "./public-allergen-sources.mjs";
 
 export const business = Object.freeze({
   name: "CAFE ELITE",
@@ -54,7 +54,7 @@ export const documentedIngredientWarnings = Object.freeze({
   "snack-muffins": { contains: ["Wheat (gluten)", "Egg", "Milk"], mayContain: null,
     note: "Chocolate Chip and Double Chocolate also list Soya. Each muffin flavour requires its own supplier and precautionary allergen check." },
   "pasta-bolognese-bowl": { contains: ["Wheat (gluten)"], mayContain: null, note: "This identifies the spaghetti ingredient only; sauce declarations remain incomplete." },
-  "pasta-chicken-tomato": { contains: ["Wheat (gluten)"], mayContain: null, note: "This identifies the penne ingredient only; sauce and chicken declarations remain incomplete." },
+  "pasta-chicken-tomato": { contains: ["Wheat (gluten)", "Milk"], mayContain: ["Soya", "Mustard"], note: "Current café recipe and pasta may-contain information provided by the owner; kitchen cross-contact must be checked separately." },
   "pasta-tomato-pasta": { contains: ["Wheat (gluten)"], mayContain: null, note: "This identifies the spaghetti ingredient only; sauce declarations remain incomplete." },
   "pasta-garlic-yogurt-pasta": { contains: ["Wheat (gluten)", "Milk"], mayContain: null, note: "This identifies the pasta and homemade dairy-yogurt ingredients only; other supplier information remains incomplete." },
 });
@@ -97,8 +97,20 @@ export function selectedAllergenSummary(item, selectedOptions = {}) {
 }
 
 export function allergenDisclosure(item) {
-  const info = getAllergenInfo(item);
   const productId = item?.sourceId || item?.id;
+  // The café owner has supplied a current recipe plus the pasta's own
+  // precautionary notice for this exact dish. Do not apply to plain Tomato
+  // Pasta, or keep showing an obsolete "sauce incomplete" warning.
+  const latest = ownerCurrentRecipeDeclarations[productId];
+  if (latest) {
+    return `<details class="menu-product-ingredients allergen-info"><summary>Ingredients &amp; allergen info<span class="sr-only"> for ${escapeMarkup(getItemDisplayName(item))}</span></summary>
+      <p class="recorded-recipe-ingredients"><strong>Ingredients:</strong> ${escapeMarkup(latest.ingredients.join(", "))}.</p>
+      <p data-allergen-review-text><strong>Allergens:</strong> ${escapeMarkup(latest.allergens.join(", "))}.</p>
+      <p data-allergen-review-text><strong>May contain:</strong> ${escapeMarkup(latest.mayContain.join(", "))} (${escapeMarkup(latest.mayContainSource)}).</p>
+      <p data-allergen-review-text>Please speak to our team about kitchen cross-contact before ordering and confirm information at collection.</p>
+    </details>`;
+  }
+  const info = getAllergenInfo(item);
   const mapped = Object.hasOwn(partialAllergenHints.products, productId || "") ? partialAllergenHints.products[productId] : null;
   const documented = documentedIngredientWarnings[productId] || null;
   const evidence = documented || (mapped?.hasSupplierComponents

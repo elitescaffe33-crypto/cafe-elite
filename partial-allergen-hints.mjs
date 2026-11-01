@@ -57,7 +57,8 @@ export const partialAllergenHints = Object.freeze({
     },
     "pasta-chicken-tomato": {
       "contains": [
-        "Cereals containing gluten"
+        "Cereals containing gluten",
+        "Milk"
       ],
       "supplierMayContain": [
         "Mustard",
