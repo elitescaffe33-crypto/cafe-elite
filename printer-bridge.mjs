@@ -25,6 +25,9 @@ console.log(`Polling every ${pollSeconds} seconds`);
 
 let printedIds = await loadPrintedIds();
 let isPolling = false;
+// Never persist this validator: on restart a full list is needed to recover
+// orders printed between receiving a response and saving the printed-ID ledger.
+let lastCompletedOrderEtag = "";
 
 await pollOrders();
 setInterval(pollOrders, pollSeconds * 1000);
@@ -34,8 +37,9 @@ async function pollOrders() {
   isPolling = true;
 
   try {
-    const orders = await fetchOrders();
-    const printableOrders = orders
+    const response = await fetchOrders();
+    if (response.notModified) return;
+    const printableOrders = response.orders
       .filter((order) => order?.id && !printedIds.has(order.id))
       .filter((order) => ["new", "pending", "paid"].includes(order.status || "new"))
       .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
@@ -46,6 +50,9 @@ async function pollOrders() {
       await savePrintedIds(printedIds);
       console.log(`Printed order ${order.id}`);
     }
+    // IMPORTANT: Commit the validator only once ALL prints and the printed-ID
+    // ledger writes have succeeded. On failure the next poll must retry.
+    lastCompletedOrderEtag = response.etag;
   } catch (error) {
     console.error(`Printer bridge error: ${error.message}`);
   } finally {
@@ -57,14 +64,24 @@ async function fetchOrders() {
   const response = await fetch(`${siteUrl}/api/admin/orders`, {
     headers: {
       "X-Admin-Password": adminPassword,
+      ...(lastCompletedOrderEtag ? { "If-None-Match": lastCompletedOrderEtag } : {}),
     },
   });
+  if (response.status === 304) {
+    if (!lastCompletedOrderEtag) throw new Error("Unexpected unchanged order response.");
+    return { notModified: true };
+  }
 
   const data = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(data?.error || `Order fetch failed with status ${response.status}`);
   }
-  return Array.isArray(data) ? data : [];
+  if (!Array.isArray(data)) throw new Error("Invalid order-list response; retrying.");
+  // Only accept validators produced by our own server; otherwise keep polling
+  // the legacy full JSON response and do not risk skipping an unprinted order.
+  const receivedEtag = response.headers.get("etag") || "";
+  const etag = /^W\/"orderlist-[a-f0-9]{64}"$/.test(receivedEtag) ? receivedEtag : "";
+  return { orders: data, etag, notModified: false };
 }
 
 function formatReceipt(order) {

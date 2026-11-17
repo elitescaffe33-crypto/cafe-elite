@@ -3,6 +3,7 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { OrderError } from "./order-catalogue.mjs";
 import { createFileOrderStore, createSupabaseOrderStore, changeOrder } from "./order-store.mjs";
 import { createCachedOrderListStore } from "./order-list-cache.mjs";
+import { orderListRepresentation, orderListNotModified } from "./order-response-etag.mjs";
 import { createOrderService, verifyWebhook } from "./order-service.mjs";
 import { mkdir, readFile, writeFile, realpath } from "node:fs/promises";
 import { extname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
@@ -599,8 +600,18 @@ async function handleRequest(request, response) {
 
   if (request.method === "GET" && request.url === "/api/admin/orders") {
     if (!requireAdmin(request, response)) return;
-    response.writeHead(200, { "content-type": "application/json" });
-    response.end(JSON.stringify(await loadOrders()));
+    // Preserve the full historical JSON for old clients. A printer that sends
+    // its most recently completed response ETag can safely skip unchanged
+    // bodies; 304 is never sent to a client that did not opt in.
+    const { body, etag } = orderListRepresentation(await loadOrders());
+    response.setHeader("ETag", etag);
+    if (orderListNotModified(request.headers["if-none-match"], etag)) {
+      response.writeHead(304);
+      response.end();
+    } else {
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(body);
+    }
     return;
   }
 
