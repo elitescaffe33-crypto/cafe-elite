@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { OrderError } from "./order-catalogue.mjs";
 import { createFileOrderStore, createSupabaseOrderStore, changeOrder } from "./order-store.mjs";
+import { createCachedOrderListStore } from "./order-list-cache.mjs";
 import { createOrderService, verifyWebhook } from "./order-service.mjs";
 import { mkdir, readFile, writeFile, realpath } from "node:fs/promises";
 import { extname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
@@ -50,7 +51,14 @@ if (!previewMode && !safety.staging && !isolatedTest) {
 }
 const checkoutOrigin = new URL(safety.staging ? safety.origin : process.env.PUBLIC_SITE_URL || business.url);
 if (checkoutOrigin.username || checkoutOrigin.password || checkoutOrigin.pathname !== "/" || checkoutOrigin.search || checkoutOrigin.hash || (checkoutOrigin.protocol !== "https:" && !(checkoutOrigin.protocol === "http:" && ["localhost", "127.0.0.1"].includes(checkoutOrigin.hostname)))) throw new Error("Invalid PUBLIC_SITE_URL configuration");
-const orderStore = hasSupabase() ? createSupabaseOrderStore(supabaseRequest) : createFileOrderStore(dataDir);
+// The single production Render instance serves two polling consumers:
+ // printer (8-second checks) and notification recovery (30-second checks).
+ // Serve unchanged full order data from a shared, write-invalidated read cache.
+ // Never cache staging or preview reads; their failure/fixture behavior is unchanged.
+const rawOrderStore = hasSupabase() ? createSupabaseOrderStore(supabaseRequest) : createFileOrderStore(dataDir);
+const orderStore = hasSupabase() && !safety.staging
+  ? createCachedOrderListStore(rawOrderStore)
+  : rawOrderStore;
 const orderService = createOrderService({ store: orderStore, loadSettings: loadOrderingSettings, buildMenuData,
   createStripeSession: (params, key) => stripeApi("/checkout/sessions", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", "Idempotency-Key": key }, body: params }),
   notify: sendOrderEmail, notificationsDisabled: safety.notificationsDisabled, origin: checkoutOrigin.origin });
