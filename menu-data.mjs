@@ -44,6 +44,8 @@ export const RETIRED_PRODUCT_IDS = Object.freeze([
   "snack-carrot-loaf-slice", "snack-lemon-loaf-slice", "snack-chocolate-loaf-slice",
   "snack-cornetto-hazelnut-chocolate", "snack-solero-exotic",
   "extra-add-syrup", "extra-homemade-yogurt-pot",
+  "autumn-pumpkin-spice-latte", "autumn-salted-caramel-latte",
+  "autumn-toffee-nut-latte", "autumn-hazelnut-cinnamon-latte",
 ]);
 export function isRetiredProduct(item) {
   return [item?.id, item?.sourceId, item?.priceKey].some(id => RETIRED_PRODUCT_IDS.includes(id));

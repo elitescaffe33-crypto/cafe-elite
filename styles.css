@@ -3105,7 +3105,7 @@ html {
   box-shadow: 0 24px 64px rgba(7, 21, 39, 0.14);
 }
 
-.new-product-card--autumn {
+.new-product-card--winter {
   background: #fff7ec;
 }
 
@@ -4164,4 +4164,44 @@ html {
   .order-section .form-grid {
     gap: 12px;
   }
+}
+/* Winter campaign: retain the complete portrait artwork without cropping. */
+.new-product-grid .new-product-card--winter {
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+  grid-template-rows: auto;
+  align-items: stretch;
+  background: #102033;
+  color: #fff8e9;
+  border-color: rgba(217, 164, 65, 0.42);
+}
+.new-product-card--winter .winter-poster-media { background: #102033; }
+.new-product-card--winter .winter-poster-media img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1000 / 1321;
+  object-fit: contain;
+}
+.new-product-card--winter .winter-poster-body {
+  align-content: center;
+  grid-template-rows: auto auto auto auto;
+  gap: 16px;
+  padding: clamp(24px, 5vw, 56px);
+}
+.new-product-card--winter .new-product-kicker { color: #e2bd7b; }
+.new-product-card--winter h3 {
+  color: #fff8e9;
+  font-size: clamp(1.8rem, 3.5vw, 3rem);
+  line-height: 1.15;
+}
+.new-product-card--winter .new-product-summary { color: #e9e1d6; font-size: 1rem; }
+.winter-poster-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+.winter-poster-actions .button { min-height: 44px; white-space: normal; text-align: center; }
+.winter-poster-actions .button.outline { color: #fff8e9; border-color: #e2bd7b; }
+.winter-poster-actions .button.outline:hover { color: #102033; background: #e2bd7b; }
+@media (max-width: 680px) {
+  .new-product-grid .new-product-card--winter { grid-template-columns: minmax(0, 1fr); }
+  .new-product-card--winter .winter-poster-media img { max-width: 460px; margin: 0 auto; }
+  .new-product-card--winter .winter-poster-body { padding: 22px; gap: 12px; }
+  .winter-poster-actions { flex-direction: column; }
 }

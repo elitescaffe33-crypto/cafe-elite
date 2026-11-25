@@ -61,6 +61,8 @@ export function validateMenuSettings(next, previous = {}) {
   if (!plain(overrides) || Object.keys(overrides).length > 1000) fail("Invalid product overrides.");
   for (const [id, item] of Object.entries(overrides)) {
     const product = canonical.get(id) || (custom.customItems || []).find(entry => customProductId(entry) === id);
+    // Retain unchanged archived seasonal settings, but never permit editing or reactivation.
+    if (product && isRetiredProduct(product) && id.startsWith("autumn-") && Object.hasOwn(previous.menuOverrides || {}, id) && JSON.stringify(previous.menuOverrides[id]) === JSON.stringify(item)) continue;
     if (!product || isRetiredProduct(product) || !plain(item)) fail("Unknown or retired product reference.");
     if (Object.keys(item).some(key => !["displayName", "description", "image", "status"].includes(key))) fail("Unsupported product edit. IDs, ingredients, categories and variants are protected.");
     if (item.displayName !== undefined) text(item.displayName, 100, "product name", true);
