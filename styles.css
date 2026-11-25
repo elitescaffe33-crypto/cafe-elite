@@ -4165,26 +4165,44 @@ html {
     gap: 12px;
   }
 }
-/* Winter campaign: retain the complete portrait artwork without cropping. */
+/* Winter campaign: explicit normal-flow sizing for Safari and Chromium. */
 .new-product-grid .new-product-card--winter {
   grid-column: 1 / -1;
-  grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
-  grid-template-rows: auto;
-  align-items: stretch;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-width: 0;
   background: #102033;
   color: #fff8e9;
   border-color: rgba(217, 164, 65, 0.42);
 }
-.new-product-card--winter .winter-poster-media { background: #102033; }
+.new-product-card--winter .winter-poster-media {
+  display: block;
+  flex: 0 0 36%;
+  width: 36%;
+  max-width: 400px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  background: #102033;
+}
 .new-product-card--winter .winter-poster-media img {
+  display: block;
+  position: static;
   width: 100%;
+  max-width: 100%;
   height: auto;
-  aspect-ratio: 1000 / 1321;
+  aspect-ratio: auto;
+  margin: 0;
   object-fit: contain;
+  transform: none;
 }
 .new-product-card--winter .winter-poster-body {
-  align-content: center;
-  grid-template-rows: auto auto auto auto;
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
   gap: 16px;
   padding: clamp(24px, 5vw, 56px);
 }
@@ -4197,11 +4215,36 @@ html {
 .new-product-card--winter .new-product-summary { color: #e9e1d6; font-size: 1rem; }
 .winter-poster-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
 .winter-poster-actions .button { min-height: 44px; white-space: normal; text-align: center; }
-.winter-poster-actions .button.outline { color: #fff8e9; border-color: #e2bd7b; }
+.winter-poster-actions .button.outline {
+  color: #fff8e9;
+  background: #102033;
+  border-color: #e2bd7b;
+}
 .winter-poster-actions .button.outline:hover { color: #102033; background: #e2bd7b; }
 @media (max-width: 680px) {
-  .new-product-grid .new-product-card--winter { grid-template-columns: minmax(0, 1fr); }
-  .new-product-card--winter .winter-poster-media img { max-width: 460px; margin: 0 auto; }
-  .new-product-card--winter .winter-poster-body { padding: 22px; gap: 12px; }
+  .new-product-grid .new-product-card--winter {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+  .new-product-card--winter .winter-poster-media {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+  }
+  .new-product-card--winter .winter-poster-media img {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    margin: 0;
+  }
+  .new-product-card--winter .winter-poster-body {
+    display: flex;
+    width: 100%;
+    padding: 22px;
+    gap: 12px;
+  }
   .winter-poster-actions { flex-direction: column; }
+  .winter-poster-actions .button { width: 100%; }
 }
