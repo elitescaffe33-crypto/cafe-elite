@@ -13,6 +13,7 @@ export const PUBLIC_ASSET_PATHS = Object.freeze([
   "assets/cafe-front.jpg",
   "assets/caffe-elite-logo.jpg",
   "assets/caffe-elite-logo.svg",
+  "assets/cakes/biscoff-cheesecake.webp",
   "assets/cakes/cafe-elite-cheesecake.webp",
   "assets/cakes/carrot-cake.jpg",
   "assets/cakes/fudge-cake.jpg",
