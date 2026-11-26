@@ -6,6 +6,7 @@ import { createCachedOrderListStore } from "./order-list-cache.mjs";
 import { orderListRepresentation, orderListNotModified } from "./order-response-etag.mjs";
 import { createOrderService, verifyWebhook } from "./order-service.mjs";
 import { mkdir, readFile, writeFile, realpath } from "node:fs/promises";
+import { isChristmasPublicFile, renderChristmasPage, serveChristmasAudio } from "./christmas-public.mjs";
 import { extname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
 import { getItemKey, menuData, slugify, isRetiredProduct, isRedundantLegacyCustomItem } from "./menu-data.mjs";
 import { defaultSiteSettings, mergeSettings } from "./site-settings.mjs";
@@ -28,6 +29,8 @@ const isolatedTest = process.env.CAFE_ISOLATED_TEST === "1"
 if (previewMode && (!process.env.CAFE_PREVIEW_DATA_DIR || resolve(process.env.CAFE_PREVIEW_DATA_DIR) === resolve(root, "data"))) {
   throw new Error("Preview requires a separate data directory.");
 }
+// Seasonal decoration is presentation-only. A single flag disables it immediately on the next start.
+const christmasEnabled = !previewMode && !safety.staging && process.env.CAFE_CHRISTMAS_ENABLED !== "0" && (!isolatedTest || process.env.CAFE_CHRISTMAS_ENABLED === "1");
 const dataDir = previewMode ? resolve(process.env.CAFE_PREVIEW_DATA_DIR) : join(root, "data");
 const settingsFile = join(dataDir, "site-settings-live.json");
 const port = Number(process.env.PORT || DEFAULT_APP_PORT);
@@ -462,7 +465,7 @@ async function serveStatic(request, response) {
   if (decodedPath.split("/").some(part => part === ".." || (part !== "." && /[. ]$/.test(part)) || /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part))) return reject(400, "Bad request");
   const path = posix.normalize(decodedPath).replace(/^\/+/, "") || "index.html";
   const publicFiles = new Set(["index.html", "admin.html", "admin.js", "admin-refinements.css", "styles.css", "ux-refinements.css", "script.js", "menu-data.mjs", "site-settings.mjs", "collection-time.mjs", "basket-view.mjs", "basket-storage.mjs", "order-notes-consent.mjs", "order-catalogue.mjs", "order-reference.mjs", "receipt-layout.mjs", "smart-pasta-deals.mjs", "public-content.mjs", "public-allergen-sources.mjs", "partial-allergen-hints.mjs", "success.html", "success.js", "privacy.html", "terms.html", "allergens.html", "menu-management.mjs", "public-asset-allowlist.mjs", "manager-ui.mjs", "manager-icons.mjs", "manager.webmanifest"]);
-  if (!publicFiles.has(path) && !isApprovedPublicAsset(path)) return reject(404, "Not found");
+  if (!publicFiles.has(path) && !isApprovedPublicAsset(path) && !isChristmasPublicFile(path)) return reject(404, "Not found");
   if (!["GET", "HEAD"].includes(request.method)) return reject(405, "Method not allowed");
 
   try {
@@ -471,10 +474,16 @@ async function serveStatic(request, response) {
     const actualRelative = relative(rootReal, filePath).split(sep).join("/");
     // Symlinks and junctions must never turn a public URL into private bytes.
     if (actualRelative !== path) return reject(404, "Not found");
+    if (path === "christmas/first-snow-scott-buckley.mp3") return await serveChristmasAudio(request, response, filePath);
     let body = await readFile(filePath);
     if (path === "index.html") {
       const settings = await loadOrderingSettings();
       body = renderPublicPage(body.toString(), buildMenuData(settings), settings);
+      // Keep the ordinary orderable page available even if a seasonal template anchor changes.
+      if (christmasEnabled) {
+        try { body = renderChristmasPage(body); }
+        catch { console.warn("Christmas theme render failed; serving ordinary menu."); }
+      }
     }
     if (["admin.html", "success.html"].includes(path)) response.setHeader("X-Robots-Tag", "noindex, nofollow");
     response.writeHead(200, {

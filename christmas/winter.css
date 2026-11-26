@@ -1,0 +1,147 @@
+/* Project Winter Magic. Customer photographs and catalogue styles are inherited. */
+:root {
+  --midnight:#081624; --pine:#173435; --gilt:#f7d593; --warm:#fff6e6;
+  --swag:url("/christmas/winter-swag.webp"); --woods:url("/christmas/woodland.webp"); --shelf:url("/christmas/snow-shelf.webp");
+}
+.yule .gold-spark-field {display:none!important}
+.yule .site-header {background:#091725;border-bottom:1px solid #ab936f}
+.yule .hero {position:relative;isolation:isolate;overflow:hidden;min-height:0;display:block;background:#101e2c var(--woods) center 39% / cover no-repeat;}
+.yule .hero::before {content:"";position:absolute;inset:0;border:0;border-radius:0;box-shadow:none;background:linear-gradient(90deg,#081320ef 0%,#0b1a2edb 30%,#10263a82 49%,transparent 69%);z-index:0;}
+/* The unrecoloured shopfront has its own clear area; only the edge blends into the night. */
+.yule .hero-media {position:absolute;inset:104px 0 0 46%;overflow:hidden;mask-image:linear-gradient(to right,transparent,#000 17%);z-index:1;}
+.yule .hero-media img {display:block;width:100%;height:100%;object-fit:cover;object-position:center top;filter:none;opacity:1;}
+.yule .visit-photo img {display:block;width:100%;height:auto;max-height:none;aspect-ratio:1280 / 973;}
+.yule .hero-media {mask-image:linear-gradient(90deg,transparent,#000 18%),linear-gradient(180deg,transparent,#000 7%,#000 83%,transparent);mask-composite:intersect;}
+.yule .hero-media::after {display:none}
+.yule .hero-content {position:relative;z-index:2;width:49%;padding:112px 0 26px max(32px,6%);}
+.yule .hero .eyebrow {margin:0;color:var(--gilt);font:750 .72rem/1.5 system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;}
+.yule .hero .eyebrow::before {content:"";display:inline-block;width:32px;height:1px;background:var(--gilt);margin:0 10px 4px 0;}
+.yule .hero h1 {margin:14px 0;color:var(--warm);font:600 4.6rem/.97 Georgia,serif;letter-spacing:0;text-transform:none;}
+.yule .hero h1 em {color:var(--gilt)}
+.yule .hero-copy {margin:16px 0;max-width:26em;font-size:1.02rem;color:#fff8ed}
+.yule .hero-actions {display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:18px;}
+.yule .hero-actions .secondary {background:#0b1829d9;color:#fff6e2;border:1px solid #cfb992;}
+.yule-controls {display:flex;align-items:center;flex-wrap:wrap;gap:4px 18px;margin-top:10px;}
+.yule-controls button {display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:0 2px;color:#fff1d8;font:600 .8rem/1.2 system-ui,sans-serif;border:0;background:none;cursor:pointer;}
+.yule-controls button svg {color:var(--gilt)}
+.yule-controls button span {font-size:.68rem;border:1px solid #ad9d87;border-radius:3px;padding:2px 5px}
+.yule-controls button[aria-pressed=true] span {color:#15263a;background:#f0ddb4}
+.yule-controls button:focus-visible {outline:2px solid #ffe0a7;outline-offset:2px}
+#yule-feedback {color:#fff4db;font-size:.8rem}
+.yule-track {position:absolute;inset:0;z-index:2;pointer-events:none;}
+.yule-track i {display:none;position:absolute;bottom:12%;width:100px;aspect-ratio:1;left:0;background:url("/christmas/reindeer-stride.webp") 0 0 / 800% 100% no-repeat;filter:drop-shadow(1px 3px 2px #17253780);}
+.yule-track i:nth-child(2){left:103px;bottom:16%;width:84px;--cycle:.71s;--phase:-.34s;}
+.yule-track i:nth-child(3){left:201px;bottom:12%;width:104px;--cycle:.64s;--phase:-.19s;}
+.yule-track.running {animation:v2-cross 6.4s linear both;}
+.yule-track.running i {display:block;animation:v2-gallop var(--cycle,.67s) steps(8,end) var(--phase,0s) infinite,v2-lift var(--cycle,.67s) ease-in-out var(--phase,0s) infinite;}
+@keyframes v2-cross {from{transform:translateX(-315px)}to{transform:translateX(103%)}}
+@keyframes v2-gallop {to{background-position-x:114.285714%}}
+@keyframes v2-lift {0%,100%{transform:translateY(0)}48%{transform:translateY(-4px)}}
+.yule .status-strip {background:#e9eef0;color:#1b3442;border-bottom:1px solid #cad5da;}
+.yule .status-strip span {color:#233747}
+.yule .status-strip a {color:#604627}
+.yule #new-at,.yule #signature {position:relative;isolation:isolate;}
+.yule #new-at::before,.yule #signature::before {content:"";position:absolute;inset:0 calc((100% - 100vw)/2);z-index:-1;pointer-events:none;background:linear-gradient(#e9eef0,#f7f3ea 44%,#fbf5ec);}
+.yule main {overflow-x:clip}
+.yule #new-at .new-at-heading .eyebrow,.yule #signature .section-heading .eyebrow,.yule #winter-warmers .new-product-kicker {color:#563d25;-webkit-text-fill-color:currentColor;background:none;font:750 .75rem/1.4 system-ui,sans-serif;letter-spacing:.15em;text-transform:uppercase;}
+.yule #new-at-title,.yule #signature-title {background:none;color:#13293c;-webkit-text-fill-color:currentColor;text-shadow:none;font:italic 600 3.25rem/1.05 Georgia,serif;letter-spacing:0;text-transform:none;}
+.yule #winter-warmers {outline:1px solid #a9916a;outline-offset:3px;margin-block:9px;background:#102336;}
+.yule .new-product-card--winter .winter-poster-media img {aspect-ratio:auto 1000 / 1321;}
+.yule #winter-warmers .winter-poster-body {position:relative;align-self:stretch;justify-content:center;background:linear-gradient(120deg,#0a1727ef 10%,#102339d6 61%,#4a342aa8),var(--woods) 85% center / cover;}
+.yule #winter-warmers .new-product-kicker {color:var(--gilt)}
+.yule #winter-title {font-family:Georgia,serif;text-transform:none;letter-spacing:0;}
+
+.yule .site-footer {background:#101e2c;border-top:1px solid #bda776}
+.winter-magic .site-header {column-gap:clamp(6px,1.5vw,22px);backdrop-filter:none;-webkit-backdrop-filter:none;}
+.winter-magic .yule-weather canvas {will-change:transform;}
+.winter-magic .site-header[data-winter-open] {flex-wrap:wrap;row-gap:0;}
+.yule-switch {flex:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;min-width:44px;padding:6px 12px;background:#132635;color:#f5dfb8;border:1px solid #796646;border-radius:6px;font:600 .8rem/1.1 system-ui;cursor:pointer;}
+.yule-switch[aria-expanded=true] {border-color:#f1cf8d;background:#233747;}
+.yule-switch svg {width:18px;height:18px;}
+.yule-switch:focus-visible {outline:2px solid #ffe3a9;outline-offset:3px;}
+.winter-magic .yule-controls {order:10;flex:0 0 100%;justify-content:flex-end;margin:5px 0 0;gap:0 16px;border-top:1px solid #605541;}
+.winter-magic .yule-controls[hidden],.yule-controls [role=status]:empty {display:none;}
+.winter-magic .yule-controls button {padding:0 6px;}
+.winter-magic .hero-content {padding-bottom:38px;}
+
+/* A native sticky viewport inside a document clip: scroll changes foreground
+   occlusion but never the camera or the particle clock. */
+body.winter-magic {position:relative}
+.winter-defs {position:absolute;pointer-events:none;}
+.yule-weather canvas[hidden] {display:block;visibility:hidden;}
+.yule-weather {position:absolute;inset:0;z-index:5;pointer-events:none;user-select:none;clip-path:url(#yule-air);}
+.yule-weather canvas {position:sticky;top:0;display:block;width:100%;height:100vh;height:100lvh;pointer-events:none;}
+.winter-creditline {color:#f2dbad;font:500 .8rem/1.5 system-ui;text-align:center;}
+.winter-creditline a {display:inline-block;padding:4px 2px;color:inherit;text-underline-offset:3px;}
+.winter-creditline a:focus-visible {outline:2px solid #f1d28e;outline-offset:1px;}
+.yule .site-header {z-index:20}
+.yule .hero-content {padding-top:122px;padding-bottom:31px;}
+.yule .hero-media {top:116px}
+.yule-crown,.yule-landscape,.yule-valance,.yule-flurry {pointer-events:none;}
+.yule-crown {position:absolute;z-index:2;inset:0 0 auto;height:115px;overflow:hidden;background:linear-gradient(180deg,#081624d9,#0a192a00 76%);}
+.yule-crown::before,.yule-crown::after {position:absolute;content:"";inset:-1px auto 0 0;width:32%;background:url("/christmas/west-bough.webp") left top / contain no-repeat;}
+.yule-crown::after {left:auto;right:0;background-image:url("/christmas/east-bells.webp");background-position:top right;}
+.yule-lamplight {display:block;position:absolute;inset:-5px 10% auto;height:65%;background:url("/christmas/festoon.webp") center top / 100% 100% no-repeat;filter:drop-shadow(0 2px 5px #f5be7466);}
+.yule-crown {border-top:3px solid #a68a60;}
+.yule-crown::before,.yule-crown::after {filter:drop-shadow(0 2px 3px #0a17274d);}
+.yule-flurry {display:none}
+.yule-landscape {position:relative;isolation:isolate;overflow:hidden;background:#142439;}
+.yule-ridge,.yule-drift {position:absolute;inset:0;pointer-events:none;}
+.yule-path {height:158px;background:linear-gradient(#16263a,#dce8eb);}
+.yule-path .yule-ridge {background:var(--woods) center 77% / cover;mask-image:linear-gradient(transparent,#000 18%,#000 95%,transparent);}
+.yule-path .yule-drift {z-index:3;inset:auto auto -17px -18px;width:min(29%,350px);aspect-ratio:780/197;background:url("/christmas/drift-ledger.webp") left bottom / contain no-repeat;transform-origin:left bottom;transform:scale(var(--accumulation));}
+.yule-orchard {height:clamp(110px,12vw,180px);background:#dce2e4;}
+.yule-orchard .yule-ridge {background:url("/christmas/orchard-path.webp") center 67% / cover;mask-image:linear-gradient(transparent,#000 15%,#000 87%,transparent);}
+.yule-woods {height:clamp(170px,19vw,275px);background:linear-gradient(#f5efe4,#b9c5cb 22%,#102032 76%);}
+.yule-woods .yule-ridge {background:url("/christmas/blue-hour-yard.webp") center 70% / cover;mask-image:linear-gradient(transparent,#000 14%,#000 84%,transparent);}
+.yule-woods .yule-track i {scale:.82;transform-origin:bottom;}
+.yule-orchard .yule-track i {scale:.87;transform-origin:bottom;}
+.yule-track i::after {content:"";position:absolute;bottom:3%;left:13%;width:75%;height:4%;background:#26384654;border-radius:50%;filter:blur(1px);}
+.yule .new-at-heading,.yule #signature .section-heading {position:relative;isolation:isolate;max-width:none;padding:0 16px 22px;text-align:center;}
+.yule .new-at-heading::before {content:"";position:absolute;inset:-34px calc((100% - 100vw)/2) -10px;z-index:-1;background:linear-gradient(#e1e8eb,#e8edefcd 21%,#eff1edd9 66%,#f5f2e9),var(--woods) center 81% / cover;}
+.yule #signature .section-heading::before {content:"";position:absolute;inset:-24px calc((100% - 100vw)/2) -10px;z-index:-1;background:linear-gradient(#dae3e6,#f4f1e9);}
+.yule-valance {position:relative;margin:auto;max-width:100%;background:none;}
+.yule .new-at-heading .yule-valance {width:calc(225px * var(--foliage-scale));height:75px;background:url("/christmas/botanical-fan.webp") center / contain no-repeat;}
+.yule #signature .yule-valance {width:calc(121px * var(--foliage-scale));height:59px;background:url("/christmas/guild-seal.webp") center / contain no-repeat;}
+.yule #winter-warmers .winter-poster-body {background:linear-gradient(111deg,#101e2b 0%,#172b38 56%,#49382c);overflow:hidden;}
+.yule .winter-poster-body .yule-valance {align-self:flex-end;width:min(80%,315px);height:105px;margin:0 0 3px auto;background:url("/christmas/hearth-light.webp") right bottom / contain no-repeat;}
+.yule .winter-poster-body .yule-valance::before {content:"";position:absolute;inset:auto 0 0 19%;border-bottom:1px solid #bc9c687d;}
+.yule #new-at-title,.yule #signature-title {color:#13293c;}
+.yule .site-footer {background:#101e2c;border-top:0;}
+.yule-orchard::after {content:"";position:absolute;bottom:-16px;right:-10px;width:min(28%,260px);aspect-ratio:780/214;background:url("/christmas/powder-sill.webp") center / contain no-repeat;}
+[data-winter-active] .winter-poster-body .yule-valance[data-lit]::after {content:"";position:absolute;left:56%;top:49%;width:5%;height:16%;background:#ffd59d;filter:blur(4px);mix-blend-mode:screen;animation:warmwick 6.4s ease-in-out infinite alternate;}
+@keyframes warmwick {from{opacity:.03}to{opacity:.24}}
+@media(min-width:741px) and (max-width:1080px){.yule .hero h1{font-size:3.35rem}.yule .hero-content{padding-left:32px;}}
+@media(max-width:1020px){
+ .yule-switch {order:1;padding:0;width:44px;}.yule-switch span {display:none;}
+ .yule .site-header .cart-toggle {margin-left:0;}.yule .site-header .brand {margin-right:auto;}
+}
+@media(max-width:740px){
+ :root{--woods:url("/christmas/woodland-small.webp");}
+ .yule .site-header {column-gap:6px;padding-inline:max(10px,env(safe-area-inset-left)) max(10px,env(safe-area-inset-right));}
+ .yule .site-header .brand {min-width:0;flex-shrink:1;}
+ .yule .yule-controls {justify-content:center;gap:0 6px;}.yule-controls .winter-creditline {flex-basis:100%;}
+ .yule .hero {--crown-height:clamp(91px,30vw,124px);background-position:center 15%;}
+ .yule .hero::before {background:linear-gradient(0deg,#091725f5 2%,#112337ec 55%,#1326376b 77%,transparent);}
+ .yule-crown {height:var(--crown-height);background:url("/christmas/counter-crown.webp") center -3px / 100% 100% no-repeat;}
+ .yule-crown::before,.yule-crown::after,.yule-lamplight {display:none;}
+ .yule .hero-media {inset:var(--crown-height) 0 auto 32%;height:158px;mask-image:linear-gradient(90deg,transparent,#000 23%),linear-gradient(0deg,transparent,#000 18%,#000 87%,transparent);mask-composite:intersect;}
+ .yule .hero-media img {object-position:center top;}
+ .yule .hero-content {width:100%;padding:calc(var(--crown-height) + 155px) 22px 23px;}
+ .yule .hero h1 {font-size:2.60rem;margin:9px 0;}.yule .hero-copy {font-size:.97rem;margin:12px 0;max-width:30em;}
+ .yule .hero-actions {margin-top:12px;}.yule .hero-actions .button {padding-inline:14px;min-width:0;width:auto;}
+ .yule-path {height:105px;}.yule-woods {height:156px;}
+ .yule-track i {width:68px;}.yule-track i:nth-child(2){left:68px;width:57px;}.yule-track i:nth-child(3){left:130px;width:70px;}
+ .yule-track.running {animation-name:v2-cross-small;animation-duration:4.8s;}
+ @keyframes v2-cross-small {from{transform:translateX(-205px)}to{transform:translateX(104%)}}
+ .yule #new-at-title,.yule #signature-title{font-size:2.2rem;}
+ .yule .new-at-heading .yule-valance {height:62px;width:185px;}
+ .yule .winter-poster-body .yule-valance {height:74px;width:217px;}
+ .yule .yule-path .yule-drift {width:38%;bottom:-7px;}
+ .yule-orchard::after {width:31%;bottom:-7px;}
+}
+@media(max-width:355px){
+ .yule .hero h1{font-size:2.55rem;}.yule .hero-content{padding-inline:16px;}
+ .yule .hero-actions .button{padding-inline:10px;font-size:.9rem;}
+}
+@media(prefers-reduced-motion:reduce){.yule-weather,.yule-track.running,.yule-track.running i{display:none;animation:none;}}

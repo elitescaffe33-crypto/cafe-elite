@@ -6,10 +6,11 @@ import assert from "node:assert/strict";
 import { menuData } from "../menu-data.mjs";
 import { defaultSiteSettings } from "../site-settings.mjs";
 import { renderPublicPage } from "../public-content.mjs";
+import { renderChristmasPage, CHRISTMAS_PUBLIC_FILES } from "../christmas-public.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 let checked = 0;
-for (const directory of ["", "scripts", "tests"]) {
+for (const directory of ["", "scripts", "tests", "christmas"]) {
   // Production's exact runtime-only package deliberately excludes tests; still
   // syntax-check all tests whenever they exist in the development checkout.
   let entries;
@@ -34,6 +35,10 @@ if (process.argv.includes("--build")) {
   JSON.parse(html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)[1]);
   const paths = new Set([...html.matchAll(/(?:src|href)="([^"#?]+)(?:[?#][^"]*)?"/g)].map(match => match[1]).filter(path => !/^(https?:|data:|mailto:|tel:)/i.test(path)));
   menuData.flatMap(group => group.items).forEach(item => { if (item.image) paths.add(item.image); });
+  const themed = renderChristmasPage(html);
+  assert.equal((themed.match(/id="yule-music"/g) || []).length,1);
+  assert.equal((themed.match(/\/christmas\/cafe-elite-winter-front\.jpg/g) || []).length,2);
+  for (const file of CHRISTMAS_PUBLIC_FILES) await access(join(root,file));
   for (const path of paths) await access(join(root, path));
   for (const item of menuData.flatMap(group => group.items)) assert.ok(item.id && item.price);
   console.log(`Production render validation passed: ${Buffer.byteLength(html)} bytes, ${paths.size} local resources. Runtime remains npm start.`);
