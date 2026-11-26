@@ -53,3 +53,7 @@ export const PUBLIC_ASSET_PATHS = Object.freeze([
 ]);
 const allowed = new Set(PUBLIC_ASSET_PATHS);
 export function isApprovedPublicAsset(path) { return allowed.has(path); }
+
+// Only immutable, server-generated WebP identifiers are allowed for uploaded product photos.
+export function isUploadedProductPhoto(path) { return typeof path === "string" && path.length === 85 && /^\/product-photos\/[a-f0-9]{64}\.webp$/.test(path); }
+export function isApprovedProductPhoto(path) { return isApprovedPublicAsset(path) || isUploadedProductPhoto(path); }

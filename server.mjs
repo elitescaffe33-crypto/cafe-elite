@@ -10,7 +10,8 @@ import { extname, isAbsolute, join, posix, relative, resolve, sep } from "node:p
 import { getItemKey, menuData, slugify, isRetiredProduct, isRedundantLegacyCustomItem } from "./menu-data.mjs";
 import { defaultSiteSettings, mergeSettings } from "./site-settings.mjs";
 import { renderPublicPage, robotsText, sitemapXml, business } from "./public-content.mjs";
-import { isApprovedPublicAsset } from "./public-asset-allowlist.mjs";
+import { isApprovedPublicAsset, isApprovedProductPhoto, isUploadedProductPhoto } from "./public-asset-allowlist.mjs";
+import { createProductPhotoStorage, readPhotoBody, referencedUploadedPhotos } from "./product-photo-storage.mjs";
 import { applyManagedMenu, validateMenuSettings } from "./menu-management.mjs";
 import { buildMarketingContacts } from "./marketing-consent.mjs";
 import { stagingSafety, assertNotificationsAllowed, assertStagingStripeRequest, assertStagingStripeSession, DEFAULT_APP_PORT } from "./staging-safety.mjs";
@@ -64,6 +65,9 @@ const orderService = createOrderService({ store: orderStore, loadSettings: loadO
   createStripeSession: (params, key) => stripeApi("/checkout/sessions", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", "Idempotency-Key": key }, body: params }),
   notify: sendOrderEmail, notificationsDisabled: safety.notificationsDisabled, origin: checkoutOrigin.origin });
 const writeLimits = new Map();
+// Uploads are isolated from order storage, and never write to staging or preview.
+const photoStorage = hasSupabase() && !safety.staging && !isolatedTest ? createProductPhotoStorage({ url: supabaseUrl, secret: supabaseSecretKey }) : null;
+let photoUploadBusy = false, photoUploadTimes = [];
 
 const contentTypes = {
   ".html": "text/html; charset=utf-8",
@@ -95,7 +99,7 @@ function normalizeCustomMenuItem(item) {
     name,
     price: item?.price || "\u00a30.00",
     description: item?.description || "",
-    ...(isApprovedPublicAsset(item?.image) ? { image: item.image } : {}),
+    ...(isApprovedProductPhoto(item?.image) ? { image: item.image } : {}),
   };
 }
 
@@ -214,6 +218,9 @@ async function saveAdminSettingsIfUnchanged(nextSettings, expectedRevision) {
     throw new OrderError("The settings changed in another session. Refresh before trying again.", 409);
   try { validateMenuSettings(nextSettings, snapshot.rawSettings); }
   catch (error) { throw new OrderError(error.message, 422); }
+  // The browser validates path shape; the server verifies every new stored image.
+  if (photoStorage) await photoStorage.validateNewReferences(nextSettings, snapshot.rawSettings);
+  else if ([...referencedUploadedPhotos(nextSettings)].some(path => !referencedUploadedPhotos(snapshot.rawSettings).has(path))) throw new OrderError("Photo uploads are unavailable in this environment.", 422);
   const mergedSettings = mergeSettings(defaultSiteSettings, nextSettings);
   if (hasSupabase()) {
     // A real PostgREST conditional PATCH, not an old snapshot upsert.
@@ -488,7 +495,7 @@ async function handleRequest(request, response) {
   response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   response.setHeader("X-Frame-Options", "DENY");
   response.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
-  response.setHeader("Content-Security-Policy", "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://www.google.com https://maps.googleapis.com; connect-src 'self'; frame-src https://www.google.com https://maps.google.com");
+  response.setHeader("Content-Security-Policy", "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://www.google.com https://maps.googleapis.com" + (photoStorage ? " " + new URL(supabaseUrl).origin : "") + "; connect-src 'self'; frame-src https://www.google.com https://maps.google.com");
   if (!previewMode && !safety.staging) response.setHeader("Strict-Transport-Security", "max-age=31536000");
   if (previewMode) {
     const allowed = ["/api/health", "/api/settings", "/api/menu", "/api/admin/settings", "/api/admin/orders", "/api/admin/contacts"];
@@ -577,6 +584,31 @@ async function handleRequest(request, response) {
     return;
   }
 
+  // No dynamic file-system paths or arbitrary URLs are exposed.
+  if (isUploadedProductPhoto(request.url) && ["GET", "HEAD"].includes(request.method)) {
+    if (!photoStorage) { jsonReply(response, 404, { error: "Photo unavailable" }); return; }
+    response.setHeader("Cache-Control", "public, max-age=86400");
+    response.writeHead(302, { Location: photoStorage.publicUrl(request.url) });
+    response.end();
+    return;
+  }
+  if (request.url === "/api/admin/product-photos" && ["GET", "POST"].includes(request.method)) {
+    if (!requireAdmin(request, response)) { request.resume(); return; }
+    if (!photoStorage) { request.resume(); jsonReply(response, 503, { error: "Photo uploads are unavailable in this environment." }); return; }
+    try {
+      if (request.method === "GET") { jsonReply(response, 200, { photos: await photoStorage.list() }); return; }
+      const now = Date.now();
+      photoUploadTimes = photoUploadTimes.filter(time => time > now - 600000);
+      if (photoUploadBusy || photoUploadTimes.length >= 12) {
+        request.resume(); jsonReply(response, 429, { error: "Too many photo uploads. Please try again shortly." }); return;
+      }
+      photoUploadBusy = true; photoUploadTimes.push(now);
+      try { jsonReply(response, 201, { path: await photoStorage.upload(await readPhotoBody(request)) }); }
+      finally { photoUploadBusy = false; }
+    } catch (error) { apiError(response, error); }
+    return;
+  }
+
   if (request.method === "GET" && request.url === "/api/admin/settings") {
     if (!requireAdmin(request, response)) return;
     try {
@@ -644,6 +676,7 @@ server.headersTimeout = 10_000;
 server.listen(port, previewMode || safety.staging || isolatedTest ? "127.0.0.1" : "0.0.0.0", () => {
   if (previewMode && process.send) process.send({ previewPort: server.address().port });
   console.log("CAFE ELITE server ready on port " + server.address().port);
+  if (photoStorage) void photoStorage.ensureBucket().then(() => console.log("Product photo storage ready")).catch(() => console.warn("Product photo storage unavailable; existing orders unaffected"));
 });
 if (previewMode) process.on("disconnect", () => server.close(() => process.exit(0)));
 if (!previewMode && !safety.notificationsDisabled) {

@@ -509,3 +509,9 @@ body.sidebar-collapsed .manager-sidebar { display:none; }
   #managerReceiptPreview .manager-receipt-content { padding:0!important; }
   #managerReceiptPreview .receipt { width:72mm!important; padding:2mm 2mm 5mm!important; margin:0!important; }
 }
+
+/* Manager-only product photo upload. */
+.upload-photo-button { display:flex; align-items:center; justify-content:center; gap:7px; width:100%; min-height:44px; background:#fff9ed; color:#162633; border:1px solid #c68e26; border-radius:9px; font-weight:700; font-size:13px; margin-top:10px; padding:8px 6px; }
+.upload-photo-button:disabled { opacity:.55; cursor:wait; }
+.upload-photo-button .icon { width:16px; height:16px; }
+#uploadStatus { overflow-wrap:anywhere; }

@@ -2,9 +2,32 @@ import { getItemKey, getItemDisplayName, isDrinkCustomisable, requiresSandwichBr
 import { managerPhotos, managerPrice, customProductCategories, customProductId, validateMenuSettings } from "./menu-management.mjs";
 import { escapeMarkup as esc } from "./public-content.mjs";
 import { icon, categoryIcon } from "./manager-icons.mjs";
+import { isUploadedProductPhoto } from "./public-asset-allowlist.mjs";
+
+async function preparePhotoFile(file) {
+  if (!file || !file.size || file.size > 20 * 1024 * 1024) throw new Error("Choose a photo under 20 MB.");
+  const nativeTypes = ["image/jpeg", "image/png", "image/webp"];
+  if (nativeTypes.includes(file.type) && file.size <= 5 * 1024 * 1024) return file;
+  if (!nativeTypes.includes(file.type) && !/^image\/hei[cf]$/i.test(file.type) && !/\.(heic|heif|jpg|jpeg|png|webp)$/i.test(file.name)) throw new Error("Choose a JPEG, PNG, WebP or iPhone photo.");
+  const data = await new Promise((resolve, reject) => {
+    const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = () => reject(new Error("Photo could not be read.")); reader.readAsDataURL(file);
+  });
+  const image = await new Promise((resolve, reject) => {
+    const img = new Image(); img.onload = () => resolve(img); img.onerror = () => reject(new Error("This phone could not open the photo. Try saving it as JPEG first.")); img.src = data;
+  });
+  if (!image.naturalWidth || !image.naturalHeight || image.naturalWidth * image.naturalHeight > 60000000) throw new Error("Photo dimensions are too large.");
+  const scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight)), canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale)); canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+  const ctx = canvas.getContext("2d"); if (!ctx) throw new Error("Photo processing is unavailable on this device.");
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", .88));
+  if (!blob || blob.type !== "image/jpeg" || blob.size > 5 * 1024 * 1024) throw new Error("Could not prepare the photo.");
+  return blob;
+}
+
 
 export function managerStatusFromSwitches(visible, soldOut) { return !visible ? "hidden" : soldOut ? "sold_out" : "active"; }
-export function createProductManager({ getSettings, getGroups, publish, showMessage, navigateCategory }) {
+export function createProductManager({ getSettings, getGroups, publish, showMessage, navigateCategory, loadPhotos, uploadPhoto }) {
   const list = document.querySelector("#priceEditor"), editor = document.querySelector("#productEditor");
   const workspace = document.querySelector("#productWorkspace"), form = document.querySelector("#productForm");
   const search = document.querySelector("#productSearch"), category = document.querySelector("#productCategory"), status = document.querySelector("#productStatus");
@@ -16,6 +39,57 @@ export function createProductManager({ getSettings, getGroups, publish, showMess
     return [...getGroups()].sort((a, b) => (order.indexOf(a.category) < 0 ? 100 : order.indexOf(a.category)) - (order.indexOf(b.category) < 0 ? 100 : order.indexOf(b.category)));
   };
   const all = () => groups().flatMap(group => group.items.map(item => ({ ...item, managerCategory: group.category })));
+  const photoInput = document.querySelector("#productImageUpload"), uploadButton = document.querySelector("#uploadNewPhoto"), uploadStatus = document.querySelector("#uploadStatus");
+  let uploadedPaths = [], photoEpoch = 0;
+  const photoLabel = path => {
+    if (!isUploadedProductPhoto(path)) return path.replace(/^assets\//, "").replace(/\.(jpg|png|webp|jpeg)$/, "").replaceAll("-", " ");
+    const item = all().find(row => photoPath(row) === path);
+    return item ? "Uploaded — " + getItemDisplayName(item) : "Uploaded photo — " + path.slice(16, 26);
+  };
+  const availablePhotos = () => [...new Set([...managerPhotos, ...uploadedPaths, ...all().map(photoPath).filter(isUploadedProductPhoto)])];
+  function renderPhotoOptions(preferred = field("Image").value) {
+    const paths = availablePhotos();
+    field("Image").replaceChildren(new Option("No individual photo", ""), ...paths.map(path => new Option(photoLabel(path), path)));
+    field("Image").value = paths.includes(preferred) ? preferred : "";
+    const thumbnails = [...new Set([preferred, ...all().filter(row => row.managerCategory === selectedCategory).map(photoPath)].filter(path => paths.includes(path)))].slice(0, 3);
+    document.querySelector("#photoChoices").innerHTML = thumbnails.map(path => '<button type="button" data-photo="' + esc(path) + '" aria-label="Choose ' + esc(photoLabel(path)) + '" title="Choose existing photo" aria-pressed="' + (path === field("Image").value) + '"><img src="' + esc(path) + '" alt=""></button>').join("") + '<button type="button" data-photo-upload aria-label="Upload new photo" title="Upload new photo">' + icon("plus") + '</button>';
+  }
+  function openPhotoLibrary(epoch) {
+    if (!loadPhotos) return;
+    void loadPhotos().then(data => {
+      if (photoEpoch !== epoch || editor.hidden) return;
+      const paths = Array.isArray(data.photos) ? data.photos.filter(isUploadedProductPhoto) : [];
+      uploadedPaths = [...new Set([...uploadedPaths, ...paths])];
+      // Preserve the user's selection and upload preview while the list loads.
+      if (!busy) { renderPhotoOptions(); updatePreview(); }
+    }).catch(() => { /* Existing approved photos remain available during a storage outage. */ });
+  }
+  function chooseUpload() { if (!busy && !editor.hidden) { photoInput.value = ""; photoInput.click(); } }
+  uploadButton.addEventListener("click", chooseUpload);
+  photoInput.addEventListener("change", async () => {
+    const file = photoInput.files?.[0];
+    if (!file || busy || editor.hidden) return;
+    const epoch = photoEpoch;
+    busy = true; save.disabled = true; uploadButton.disabled = true; error.textContent = "";
+    uploadStatus.textContent = "Preparing and uploading photo...";
+    try {
+      const body = await preparePhotoFile(file);
+      if (epoch !== photoEpoch || editor.hidden) return;
+      const result = await uploadPhoto(body);
+      if (epoch !== photoEpoch || editor.hidden) return;
+      if (!isUploadedProductPhoto(result?.path)) throw new Error("Photo upload could not be verified.");
+      uploadedPaths = [...new Set([result.path, ...uploadedPaths])];
+      renderPhotoOptions(result.path); updatePreview();
+      uploadStatus.textContent = "Photo uploaded. Tap Save changes to publish it on the menu.";
+    } catch (problem) {
+      if (epoch === photoEpoch && !editor.hidden) {
+        uploadStatus.textContent = problem.message || "Upload failed. Please try again.";
+        error.textContent = uploadStatus.textContent;
+      }
+    } finally {
+      busy = false; save.disabled = false; uploadButton.disabled = false; photoInput.value = "";
+    }
+  });
   const itemPrice = item => getSettings().menuPrices?.[getItemKey(item)] || getSettings().menuPrices?.[item.name] || item.price;
   const statusName = value => ({ active: "Active", sold_out: "Sold out", hidden: "Hidden" })[value || "active"];
   const photoPath = item => item?.image || (item?.id?.includes("cupcake") ? "assets/cafe-elite-cupcakes.jpg" : "");
@@ -68,7 +142,7 @@ export function createProductManager({ getSettings, getGroups, publish, showMess
       ${item.managerStatus === "hidden" ? `<button class="icon-button" type="button" data-restore="${esc(item.id)}" title="Restore ${esc(getItemDisplayName(item))}" aria-label="Restore ${esc(getItemDisplayName(item))}">${icon("rotate-ccw")}</button>` : ""}</div></article>`).join("") : '<p class="manager-empty">No matching products.</p>';
   }
   const isDirty = () => !editor.hidden && JSON.stringify(values()) !== initial;
-  function closeEditor() { editor.hidden = true; workspace.hidden = true; selected = null; initial = ""; returnFocus?.focus({ preventScroll: true }); }
+  function closeEditor() { photoEpoch++; editor.hidden = true; workspace.hidden = true; selected = null; initial = ""; photoInput.value = ""; returnFocus?.focus({ preventScroll: true }); }
   function canLeave() {
     if (busy) return false;
     if (isDirty() && !window.confirm("Discard unsaved product changes?")) return false;
@@ -96,10 +170,8 @@ export function createProductManager({ getSettings, getGroups, publish, showMess
     field("Category").title = custom ? "" : "Catalogue category is protected to preserve existing variants and deal choices.";
     const currentStatus = restoring ? "active" : item ? item.managerStatus || "active" : "hidden";
     field("Visible").checked = currentStatus !== "hidden"; field("SoldOut").checked = currentStatus === "sold_out";
-    field("Image").innerHTML = '<option value="">No individual photo</option>' + managerPhotos.map(path => `<option value="${esc(path)}">${esc(path.replace(/^assets\//, "").replace(/\.(jpg|png|webp|jpeg)$/, "").replaceAll("-", " "))}</option>`).join("");
-    field("Image").value = item?.image || "";
-    const thumbnails = [...new Set([photoPath(item), ...all().filter(row => row.managerCategory === selectedCategory).map(photoPath)].filter(path => managerPhotos.includes(path)))].slice(0, 3);
-    document.querySelector("#photoChoices").innerHTML = thumbnails.map(path => `<button type="button" data-photo="${esc(path)}" aria-label="Choose ${esc(path.split("/").pop())}" title="Choose existing photo" aria-pressed="${path === field("Image").value}"><img src="${esc(path)}" alt=""></button>`).join("") + `<button type="button" disabled title="Upload not enabled" aria-label="Upload new photo unavailable">${icon("plus")}</button>`;
+    renderPhotoOptions(item?.image || "");
+    uploadStatus.textContent = "Choose a product photo from your device. It will be optimised automatically.";
     const variants = Object.entries(item?.deal || {}).map(([name, choices]) => name + ": " + choices.join(", "));
     if (item && isDrinkCustomisable(item)) variants.push("Milk: " + MILK_CHOICES.join(", "), "Syrup: " + SYRUP_MODIFIER_CHOICES.join(", "));
     if (item && requiresSandwichBreadChoice(item)) variants.push("Bread: White, Brown");
@@ -108,6 +180,7 @@ export function createProductManager({ getSettings, getGroups, publish, showMess
     document.querySelector("#editorOptions").textContent = variants.length ? variants.join("\n") : "No editable variants in this version.";
     document.querySelector("#productBefore").innerHTML = item ? preview(item, itemPrice(item)) : "<p>New product</p>";
     updatePreview(); initial = JSON.stringify(values()); editor.hidden = false; workspace.hidden = false;
+    const epoch = ++photoEpoch; openPhotoLibrary(epoch);
     document.querySelector("#editorTitle").focus({ preventScroll: true });
     editor.scrollIntoView({ block: "nearest", behavior: "instant" });
   }
@@ -116,7 +189,8 @@ export function createProductManager({ getSettings, getGroups, publish, showMess
   document.querySelector("#hideProduct").addEventListener("click", () => { field("Visible").checked = false; updatePreview(); });
   form.addEventListener("input", updatePreview); form.addEventListener("change", updatePreview);
   document.querySelector("#photoChoices").addEventListener("click", event => {
-    const button = event.target.closest("[data-photo]"); if (!button) return;
+    if (event.target.closest("[data-photo-upload]")) { chooseUpload(); return; }
+    const button = event.target.closest("[data-photo]"); if (!button || busy) return;
     field("Image").value = button.dataset.photo; updatePreview();
   });
   search.addEventListener("input", render); status.addEventListener("change", render);
@@ -153,5 +227,5 @@ export function createProductManager({ getSettings, getGroups, publish, showMess
     } catch (problem) { error.textContent = problem.message || "Nothing was saved. Please refresh and try again."; }
     finally { busy = false; save.disabled = false; save.textContent = "Save changes"; }
   });
-  return { render, canLeave, isDirty, selectCategory, category: () => selectedCategory, close: () => { closeEditor(); form.reset(); list.replaceChildren(); } };
+  return { render, canLeave, isDirty, selectCategory, category: () => selectedCategory, close: () => { closeEditor(); uploadedPaths = []; form.reset(); list.replaceChildren(); } };
 }

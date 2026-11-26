@@ -1,8 +1,9 @@
 import { menuData, getItemKey, isRetiredProduct, slugify } from "./menu-data.mjs";
-import { PUBLIC_ASSET_PATHS } from "./public-asset-allowlist.mjs";
+import { PUBLIC_ASSET_PATHS, isUploadedProductPhoto } from "./public-asset-allowlist.mjs";
 
 export const managerPhotos = Object.freeze(PUBLIC_ASSET_PATHS.filter(path => path.startsWith("assets/") && !path.includes("manager-icon") && /\.(jpg|jpeg|png|webp)$/i.test(path)));
 const photos = new Set(managerPhotos);
+const validPhoto = path => photos.has(path) || isUploadedProductPhoto(path);
 const base = menuData.flatMap(group => group.items);
 const canonical = new Map(base.filter(item => !item.sourceId).map(item => [item.id, item]));
 export const customProductCategories = Object.freeze(["Cakes", "Snacks", "Teas", "Soft Drinks"]);
@@ -49,7 +50,7 @@ export function validateMenuSettings(next, previous = {}) {
     text(item.description || "", 1000, "description");
     if (!customProductCategories.includes(item.category)) fail("This category requires a separately reviewed product configuration.");
     managerPrice(item.price);
-    if (item.image && !photos.has(item.image)) fail("Choose an approved existing photograph.");
+    if (item.image && !validPhoto(item.image)) fail("Choose an approved existing photograph.");
     if (base.some(entry => entry.name.toLowerCase() === item.name.trim().toLowerCase())) fail("Use Edit on the existing product instead of creating a duplicate.");
     if (custom.customItems.some(entry => entry !== item && entry.category?.toLowerCase() === item.category.toLowerCase() && entry.name?.trim().toLowerCase() === item.name.trim().toLowerCase())) fail("A custom product with this name already exists in this category.");
   }
@@ -67,7 +68,7 @@ export function validateMenuSettings(next, previous = {}) {
     if (Object.keys(item).some(key => !["displayName", "description", "image", "status"].includes(key))) fail("Unsupported product edit. IDs, ingredients, categories and variants are protected.");
     if (item.displayName !== undefined) text(item.displayName, 100, "product name", true);
     if (item.description !== undefined) text(item.description, 1000, "description");
-    if (item.image !== undefined && item.image !== "" && !photos.has(item.image)) fail("Choose an approved existing photograph.");
+    if (item.image !== undefined && item.image !== "" && !validPhoto(item.image)) fail("Choose an approved existing photograph.");
     if (item.status !== undefined && !["active", "sold_out", "hidden"].includes(item.status)) fail("Invalid product status.");
   }
 }
@@ -88,7 +89,7 @@ export function applyManagedMenu(groups, settings, includeHidden = false) {
       output.displayBasketName = edit.displayName;
     }
     if (edit?.description !== undefined) output.description = edit.description;
-    if (edit?.image !== undefined && (!edit.image || photos.has(edit.image))) output.image = edit.image;
+    if (edit?.image !== undefined && (!edit.image || validPhoto(edit.image))) output.image = edit.image;
     output.managerStatus = status;
     output.orderable = status === "active";
     return [output];

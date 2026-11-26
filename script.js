@@ -581,7 +581,7 @@ function renderStandardItem(item, groupIndex, itemIndex) {
   const isMuffin = item.id === "snack-muffins";
   return `
     <article class="menu-product-card ${item.image ? "has-image" : ""}" data-group="${groupIndex}" data-item="${itemIndex}" data-product-id="${item.id || getItemKey(item)}">
-      ${item.image ? `<img class="menu-product-image" src="${item.image}" alt="${escapeHtml(getItemDisplayName(item))}" loading="lazy">` : ""}
+      ${item.image ? `<img class="menu-product-image" src="${escapeHtml(item.image)}" alt="${escapeHtml(getItemDisplayName(item))}" loading="lazy">` : ""}
       <div class="menu-product-body">
         <div class="menu-item-head">
           ${item.badge ? `<span class="item-badge">${item.badge}</span>` : ""}
@@ -618,7 +618,7 @@ function renderDealItem(item, groupIndex, itemIndex) {
   const isOpen = openDealKey === key;
   return `
     <article class="deal-builder menu-product-card menu-product-card--deal ${item.image ? "has-image" : ""} ${isOpen ? "is-open" : ""}" data-group="${groupIndex}" data-item="${itemIndex}" data-product-id="${item.id || getItemKey(item)}">
-      ${item.image ? `<img class="menu-product-image deal-artwork" src="${item.image}" alt="${escapeHtml(getItemDisplayName(item))}" loading="lazy">` : ""}
+      ${item.image ? `<img class="menu-product-image deal-artwork" src="${escapeHtml(item.image)}" alt="${escapeHtml(getItemDisplayName(item))}" loading="lazy">` : ""}
       <div class="menu-product-body">
         <div class="menu-item-head">
           ${item.badge ? `<span class="item-badge">${item.badge}</span>` : ""}

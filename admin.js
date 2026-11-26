@@ -1,7 +1,7 @@
 import { getItemKey, getItemOrderName, menuData, slugify, isRetiredProduct, isRedundantLegacyCustomItem } from "./menu-data.mjs";
 import { dayKeys, defaultSiteSettings, mergeSettings, getOrderingStatus } from "./site-settings.mjs";
 import { applyManagedMenu } from "./menu-management.mjs";
-import { isApprovedPublicAsset } from "./public-asset-allowlist.mjs";
+import { isApprovedProductPhoto } from "./public-asset-allowlist.mjs";
 import { createProductManager } from "./manager-ui.mjs";
 import { hydrateIcons } from "./manager-icons.mjs";
 import { visibleOrderReference } from "./order-reference.mjs";
@@ -37,6 +37,8 @@ const productManager = createProductManager({
   getSettings: () => currentSettings,
   getGroups: () => getEffectiveMenuData(true).filter(group => !group.featured),
   showMessage,
+  loadPhotos: () => adminFetch("/api/admin/product-photos"),
+  uploadPhoto: file => adminFetch("/api/admin/product-photos", { method: "POST", headers: { "Content-Type": file.type }, body: file }),
   navigateCategory: name => { const group = getEffectiveMenuData(true).find(group => group.category === name); if (group) openAdminSection("#menu/" + encodeURIComponent(group.id)); },
   publish: async settings => {
     currentSettings = mergeSettings(defaultSiteSettings, await adminFetch("/api/admin/settings", { method: "POST", body: JSON.stringify(settings) }));
@@ -384,7 +386,7 @@ function normalizeCustomMenuItem(item) {
     name,
     price: item?.price || "\u00a30.00",
     description: item?.description || "",
-    ...(isApprovedPublicAsset(item?.image) ? { image: item.image } : {}),
+    ...(isApprovedProductPhoto(item?.image) ? { image: item.image } : {}),
   };
 }
 
